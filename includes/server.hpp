@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 16:14:51 by evan-ite          #+#    #+#             */
-/*   Updated: 2024/07/01 16:39:27 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/01 18:05:45 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,5 +19,6 @@
 # include <cstring>
 
 std::string find_key(std::string file_str, std::string keyword, char separator);
+std::string splitReturnFirst(const std::string& str, const std::string& delimiter);
 
 #endif
