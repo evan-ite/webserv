@@ -16,7 +16,7 @@ Sure! Here's a comprehensive README for your HTTP server project:
 4. [Usage](#usage)
 5. [Configuration](#configuration)
 6. [Testing](#testing)
-7. 
+7. [Collaborators](#collaborators)
 
 ## Introduction
 
