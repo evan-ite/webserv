@@ -1,7 +1,3 @@
-Sure! Here's a comprehensive README for your HTTP server project:
-
----
-
 # Webserv
 
 ## Overview
