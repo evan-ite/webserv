@@ -2,7 +2,6 @@
 # define RESPONSE_HPP
 
 # include "../includes/server.hpp"
-# include <ctime>
 
 class Response
 {
