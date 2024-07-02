@@ -1,18 +1,18 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include <iostream>
-# include <string>
+# include "../includes/server.hpp"
+# include <ctime>
 
 class Response
 {
 	public:
 		// Constructors
-		Response(std::string status,
-				std::string reason,
-				std::string type,
-				std::string connection,
-				std::string body);
+		Response(const std::string& status,
+				const std::string& reason,
+				const std::string& type,
+				const std::string& connection,
+				const std::string& body);
 		Response(const Response &copy);
 
 		// Destructor
@@ -20,6 +20,8 @@ class Response
 
 		// Operators
 		Response & operator=(const Response &assign);
+
+		std::string makeResponse();
 
 	private:
 		std::string	_status;
@@ -30,5 +32,7 @@ class Response
 		std::string	_connection;
 		std::string	_body;
 };
+
+std::string get_date_time();
 
 #endif

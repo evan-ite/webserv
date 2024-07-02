@@ -6,7 +6,7 @@
 /*   By: elisevaniterson <elisevaniterson@studen    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 16:14:51 by evan-ite          #+#    #+#             */
-/*   Updated: 2024/07/01 20:56:44 by elisevanite      ###   ########.fr       */
+/*   Updated: 2024/07/02 12:26:11 by elisevanite      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <iostream>
 # include <iomanip>
 # include <cstring>
+# include <sstream>
 # include "../includes/Response.hpp"
 
 # define HTTPVERSION "HTTP/1.1"

@@ -6,7 +6,7 @@
 /*   By: elisevaniterson <elisevaniterson@studen    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 20:50:35 by elisevanite       #+#    #+#             */
-/*   Updated: 2024/07/01 21:10:02 by elisevanite      ###   ########.fr       */
+/*   Updated: 2024/07/02 12:50:53 by elisevanite      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,25 +14,29 @@
 
 // Constructors
 Response::Response(
-	std::string status,
-	std::string reason,
-	std::string type,
-	std::string connection,
-	std::string body):
+	const std::string& status,
+	const std::string& reason,
+	const std::string& type,
+	const std::string& connection,
+	const std::string& body) :
 	_status(status),
 	_reason(reason),
 	_type(type),
 	_connection(connection),
-	_body(body)
-{
-	_len = _body.length();
-	_date = "the date!!";
-}
+	_body(body),
+	_len(body.length()),
+	_date(get_date_time())
+{}
 
-Response::Response(const Response &copy)
-{
-	(void) copy;
-}
+Response::Response(const Response &copy) :
+	_status(copy._status),
+	_reason(copy._reason),
+	_type(copy._type),
+	_connection(copy._connection),
+	_body(copy._body),
+	_len(copy._len),
+	_date(get_date_time())
+{}
 
 
 // Destructor
@@ -44,7 +48,38 @@ Response::~Response()
 // Operators
 Response & Response::operator=(const Response &assign)
 {
-	(void) assign;
+	_status = assign._status;
+	_reason = assign._reason;
+	_type = assign._type;
+	_connection = assign._connection;
+	_body = assign._body;
+	_len = assign._len;
+	_date = assign._date;
 	return *this;
 }
 
+std::string Response::makeResponse()
+{
+	std::ostringstream response;
+
+	response << HTTPVERSION << " " << _status << " " << _reason << "\r\n";
+	response << "Date: " << _date << "\r\n";
+	response << "Content-Length: " << _len << "\r\n";
+	response << "Content-Type: " << _type << "\r\n";
+	response << "Connection: " << _connection << "\r\n";
+	response << "\r\n";
+	response << _body;
+
+	return response.str();
+}
+
+
+std::string get_date_time()
+{
+	std::time_t raw_time;
+	std::time(&raw_time);
+	struct std::tm *gmt_time = std::gmtime(&raw_time);
+	char buffer[30];
+	std::strftime(buffer, 30, "%a, %d %b %Y %H:%M:%S GMT", gmt_time);
+	return std::string(buffer);
+}
