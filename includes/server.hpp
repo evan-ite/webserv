@@ -6,6 +6,9 @@
 # include <iomanip>
 # include <cstring>
 # include <stdlib.h>
+# include <sstream>
+# include <fstream>
+# include <ctime>
 //# include "Response.hpp"
 
 # define HTTPVERSION "HTTP/1.1"

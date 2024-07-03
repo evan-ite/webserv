@@ -1,4 +1,6 @@
+#include "../includes/server.hpp"
 #include "../includes/Response.hpp"
+
 
 // Constructors
 Response::Response(
@@ -10,10 +12,10 @@ Response::Response(
 	_status(status),
 	_reason(reason),
 	_type(type),
-	_connection(connection),
 	_len(body.length()),
-	_body(body),
-	_date(get_date_time())
+	_date(get_date_time()),
+	_connection(connection),
+	_body(body)
 {}
 
 /* Sets date and time to moment of copy */
@@ -21,10 +23,10 @@ Response::Response(const Response &copy) :
 	_status(copy._status),
 	_reason(copy._reason),
 	_type(copy._type),
-	_connection(copy._connection),
-	_body(copy._body),
 	_len(copy._len),
-	_date(get_date_time())
+	_date(get_date_time()),
+	_connection(copy._connection),
+	_body(copy._body)
 {}
 
 
