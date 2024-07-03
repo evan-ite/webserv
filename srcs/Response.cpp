@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elisevaniterson <elisevaniterson@studen    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/01 20:50:35 by elisevanite       #+#    #+#             */
-/*   Updated: 2024/07/02 12:50:53 by elisevanite      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../includes/server.hpp"
 
 // Constructors
@@ -28,6 +16,7 @@ Response::Response(
 	_date(get_date_time())
 {}
 
+/* Sets date and time to moment of copy */
 Response::Response(const Response &copy) :
 	_status(copy._status),
 	_reason(copy._reason),
