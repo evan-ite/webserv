@@ -5,6 +5,7 @@
 # include <iostream>
 # include <iomanip>
 # include <cstring>
+# include <stdlib.h>
 //# include "Response.hpp"
 
 # define HTTPVERSION "HTTP/1.1"

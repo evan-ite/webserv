@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/Response.hpp"
 
 // Constructors
 Response::Response(
@@ -11,8 +11,8 @@ Response::Response(
 	_reason(reason),
 	_type(type),
 	_connection(connection),
-	_body(body),
 	_len(body.length()),
+	_body(body),
 	_date(get_date_time())
 {}
 

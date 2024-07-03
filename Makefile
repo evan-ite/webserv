@@ -8,7 +8,7 @@ SRC = srcs/main.cpp srcs/Logger.cpp srcs/Request.cpp srcs/Response.cpp srcs/util
 all: $(NAME)
 
 $(OBJDIR)/%.o: %.cpp
-	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)/srcs
 	@$(CXX) $(CXXFLAGS) -o $@ -c $< && printf "Compiling: $(notdir $<)\n"
 
 $(NAME): $(OBJ)
