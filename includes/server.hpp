@@ -5,15 +5,24 @@
 # include <iostream>
 # include <iomanip>
 # include <cstring>
-# include <stdlib.h>
 # include <sstream>
 # include <fstream>
 # include <ctime>
-//# include "Response.hpp"
+# include <stdio.h>
+# include <stdlib.h>
+# include <map>
+// local header files
+# include "Response.hpp"
+# include "Response.hpp"
+# include "Request.hpp"
+# include "Logger.hpp"
+# include "Config.hpp"
 
 # define HTTPVERSION "HTTP/1.1"
+# define LOGLEVEL logDEBUG
 
 std::string findKey(std::string file_str, std::string keyword, char separator);
 std::string splitReturnFirst(const std::string& str, const std::string& delimiter);
+std::string readFileToString(const std::string& filename);
 
 #endif

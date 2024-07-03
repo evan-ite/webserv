@@ -1,13 +1,13 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include "../includes/server.hpp"
+# include "server.hpp"
 
 class Response
 {
 	public:
 		// Constructors
-		Response(const std::string& status,
+		Response(const int& status,
 				const std::string& reason,
 				const std::string& type,
 				const std::string& connection,
@@ -23,7 +23,9 @@ class Response
 		std::string makeResponse();
 
 	private:
-		std::string	_status;
+		Response();
+
+		int	_status;
 		std::string	_reason;
 		std::string	_type;
 		std::size_t	_len;
@@ -32,6 +34,6 @@ class Response
 		std::string	_body;
 };
 
-std::string get_date_time();
+std::string getDateTime();
 
 #endif

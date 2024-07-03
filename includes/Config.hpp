@@ -1,34 +1,19 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Config.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/02 15:23:46 by ubazzane          #+#    #+#             */
-/*   Updated: 2024/07/02 16:39:48 by ubazzane         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
+# include "server.hpp"
 
-# include <iostream>
-# include <fstream>
-# include <sstream>
-# include <string>
-# include <map>
-
-struct LocationConfig {
+struct LocationConfig { //rename to Location?
 	std::string path;
 	std::string root;
 	std::string index;
 	std::string error_page;
 	std::string cgi;
 	std::string client_max_body_size;
-	bool allow_uploads = false;
+	// bool allow_uploads = false; // cpp11
+	bool allow_uploads;
 
 	LocationConfig(const std::string& path) : path(path) {}
+	LocationConfig() : path("") {};
 };
 
 struct ConfigData {

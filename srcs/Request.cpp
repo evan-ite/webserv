@@ -1,16 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Request.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/01 17:54:58 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 13:33:06 by jstrozyk         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../includes/Request.hpp"
+#include "../includes/server.hpp"
 
 Request::Request(std::string httpRequest)
 {

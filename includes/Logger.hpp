@@ -1,20 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Logger.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/03 09:59:14 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 10:42:09 by jstrozyk         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-
-#include <iostream>
-#include <sstream>
+# include "server.hpp"
 
 enum loglevel_e
 {
@@ -40,8 +26,12 @@ private:
 };
 
 extern loglevel_e loglevel;
+const std::string ANSI_RED = "\033[1;31m";
+const std::string ANSI_YELLOW = "\033[1;33m";
+const std::string ANSI_GREEN = "\033[1;32m";
+const std::string ANSI_BLUE = "\033[1;34m";
+const std::string ANSI_RESET = "\033[0m";
 
-# define LOGLEVEL logDEBUG
 # define log(level) if (level > loglevel) ; else Logger(level)
 
 #endif
