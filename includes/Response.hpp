@@ -7,7 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(const std::string& status,
+		Response(const int& status,
 				const std::string& reason,
 				const std::string& type,
 				const std::string& connection,
@@ -25,7 +25,7 @@ class Response
 	private:
 		Response();
 
-		std::string	_status;
+		int	_status;
 		std::string	_reason;
 		std::string	_type;
 		std::size_t	_len;
