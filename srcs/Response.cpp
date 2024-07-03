@@ -5,7 +5,7 @@ Response::Response()
 {}
 
 Response::Response(
-	const std::string& status,
+	const int& status,
 	const std::string& reason,
 	const std::string& type,
 	const std::string& connection,
@@ -13,10 +13,10 @@ Response::Response(
 	_status(status),
 	_reason(reason),
 	_type(type),
-	_connection(connection),
-	_body(body),
 	_len(body.length()),
-	_date(getDateTime())
+	_date(getDateTime()),
+	_connection(connection),
+	_body(body)
 {}
 
 /* Sets date and time to moment of copy */
@@ -24,10 +24,10 @@ Response::Response(const Response &copy) :
 	_status(copy._status),
 	_reason(copy._reason),
 	_type(copy._type),
-	_connection(copy._connection),
-	_body(copy._body),
 	_len(copy._len),
-	_date(getDateTime())
+	_date(getDateTime()),
+	_connection(copy._connection),
+	_body(copy._body)
 {}
 
 
@@ -57,10 +57,12 @@ std::string Response::makeResponse()
 	response << HTTPVERSION << " " << _status << " " << _reason << "\r\n";
 	response << "Date: " << _date << "\r\n";
 	response << "Content-Length: " << _len << "\r\n";
-	response << "Content-Type: " << _type << "\r\n";
+	if (_type != "")
+		response << "Content-Type: " << _type << "\r\n";
 	response << "Connection: " << _connection << "\r\n";
 	response << "\r\n";
-	response << _body;
+	if (_body != "")
+		response << _body;
 
 	return response.str();
 }
