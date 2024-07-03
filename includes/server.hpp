@@ -10,10 +10,13 @@
 # include <ctime>
 # include <stdio.h>
 # include <stdlib.h>
+# include <map>
+// local header files
 # include "Response.hpp"
 # include "Response.hpp"
 # include "Request.hpp"
 # include "Logger.hpp"
+# include "Config.hpp"
 
 # define HTTPVERSION "HTTP/1.1"
 # define LOGLEVEL logDEBUG
