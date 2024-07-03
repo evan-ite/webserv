@@ -6,7 +6,7 @@
 /*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 16:14:33 by evan-ite          #+#    #+#             */
-/*   Updated: 2024/07/01 18:04:44 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/03 11:04:35 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
  seperator = \n
  return value is " Thu, 27 Jun 2024 12:00:00 GMT"
 */
-std::string find_key(std::string file_str, std::string keyword, char separator)
+std::string findKey(std::string file_str, std::string keyword, char separator)
 {
     std::string::size_type start_pos = file_str.find(keyword);
 
