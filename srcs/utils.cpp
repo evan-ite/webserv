@@ -37,7 +37,7 @@ std::string splitReturnFirst(const std::string& str, const std::string& delimite
 
 /* Takes a filename (incl path) as argument and returns
 the content of the file as a string */
-std::string readFileToString(const std::string& filename) 
+std::string readFileToString(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
 
@@ -47,8 +47,8 @@ std::string readFileToString(const std::string& filename)
     }
 
     std::ostringstream oss;
-    oss << file.rdbuf(); 
-    file.close(); 
+    oss << file.rdbuf();
+    file.close();
 
     return oss.str();
 }

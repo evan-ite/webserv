@@ -1,7 +1,7 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include "../includes/server.hpp"
+# include "server.hpp"
 
 class Response
 {
@@ -24,7 +24,7 @@ class Response
 
 	private:
 		Response();
-		
+
 		std::string	_status;
 		std::string	_reason;
 		std::string	_type;

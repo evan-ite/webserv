@@ -6,11 +6,11 @@
 /*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 10:01:35 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 10:41:52 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:50:34 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/Logger.hpp"
+#include "../includes/server.hpp"
 
 loglevel_e loglevel = LOGLEVEL;
 

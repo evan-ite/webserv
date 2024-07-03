@@ -6,15 +6,13 @@
 /*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 09:59:14 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 10:42:09 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:52:00 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-
-#include <iostream>
-#include <sstream>
+# include "server.hpp"
 
 enum loglevel_e
 {
@@ -41,7 +39,6 @@ private:
 
 extern loglevel_e loglevel;
 
-# define LOGLEVEL logDEBUG
 # define log(level) if (level > loglevel) ; else Logger(level)
 
 #endif
