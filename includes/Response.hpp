@@ -23,6 +23,8 @@ class Response
 		std::string makeResponse();
 
 	private:
+		Response();
+		
 		std::string	_status;
 		std::string	_reason;
 		std::string	_type;
@@ -32,6 +34,6 @@ class Response
 		std::string	_body;
 };
 
-std::string get_date_time();
+std::string getDateTime();
 
 #endif

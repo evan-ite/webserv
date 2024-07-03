@@ -1,6 +1,9 @@
 #include "../includes/server.hpp"
 
 // Constructors
+Response::Response() 
+{}
+
 Response::Response(
 	const std::string& status,
 	const std::string& reason,
@@ -13,7 +16,7 @@ Response::Response(
 	_connection(connection),
 	_body(body),
 	_len(body.length()),
-	_date(get_date_time())
+	_date(getDateTime())
 {}
 
 /* Sets date and time to moment of copy */
@@ -24,7 +27,7 @@ Response::Response(const Response &copy) :
 	_connection(copy._connection),
 	_body(copy._body),
 	_len(copy._len),
-	_date(get_date_time())
+	_date(getDateTime())
 {}
 
 
@@ -63,7 +66,7 @@ std::string Response::makeResponse()
 }
 
 
-std::string get_date_time()
+std::string getDateTime()
 {
 	std::time_t raw_time;
 	std::time(&raw_time);
