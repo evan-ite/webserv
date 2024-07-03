@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 11:13:35 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/03 13:11:15 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,12 +35,14 @@ class Request
 				return "Invalid HTTP method.";
 			}
 		};
+		
+		std::string _location;
+		
 	private:
 		Request();
 		HttpMethod _method;
 		std::string _host; //mandatory!
 		int _contentLenght;
-		std::string _location;
 		std::string _userAgent;
 		std::string _connection;
 		void parse(std::string httpRequest);

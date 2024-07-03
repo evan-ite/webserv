@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
+/*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:23:46 by ubazzane          #+#    #+#             */
-/*   Updated: 2024/07/02 16:39:48 by ubazzane         ###   ########.fr       */
+/*   Updated: 2024/07/03 13:42:22 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ struct LocationConfig {
 	std::string error_page;
 	std::string cgi;
 	std::string client_max_body_size;
-	bool allow_uploads = false;
+	bool allow_uploads; // = false;
 
 	LocationConfig(const std::string& path) : path(path) {}
 };

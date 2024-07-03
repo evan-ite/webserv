@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:54:58 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 11:04:37 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/03 13:42:40 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Request.hpp"
+#include "../includes/Request.hpp"
 
 Request::Request(std::string httpRequest)
 {

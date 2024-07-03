@@ -6,8 +6,13 @@
 # include <iomanip>
 # include <cstring>
 # include <sstream>
+# include <fstream>
 # include <ctime>
 # include "../includes/Response.hpp"
+# include "../includes/Request.hpp"
+# include "../includes/Logger.hpp"
+# include "../includes/Config.hpp"
+
 
 # define HTTPVERSION "HTTP/1.1"
 
