@@ -38,22 +38,13 @@ std::string findType(const std::string &filename)
     return checkMime(extension);
 }
 
-int createResponse(std::string httpRequest)
+int createResponse(const std::string &httpRequest, const ConfigData &confData)
 {
-	Config server("default.conf");
-
-    // std::string httpRequest = "GET /index.html HTTP/1.1\r\n"
-    //                         "Host: localhost:80\r\n"
-    //                         "User-Agent: Chrome/91.0.4472.124\r\n"
-    //                         "Accept: */*\r\n"
-    //                         "Accept-Encoding: gzip, deflate, br\r\n"
-    //                         "Connection: keep-alive\r\n";
-
     Request request(httpRequest);
 
     std::string location = request._location;
-    std::string path = server.getConfigData().locations[location].path;
-    std::string index = server.getConfigData().locations[location].index;
+    std::string path = confData.locations.at(location).path;
+    std::string index = confData.locations.at(location).index;
     
     int         status = 200;
     std::string body = readFileToString(path + index);
@@ -71,6 +62,7 @@ int createResponse(std::string httpRequest)
 
     Response response(status, reason, type, connection, body);
 
+    std::cout << "------------- RESPONSE ---------------\n";
     std::cout << response.makeResponse();
     return 0;
 }

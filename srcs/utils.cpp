@@ -72,21 +72,3 @@ int make_socket_non_blocking(int sfd)
 	}
 	return 0;
 }
-
-/* Takes a filename (incl path) as argument and returns
-the content of the file as a string */
-std::string readFileToString(const std::string& filename) 
-{
-    std::ifstream file(filename.c_str());
-
-    if (!file.is_open()) {
-        log(logERROR) << "Error opening file: " << filename;
-        return "";
-    }
-
-    std::ostringstream oss;
-    oss << file.rdbuf(); 
-    file.close(); 
-
-    return oss.str();
-}

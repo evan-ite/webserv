@@ -38,5 +38,6 @@ std::string	findKey(std::string file_str, std::string keyword, char separator);
 std::string	splitReturnFirst(const std::string& str, const std::string& delimiter);
 std::string	readFileToString(const std::string& filename);
 int			make_socket_non_blocking(int sfd);
+int         createResponse(const std::string &httpRequest, const ConfigData &confData);
 
 #endif

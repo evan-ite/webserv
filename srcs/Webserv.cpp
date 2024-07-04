@@ -53,7 +53,7 @@ int	Webserv::run()
 	// do all the config stuff here!
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(8484); //read from this.conf but I'm too lazy now
+	address.sin_port = htons(8484); //this->_conf.getConfigData().port;
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
@@ -120,9 +120,11 @@ int	Webserv::run()
 				log(logINFO) << "data on socket ready to read";
 				char buffer[512];
 				int count;
+				std::string httpRequest;
 				while ((count = read(events[i].data.fd, buffer, sizeof(buffer))) > 0)
 				{
 					log(logDEBUG) << buffer;
+					httpRequest.append(buffer, count);
 					write(events[i].data.fd, "ACK", 3); // return ACK for debugging, this is where the magic has to happen
 				}
 				if (count == -1 && errno != EAGAIN)
@@ -130,6 +132,9 @@ int	Webserv::run()
 					log(logERROR) << "socket read() error";
 					close(events[i].data.fd);
 				}
+				std::cout << "----------- Config data ----------\n";
+		        std::cout << this->_conf.getConfigData();
+				createResponse(httpRequest, this->_conf.getConfigData());
 			}
 		}
 	}
