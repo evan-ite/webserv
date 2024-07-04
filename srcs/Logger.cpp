@@ -1,22 +1,27 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Logger.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/03 10:01:35 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/03 10:41:52 by jstrozyk         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../includes/Logger.hpp"
+#include "../includes/server.hpp"
 
 loglevel_e loglevel = LOGLEVEL;
 
 Logger::Logger(loglevel_e _loglevel)
 {
-	this->_buffer << _loglevel << " : ";
+	switch (_loglevel)
+	{
+		case logERROR:
+			_buffer << ANSI_RED;
+			break;
+		case logWARNING:
+			_buffer << ANSI_YELLOW;
+			break;
+		case logINFO:
+			_buffer << ANSI_GREEN;
+			break;
+		case logDEBUG:
+			_buffer << ANSI_BLUE;
+			break;
+		default:
+			break;
+	}
+	_buffer << _loglevel << " : " << ANSI_RESET;
 }
 
 Logger::~Logger()

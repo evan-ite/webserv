@@ -1,7 +1,9 @@
 #include "../includes/server.hpp"
+#include "../includes/Response.hpp"
+
 
 // Constructors
-Response::Response() 
+Response::Response()
 {}
 
 Response::Response(

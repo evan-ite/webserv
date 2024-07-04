@@ -1,16 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Config.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/02 15:30:39 by ubazzane          #+#    #+#             */
-/*   Updated: 2024/07/02 16:39:56 by ubazzane         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../includes/Config.hpp"
+#include "../includes/server.hpp"
 
 Config::Config(void) {}
 
@@ -101,14 +89,15 @@ std::ostream& operator<<(std::ostream& os, const ConfigData& configData) {
 	os << "Host: " << configData.host << std::endl;
 	os << "Port: " << configData.port << std::endl;
 	os << "Locations:" << std::endl;
-	for (const auto& location : configData.locations) {
-		os << "  Path: " << location.second.path << std::endl;
-		os << "    Root: " << location.second.root << std::endl;
-		os << "    Index: " << location.second.index << std::endl;
-		os << "    Error Page: " << location.second.error_page << std::endl;
-		os << "    CGI: " << location.second.cgi << std::endl;
-		os << "    Client Max Body Size: " << location.second.client_max_body_size << std::endl;
-		os << "    Allow Uploads: " << (location.second.allow_uploads ? "true" : "false") << std::endl;
+	for (std::map<std::string, LocationConfig>::const_iterator it = configData.locations.begin(); it != configData.locations.end(); ++it) {
+		const LocationConfig& location = it->second;
+		os << "  Path: " << location.path << std::endl;
+		os << "    Root: " << location.root << std::endl;
+		os << "    Index: " << location.index << std::endl;
+		os << "    Error Page: " << location.error_page << std::endl;
+		os << "    CGI: " << location.cgi << std::endl;
+		os << "    Client Max Body Size: " << location.client_max_body_size << std::endl;
+		os << "    Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
 	}
 	return os;
 }
