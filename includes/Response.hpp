@@ -24,7 +24,6 @@ class Response
 
 	private:
 		Response();
-
 		int	_status;
 		std::string	_reason;
 		std::string	_type;

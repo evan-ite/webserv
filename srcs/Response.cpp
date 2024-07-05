@@ -42,13 +42,13 @@ Response::~Response()
 // Operators
 Response & Response::operator=(const Response &assign)
 {
-	_status = assign._status;
-	_reason = assign._reason;
-	_type = assign._type;
-	_connection = assign._connection;
-	_body = assign._body;
-	_len = assign._len;
-	_date = assign._date;
+	this->_status = assign._status;
+	this->_reason = assign._reason;
+	this->_type = assign._type;
+	this->_connection = assign._connection;
+	this->_body = assign._body;
+	this->_len = assign._len;
+	this->_date = assign._date;
 	return *this;
 }
 
@@ -56,15 +56,15 @@ std::string Response::makeResponse()
 {
 	std::ostringstream response;
 
-	response << HTTPVERSION << " " << _status << " " << _reason << "\r\n";
-	response << "Date: " << _date << "\r\n";
-	response << "Content-Length: " << _len << "\r\n";
-	if (_type != "")
-		response << "Content-Type: " << _type << "\r\n";
-	response << "Connection: " << _connection << "\r\n";
+	response << HTTPVERSION << " " << this->_status << " " << this->_reason << "\r\n";
+	response << "Date: " << this->_date << "\r\n";
+	response << "Content-Length: " << this->_len << "\r\n";
+	if (this->_type != "")
+		response << "Content-Type: " << this->_type << "\r\n";
+	response << "Connection: " << this->_connection << "\r\n";
 	response << "\r\n";
-	if (_body != "")
-		response << _body;
+	if (this->_body != "")
+		response << this->_body;
 
 	return response.str();
 }

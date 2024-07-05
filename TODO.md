@@ -15,6 +15,7 @@
 	- [ ] put info in response object
 - [x] Convert response object into HTTP Response 
 - [x] Print logging
+- [ ] Handle signals
 
 
 
