@@ -53,7 +53,7 @@ int	Webserv::run()
 	// do all the config stuff here!
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(8484); //this->_conf.getConfigData().port;
+	address.sin_port = htons(8480); //this->_conf.getConfigData().port;
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
@@ -123,20 +123,22 @@ int	Webserv::run()
 				std::string httpRequest;
 				while ((count = read(events[i].data.fd, buffer, sizeof(buffer))) > 0)
 				{
-					log(logDEBUG) << buffer;
+					log(logDEBUG) << count << " count \n buffer " << buffer;
 					httpRequest.append(buffer, count);
-					// write(events[i].data.fd, "ACK", 3); // return ACK for debugging, this is where the magic has to happen
 				}
 				if (count == -1 && errno != EAGAIN) // check subject, errno is forbidden?
 				{
 					log(logERROR) << "socket read() error";
 					close(events[i].data.fd);
 				}
-				log(logDEBUG) << "----------- Config data ----------\n" << this->_conf.getConfigData();
-				Response res(httpRequest, this->_conf.getConfigData());
-				const char *res_string = res.makeResponse().c_str();
-				log(logDEBUG) << "------------- RESPONSE ---------------\n" << res_string;
-				write(events[i].data.fd, res_string, strlen(res_string));
+				if (httpRequest.size() > 1)
+				{
+					Response res(httpRequest, this->_conf.getConfigData());
+					std::string resString = res.makeResponse();
+					const char *resCStr = resString.c_str();
+					log(logDEBUG) << "------------- RESPONSE ---------------\n" << resCStr;
+					write(events[i].data.fd, resCStr, strlen(resCStr));
+				}
 			}
 		}
 	}

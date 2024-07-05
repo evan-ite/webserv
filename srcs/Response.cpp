@@ -8,23 +8,33 @@ Response::Response(std::string const &httpRequest, ConfigData const confData)
 {
 	Request request(httpRequest);
 
-    std::string location = request._location;
-    std::string path = confData.locations.at(location).path;
-    std::string index = confData.locations.at(location).index;
+	// this will come from conf file soon
+	std::string index = "index.html";
+	std::string root = "html";
+	(void)confData;
+	std::string file = root + "/"+ request._location;
+	if (request._location == "/")
+		file = root + "/" + index;
 
     this->_status = 200;
-    this->_body = readFileToString(path + index);
+    this->_body = readFileToString(file);//readFileToString(path + index);
+	this->_len = _body.length();
     this->_reason = "ok";
-    this->_type = findType(index);
-    this->_connection = "keep-alive";
+    this->_type = findType(file);
+    this->_connection = "close";
+	this->_date = getDateTime();
+
+	// log(logDEBUG) << "type " << _type;
 
     if (this->_body == "" || this->_type == "") {
         this->_status = 404;
         this->_reason = "not found";
-        this->_connection = "close";
         this->_type = "";
         this->_body = "";
+		this->_len = 0;
     }
+
+	log(logDEBUG) << "Response object succesfully created";
 }
 
 /* Sets date and time to moment of copy */
@@ -70,7 +80,9 @@ std::string Response::makeResponse()
 	response << "Connection: " << this->_connection << "\r\n";
 	response << "\r\n";
 	if (this->_body != "")
-		response << this->_body;
+		response.write(this->_body.c_str(), this->_len);
+		// response << this->_body;
+	response << "\r\n";
 
 	return response.str();
 }

@@ -33,7 +33,7 @@ std::string findType(const std::string &filename)
     std::size_t i = filename.rfind('.');
     if (i == std::string::npos)
         return "text/plain";
-    std::string extension = filename.substr(i);
+    std::string extension = filename.substr(i + 1);
 
     return checkMime(extension);
 }

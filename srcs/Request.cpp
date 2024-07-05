@@ -49,7 +49,8 @@ void Request::parse(std::string httpRequest)
 		this->_location = findKey(httpRequest, "DELETE ", ' ');
 	}
 	else
-		throw Request::invalidMethod();
+		log(logDEBUG) << httpRequest;
+		// throw Request::invalidMethod(); 
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
