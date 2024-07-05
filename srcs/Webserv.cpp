@@ -40,7 +40,7 @@ int	Webserv::run()
 	struct sockaddr_in address;
 	int addrlen = sizeof(address);
 
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	server_fd = socket(AF_INET, SOCK_STREAM, 0); // we should close the fd on all failures below?
 	if (server_fd == 0)
 	{
 		log(logERROR) << "can't create server fd";
@@ -123,9 +123,10 @@ int	Webserv::run()
 				while ((count = read(events[i].data.fd, buffer, sizeof(buffer))) > 0)
 				{
 					log(logDEBUG) << buffer;
-					Request req(buffer);
+					Request req(buffer); // create Request object - todo: multipart reqs
 					// Response res;
-					write(events[i].data.fd, "ACK", 3); // return ACK for debugging, this is where the magic has to happen
+					// write(events[i].data.fd, SAMPLE_RES, 1 + strlen(SAMPLE_RES)); // return ACK for debugging, this is where the magic has to happen
+					write(events[i].data.fd, "HTTP/1.1 200 OK", 1 + strlen("HTTP/1.1 200 OK")); // return default message for debugging, this is where the magic has to happen
 				}
 				if (count == -1 && errno != EAGAIN)
 				{

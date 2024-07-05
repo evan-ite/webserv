@@ -16,7 +16,7 @@ public:
 	Logger(loglevel_e _loglevel = logERROR);
 	~Logger();
 	template <typename T>
-	Logger& operator<<(T const& value)
+	Logger& operator<<(T const& value) // is this norm conform?
 	{
 		this->_buffer << value;
 		return *this;

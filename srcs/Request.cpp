@@ -17,16 +17,6 @@ Request::Request(const Request &copy)
 	this->_connection = copy._connection;
 }
 
-// Request::Request(HttpMethod method, std::string host, int contenLenght, std::string location, std::string userAgent, int connection)
-// {
-// 	this->_method = method;
-// 	this->_host = host;
-// 	this->_contenLenght = contenLenght;
-// 	this->_location = location;
-// 	this->_userAgent = userAgent;
-// 	this->_connection = connection;
-// }
-
 Request::~Request() {}
 
 Request & Request::operator=(const Request &assign)
@@ -64,4 +54,5 @@ void Request::parse(std::string httpRequest)
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
 	this->_contentLenght = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
+	log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLenght;
 }

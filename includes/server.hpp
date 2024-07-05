@@ -30,6 +30,27 @@
 # define HTTPVERSION "HTTP/1.1"
 # define LOGLEVEL logDEBUG
 # define DEFAULT_CONF "./default.conf"
+# define SAMPLE_RES "HTTP/1.1 200 OK \
+Date: Fri, 05 Jul 2024 12:00:00 GMT \
+Server: Apache/2.4.41 (Ubuntu) \
+Last-Modified: Fri, 05 Jul 2024 11:00:00 GMT \
+Content-Length: 138 \
+Content-Type: text/html; charset=UTF-8 \
+Connection: keep-alive \
+ \
+<!DOCTYPE html> \
+<html lang=\"en\"> \
+<head> \
+    <meta charset=\"UTF-8\"> \
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> \
+    <title>Sample Page</title> \
+</head> \
+<body> \
+    <h1>Hello, World!</h1> \
+    <p>This is a sample HTML page.</p> \
+</body> \
+</html> \
+"
 
 extern int g_signal;
 
