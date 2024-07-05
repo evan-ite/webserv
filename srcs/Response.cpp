@@ -11,28 +11,28 @@ Response::Response(std::string const &httpRequest, ConfigData const confData)
 	// this will come from conf file soon
 	std::string index = "index.html";
 	std::string root = "html";
-	(void)confData;
+	(void)confData; // add parser
+
 	std::string file = root + "/"+ request._location;
 	if (request._location == "/")
 		file = root + "/" + index;
 
-    this->_status = 200;
-    this->_body = readFileToString(file);//readFileToString(path + index);
+	this->_status = 200;
+	this->_body = readFileToString(file);
 	this->_len = _body.length();
-    this->_reason = "ok";
-    this->_type = findType(file);
-    this->_connection = "close";
+	this->_reason = "ok";
+	this->_type = findType(file);
+	this->_connection = "keep-alive";
 	this->_date = getDateTime();
 
-	// log(logDEBUG) << "type " << _type;
-
-    if (this->_body == "" || this->_type == "") {
-        this->_status = 404;
-        this->_reason = "not found";
-        this->_type = "";
-        this->_body = "";
+	if (this->_body == "" || this->_type == "") {
+		this->_status = 404;
+		this->_reason = "not found";
+		this->_type = "";
+		this->_body = "";
+		this->_connection = "close";
 		this->_len = 0;
-    }
+	}
 
 	log(logDEBUG) << "Response object succesfully created";
 }
@@ -48,12 +48,8 @@ Response::Response(const Response &copy) :
 	_body(copy._body)
 {}
 
-
 // Destructor
-Response::~Response()
-{
-}
-
+Response::~Response() {}
 
 // Operators
 Response & Response::operator=(const Response &assign)
@@ -65,7 +61,7 @@ Response & Response::operator=(const Response &assign)
 	this->_body = assign._body;
 	this->_len = assign._len;
 	this->_date = assign._date;
-	return *this;
+	return (*this);
 }
 
 std::string Response::makeResponse()
@@ -79,12 +75,10 @@ std::string Response::makeResponse()
 		response << "Content-Type: " << this->_type << "\r\n";
 	response << "Connection: " << this->_connection << "\r\n";
 	response << "\r\n";
-	if (this->_body != "")
-		response.write(this->_body.c_str(), this->_len);
-		// response << this->_body;
-	response << "\r\n";
-
-	return response.str();
+	std::string return_value = response.str();
+	if (this->_len)
+		return_value += this->_body + "\r\n";
+	return (return_value);
 }
 
 

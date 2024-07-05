@@ -53,11 +53,12 @@ int	Webserv::run()
 	// do all the config stuff here!
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(8480); //this->_conf.getConfigData().port;
+	address.sin_port = htons(8484); //this->_conf.getConfigData().port;
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
 		log(logERROR) << "bind failed";
+		close(server_fd);
 		return(EXIT_FAILURE);
 	}
 	if (listen(server_fd, 3) < 0)
@@ -122,10 +123,7 @@ int	Webserv::run()
 				int count;
 				std::string httpRequest;
 				while ((count = read(events[i].data.fd, buffer, sizeof(buffer))) > 0)
-				{
-					log(logDEBUG) << count << " count \n buffer " << buffer;
 					httpRequest.append(buffer, count);
-				}
 				if (count == -1 && errno != EAGAIN) // check subject, errno is forbidden?
 				{
 					log(logERROR) << "socket read() error";
@@ -133,16 +131,19 @@ int	Webserv::run()
 				}
 				if (httpRequest.size() > 1)
 				{
+					log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
 					Response res(httpRequest, this->_conf.getConfigData());
 					std::string resString = res.makeResponse();
-					const char *resCStr = resString.c_str();
-					log(logDEBUG) << "------------- RESPONSE ---------------\n" << resCStr;
-					write(events[i].data.fd, resCStr, strlen(resCStr));
+					const char *resCStr = resString.data();
+					log(logDEBUG) << "--- RESPONSE ---\n" << resCStr;
+					write(events[i].data.fd, resCStr, resString.size());
 				}
 			}
+			close(server_fd);
 		}
 	}
 	close(server_fd);
+	close(epoll_fd);
 	log(logINFO) << "Webserver" << this->_conf.getConfigData().server_name << " shutting down";
 	return (EXIT_SUCCESS);
 }
