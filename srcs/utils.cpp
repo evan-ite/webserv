@@ -39,18 +39,26 @@ std::string splitReturnFirst(const std::string& str, const std::string& delimite
 the content of the file as a string */
 std::string readFileToString(const std::string& filename)
 {
-	std::ifstream file(filename.c_str());
+	std::ifstream file(filename.c_str(), std::ios::in | std::ios::binary);
 
-	if (!file.is_open()) {
+	if (!file.is_open())
+	{
 		log(logERROR) << "Error opening file: " << filename;
 		return "";
 	}
 
-	std::ostringstream oss;
-	oss << file.rdbuf();
+	// Get file size
+	file.seekg(0, std::ios::end);
+	std::streampos fileSize = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	// Read the file into a vector<char>
+	std::vector<char> buffer(fileSize);
+	file.read(buffer.data(), fileSize);
 	file.close();
 
-	return oss.str();
+	// Convert buffer to std::string
+	return std::string(buffer.data(), buffer.size());
 }
 
 // mostly chatgpt but I do think I understand what it does

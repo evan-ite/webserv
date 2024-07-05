@@ -7,11 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(const int& status,
-				const std::string& reason,
-				const std::string& type,
-				const std::string& connection,
-				const std::string& body);
+		Response(std::string const &httpRequest, ConfigData const confData);
 		Response(const Response &copy);
 
 		// Destructor
@@ -24,7 +20,6 @@ class Response
 
 	private:
 		Response();
-
 		int	_status;
 		std::string	_reason;
 		std::string	_type;
