@@ -4,6 +4,7 @@
 -	Server class (config)
 -	Request class
 -	Response Class
+-	Webserv Class
 
 - [ ] Parsing config file into server object -- > Urbano
 - [ ] Thread for listening asynchronous i/o
@@ -11,11 +12,11 @@
 - [ ] Process request and store in response object --> Elise
 	- [ ] check location from request object
 	- [ ] find path and index in config object
-	- [ ] figure out content type of body (MIME type) https://www.rfc-editor.org/rfc/rfc1341
-	- [ ] put info in response object
-- [x] Convert response object into HTTP Response 
+	- [x] figure out content type of body (MIME type) https://www.rfc-editor.org/rfc/rfc1341
+	- [x] put info in response object
+- [x] Convert response object into HTTP Response
 - [x] Print logging
-- [ ] Handle signals
+- [x] Handle signals
 
 
 
