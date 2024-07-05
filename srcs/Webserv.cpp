@@ -125,16 +125,18 @@ int	Webserv::run()
 				{
 					log(logDEBUG) << buffer;
 					httpRequest.append(buffer, count);
-					write(events[i].data.fd, "ACK", 3); // return ACK for debugging, this is where the magic has to happen
+					// write(events[i].data.fd, "ACK", 3); // return ACK for debugging, this is where the magic has to happen
 				}
-				if (count == -1 && errno != EAGAIN)
+				if (count == -1 && errno != EAGAIN) // check subject, errno is forbidden?
 				{
 					log(logERROR) << "socket read() error";
 					close(events[i].data.fd);
 				}
-				std::cout << "----------- Config data ----------\n";
-		        std::cout << this->_conf.getConfigData();
-				createResponse(httpRequest, this->_conf.getConfigData());
+				log(logDEBUG) << "----------- Config data ----------\n" << this->_conf.getConfigData();
+				Response res(httpRequest, this->_conf.getConfigData());
+				const char *res_string = res.makeResponse().c_str();
+				log(logDEBUG) << "------------- RESPONSE ---------------\n" << res_string;
+				write(events[i].data.fd, res_string, strlen(res_string));
 			}
 		}
 	}

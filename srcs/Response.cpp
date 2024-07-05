@@ -1,25 +1,31 @@
 #include "../includes/server.hpp"
-#include "../includes/Response.hpp"
-
 
 // Constructors
 Response::Response()
 {}
 
-Response::Response(
-	const int& status,
-	const std::string& reason,
-	const std::string& type,
-	const std::string& connection,
-	const std::string& body) :
-	_status(status),
-	_reason(reason),
-	_type(type),
-	_len(body.length()),
-	_date(getDateTime()),
-	_connection(connection),
-	_body(body)
-{}
+Response::Response(std::string const &httpRequest, ConfigData const confData)
+{
+	Request request(httpRequest);
+
+    std::string location = request._location;
+    std::string path = confData.locations.at(location).path;
+    std::string index = confData.locations.at(location).index;
+
+    this->_status = 200;
+    this->_body = readFileToString(path + index);
+    this->_reason = "ok";
+    this->_type = findType(index);
+    this->_connection = "keep-alive";
+
+    if (this->_body == "" || this->_type == "") {
+        this->_status = 404;
+        this->_reason = "not found";
+        this->_connection = "close";
+        this->_type = "";
+        this->_body = "";
+    }
+}
 
 /* Sets date and time to moment of copy */
 Response::Response(const Response &copy) :

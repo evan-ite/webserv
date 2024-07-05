@@ -19,11 +19,10 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 // local header files
-# include "Response.hpp"
+# include "Config.hpp"
+# include "Logger.hpp"
 # include "Response.hpp"
 # include "Request.hpp"
-# include "Logger.hpp"
-# include "Config.hpp"
 # include "Webserv.hpp"
 
 # define MAX_EVENTS 1024
@@ -59,6 +58,8 @@ std::string	findKey(std::string file_str, std::string keyword, char separator);
 std::string	splitReturnFirst(const std::string& str, const std::string& delimiter);
 std::string	readFileToString(const std::string& filename);
 int			make_socket_non_blocking(int sfd);
-int         createResponse(const std::string &httpRequest, const ConfigData &confData);
+std::string	checkMime(const std::string &extension);
+std::string	findType(const std::string &filename);
+
 
 #endif

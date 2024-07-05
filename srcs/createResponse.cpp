@@ -2,7 +2,7 @@
 
 /* Iterates over the possible extensions in MIME.txt and
 checks if the argument extension is valid. If the extension
-is found the corresponding content type is returned as 
+is found the corresponding content type is returned as
 "type/subtype". If no match is found an empty string wil be returned. */
 std::string checkMime(const std::string &extension)
 {
@@ -38,31 +38,3 @@ std::string findType(const std::string &filename)
     return checkMime(extension);
 }
 
-int createResponse(const std::string &httpRequest, const ConfigData &confData)
-{
-    Request request(httpRequest);
-
-    std::string location = request._location;
-    std::string path = confData.locations.at(location).path;
-    std::string index = confData.locations.at(location).index;
-    
-    int         status = 200;
-    std::string body = readFileToString(path + index);
-    std::string reason = "ok";
-    std::string type = findType(index);
-    std::string connection = "keep-alive";
-
-    if (body == "" || type == "") {
-        status = 404;
-        reason = "not found";
-        connection = "close";
-        type = "";
-        body = "";
-    }
-
-    Response response(status, reason, type, connection, body);
-
-    std::cout << "------------- RESPONSE ---------------\n";
-    std::cout << response.makeResponse();
-    return 0;
-}
