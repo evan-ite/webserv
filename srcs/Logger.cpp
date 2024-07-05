@@ -4,6 +4,10 @@ loglevel_e loglevel = LOGLEVEL;
 
 Logger::Logger(loglevel_e _loglevel)
 {
+	std::time_t now = std::time(0);
+	std::tm* localtm = std::localtime(&now);
+	char timeBuffer[20];
+	std::strftime(timeBuffer, sizeof(timeBuffer), "%Y%-m%-d %H:%M:%S", localtm);
 	switch (_loglevel)
 	{
 		case logERROR:
@@ -21,7 +25,7 @@ Logger::Logger(loglevel_e _loglevel)
 		default:
 			break;
 	}
-	_buffer << _loglevel << " : " << ANSI_RESET;
+	_buffer << timeBuffer << " " << _loglevel << " : " << ANSI_RESET;
 }
 
 Logger::~Logger()

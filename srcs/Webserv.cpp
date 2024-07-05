@@ -123,6 +123,8 @@ int	Webserv::run()
 				while ((count = read(events[i].data.fd, buffer, sizeof(buffer))) > 0)
 				{
 					log(logDEBUG) << buffer;
+					Request req(buffer);
+					// Response res;
 					write(events[i].data.fd, "ACK", 3); // return ACK for debugging, this is where the magic has to happen
 				}
 				if (count == -1 && errno != EAGAIN)
