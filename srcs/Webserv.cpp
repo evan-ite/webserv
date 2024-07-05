@@ -53,7 +53,7 @@ int	Webserv::run()
 	// do all the config stuff here!
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(8484); //this->_conf.getConfigData().port;
+	address.sin_port = htons(this->_conf.getConfigData().port);
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
@@ -85,7 +85,7 @@ int	Webserv::run()
 
 	std::vector<struct epoll_event> events(MAX_EVENTS);
 
-	log(logINFO) << "Webserver" << this->_conf.getConfigData().server_name << " now listening on port " << this->_conf.getConfigData().port;
+	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name << " now listening on port " << this->_conf.getConfigData().port;
 	while (g_signal)
 	{
 		int n = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, -1);
@@ -139,11 +139,10 @@ int	Webserv::run()
 					write(events[i].data.fd, resCStr, resString.size());
 				}
 			}
-			close(server_fd);
 		}
 	}
 	close(server_fd);
 	close(epoll_fd);
-	log(logINFO) << "Webserver" << this->_conf.getConfigData().server_name << " shutting down";
+	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name << " shutting down";
 	return (EXIT_SUCCESS);
 }

@@ -4,19 +4,16 @@
 Response::Response()
 {}
 
-Response::Response(std::string const &httpRequest, ConfigData const confData)
+Response::Response(std::string const &httpRequest, ConfigData confData)
 {
 	Request request(httpRequest);
+	LocationConfig loc = confData.locations["/"];
+	std::string index = loc.index;
+	std::string root = loc.root;
 
-	// this will come from conf file soon
-	std::string index = "index.html";
-	std::string root = "html";
-	(void)confData; // add parser
-
-	std::string file = root + "/"+ request._location;
+	std::string file = root + request._location;
 	if (request._location == "/")
 		file = root + "/" + index;
-
 	this->_status = 200;
 	this->_body = readFileToString(file);
 	this->_len = _body.length();
@@ -33,7 +30,6 @@ Response::Response(std::string const &httpRequest, ConfigData const confData)
 		this->_connection = "close";
 		this->_len = 0;
 	}
-
 	log(logDEBUG) << "Response object succesfully created";
 }
 

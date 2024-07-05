@@ -22,6 +22,7 @@ int main(int argc, char **argv)
 		try
 		{
 			Config conf(configPath);
+			log(logINFO) << "Loaded " << configPath;
 			Webserv server(conf);
 			return(server.run());
 		}

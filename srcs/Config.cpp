@@ -2,7 +2,8 @@
 
 Config::Config(void) {}
 
-Config::Config(const std::string &filename) {
+Config::Config(const std::string &filename)
+{
 	this->parseConfigFile(filename);
 }
 
@@ -19,7 +20,8 @@ Config &Config::operator=(const Config &rhs) {
 	return *this;
 }
 
-void Config::parseConfigFile(const std::string &filename) {
+void Config::parseConfigFile(const std::string &filename)
+{
 	std::ifstream file(filename.c_str());
 	std::string line;
 	bool parsingLocation = false;
@@ -28,18 +30,25 @@ void Config::parseConfigFile(const std::string &filename) {
 	if (!file.is_open())
 		throw std::runtime_error("Error: could not open file");
 
-	while (std::getline(file, line)) {
+	while (std::getline(file, line))
+	{
 		std::istringstream iss(line);
 		std::string key;
 		std::string value;
 
-		if (line.find("location") != std::string::npos) {
-			if (parsingLocation) {
+		iss >> key >> value; // Assuming 'location /path/' format
+		if (!value.empty() && value[value.size() - 1] == ';')
+			value.erase(value.size() - 1);
+		if (line.find("location") != std::string::npos)
+		{
+			if (parsingLocation)
+			{
 				this->_configData.locations[currentLocation.path] = currentLocation;
+				log(logDEBUG) << "saved path config for " << currentLocation.path;
 				parsingLocation = false;
 			}
-			else {
-				iss >> key >> value; // Assuming 'location /path/' format
+			else
+			{
 				currentLocation = LocationConfig(value);
 				parsingLocation = true;
 			}
@@ -50,7 +59,7 @@ void Config::parseConfigFile(const std::string &filename) {
 				this->_configData.server_name = value;
 			else if (key == "host")
 				this->_configData.host = value;
-			else if (key == "port") {
+			else if (key == "listen") {
 				std::istringstream iss(value);
 				int port;
 				if (!(iss >> port))
