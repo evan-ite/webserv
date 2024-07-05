@@ -7,7 +7,7 @@ Logger::Logger(loglevel_e _loglevel)
 	std::time_t now = std::time(0);
 	std::tm* localtm = std::localtime(&now);
 	char timeBuffer[20];
-	std::strftime(timeBuffer, sizeof(timeBuffer), "%Y%-m%-d %H:%M:%S", localtm);
+	std::strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", localtm);
 	switch (_loglevel)
 	{
 		case logERROR:
