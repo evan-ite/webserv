@@ -115,7 +115,6 @@ void	Webserv::handleIncomingConnections(int server_fd, int epoll_fd, struct sock
 		int n = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, -1);
 		for (int i = 0; i < n; i++)
 		{
-			log(logINFO) << "WE ARE HERE 1";
 			if (events[i].events & (EPOLLERR | EPOLLHUP) || !(events[i].events & EPOLLIN))
 			{
 				log(logERROR) << "an error has occurred on this fd: " << server_fd;
@@ -128,7 +127,6 @@ void	Webserv::handleIncomingConnections(int server_fd, int epoll_fd, struct sock
 				log(logINFO) << "new incoming connection";
 				while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) != -1)
 				{
-					log(logINFO) << "WE ARE HERE 2";
 					if (make_socket_non_blocking(new_socket) == -1)
 					{
 						close(new_socket);
