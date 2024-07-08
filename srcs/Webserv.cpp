@@ -127,7 +127,7 @@ void	Webserv::handleIncomingConnections(int server_fd, int epoll_fd, struct sock
 				log(logINFO) << "new incoming connection";
 				while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) != -1)
 				{
-					if (make_socket_non_blocking(new_socket) == -1)
+					if (this->makeNonBlocking(new_socket) == -1)
 					{
 						close(new_socket);
 						continue;
@@ -154,7 +154,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 		struct epoll_event &event = *it;
 		if (event.data.fd != -1 && (event.events & EPOLLIN))
 		{
-			char buffer[512];
+			char buffer[5120];
 			int count;
 			std::string httpRequest;
 

@@ -75,12 +75,20 @@ std::string Response::makeResponse()
 
 void	Response::postMethod(Request request)
 {
-	// Handle POST request
-	std::string body = request._fileData["test.txt"]; // Assuming Request class has getBody()
+	// (void)request;
+	// Create all files 
+	for (size_t i = 0; i < request._fileData.size(); ++i) {
+
+		std::string filename = request._fileData[i].first;
+		std::string content = request._fileData[i].second;
+
+		std::cout << "Filename: " << filename << "\nContent: " << content << "\n";
+	}
+	
 
 	// Process the POST data (e.g., save it, respond with a success message, etc.)
 	this->_status = 200;
-	this->_body = "Received POST data: " + body;
+	this->_body = "Received POST data: ";
 	this->_len = _body.length();
 	this->_reason = "ok";
 	this->_type = "text/plain";
