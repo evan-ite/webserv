@@ -21,8 +21,8 @@
 // local header files
 # include "Config.hpp"
 # include "Logger.hpp"
-# include "Response.hpp"
 # include "Request.hpp"
+# include "Response.hpp"
 # include "Webserv.hpp"
 
 # define MAX_EVENTS 1024
@@ -60,6 +60,7 @@ std::string	readFileToString(const std::string& filename);
 int			make_socket_non_blocking(int sfd);
 std::string	checkMime(const std::string &extension);
 std::string	findType(const std::string &filename);
+std::string getDateTime();
 
 
 #endif

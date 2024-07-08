@@ -80,3 +80,14 @@ int make_socket_non_blocking(int sfd)
 	}
 	return 0;
 }
+
+/* Returns date and time in astring formatted for the HTTP response */
+std::string getDateTime()
+{
+	std::time_t raw_time;
+	std::time(&raw_time);
+	struct std::tm *gmt_time = std::gmtime(&raw_time);
+	char buffer[30];
+	std::strftime(buffer, 30, "%a, %d %b %Y %H:%M:%S GMT", gmt_time);
+	return std::string(buffer);
+}

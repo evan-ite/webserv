@@ -20,6 +20,10 @@ class Response
 
 	private:
 		Response();
+		void	postMethod(Request request);
+		void	getMethod(Request request, std::string root, std::string index);
+		void	deleteMethod();
+
 		int	_status;
 		std::string	_reason;
 		std::string	_type;
@@ -29,6 +33,5 @@ class Response
 		std::string	_body;
 };
 
-std::string getDateTime();
 
 #endif

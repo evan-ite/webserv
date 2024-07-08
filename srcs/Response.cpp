@@ -11,25 +11,21 @@ Response::Response(std::string const &httpRequest, ConfigData confData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	std::string file = root + request._location;
-	if (request._location == "/")
-		file = root + "/" + index;
-	this->_status = 200;
-	this->_body = readFileToString(file);
-	this->_len = _body.length();
-	this->_reason = "ok";
-	this->_type = findType(file);
-	this->_connection = "keep-alive";
-	this->_date = getDateTime();
-
-	if (this->_body == "" || this->_type == "") {
-		this->_status = 404;
-		this->_reason = "not found";
-		this->_type = "";
-		this->_body = "";
-		this->_connection = "close";
-		this->_len = 0;
-	}
+	if (request._method == POST && request._location == "/upload")
+		postMethod(request);
+	else if (request._method == GET)
+		getMethod(request, root, index);
+	else 
+	{
+        // Handle other methods or send a 405 Method Not Allowed response
+        this->_status = 405;
+        this->_reason = "Method Not Allowed";
+        this->_type = "text/plain";
+        this->_body = "Method Not Allowed";
+        this->_connection = "close";
+        this->_len = _body.length();
+        this->_date = getDateTime();
+    }
 	log(logDEBUG) << "Response object succesfully created";
 }
 
@@ -77,13 +73,46 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-
-std::string getDateTime()
+void	Response::postMethod(Request request)
 {
-	std::time_t raw_time;
-	std::time(&raw_time);
-	struct std::tm *gmt_time = std::gmtime(&raw_time);
-	char buffer[30];
-	std::strftime(buffer, 30, "%a, %d %b %Y %H:%M:%S GMT", gmt_time);
-	return std::string(buffer);
+	// Handle POST request
+	std::string body = request._fileData["test.txt"]; // Assuming Request class has getBody()
+
+	// Process the POST data (e.g., save it, respond with a success message, etc.)
+	this->_status = 200;
+	this->_body = "Received POST data: " + body;
+	this->_len = _body.length();
+	this->_reason = "ok";
+	this->_type = "text/plain";
+	this->_connection = "close"; // Generally, you close the connection after handling POST
+	this->_date = getDateTime();
+}
+
+void	Response::getMethod(Request request, std::string root, std::string index)
+{
+	std::string file = root + request._location;
+	if (request._location == "/")
+		file = root + "/" + index;
+	this->_status = 200;
+	this->_body = readFileToString(file);
+	this->_len = _body.length();
+	this->_reason = "ok";
+	this->_type = findType(file);
+	this->_connection = "keep-alive";
+	this->_date = getDateTime();
+
+	// Check if body is empty or type was not found
+	if (this->_body == "" || this->_type == "") {
+		this->_status = 404;
+		this->_reason = "not found";
+		this->_type = "";
+		this->_body = "";
+		this->_connection = "close";
+		this->_len = 0;
+	}
+}
+
+void	Response::deleteMethod()
+{
+
 }
