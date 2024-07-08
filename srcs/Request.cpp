@@ -51,7 +51,7 @@ void Request::parse(std::string httpRequest)
 	}
 	else
 		log(logERROR) << "Invlaid http mehtod\n" << httpRequest;
-		// throw Request::invalidMethod(); 
+		// throw Request::invalidMethod();
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
@@ -60,42 +60,41 @@ void Request::parse(std::string httpRequest)
 	printFileData();
 }
 
-void Request::parseMultipart(std::string httpRequest) {
+void Request::parseMultipart(std::string httpRequest)
+{
 	std::string body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4); // Find body
-    std::string boundary = "--" + findKey(body, "boundary=", '\r').substr(9); // Find bounndary
-    std::string::size_type startPos = body.find(boundary) + boundary.length() + 2; // Skip the boundary and CRLF
-
-    while (startPos != std::string::npos) {
-        std::string::size_type endPos = body.find(boundary, startPos) - 4; // Find the end boundary and subtract the CRLF
-        std::string part = body.substr(startPos, endPos - startPos); // This is the actual info we need
-
-        // Parse headers within the part
-        std::string::size_type headerEndPos = part.find("\r\n\r\n");
-        std::string headers = part.substr(0, headerEndPos);
-        std::string content = part.substr(headerEndPos + 4); // Skip the CRLF
-
-        // Parse Content-Disposition header
-        std::string disposition = findKey(headers, "Content-Disposition: ", '\r');
-        if (disposition.find("filename=\"") != std::string::npos) {
-            std::string filename = disposition.substr(disposition.find("filename=\"") + 10);
-            filename = filename.substr(0, filename.find("\""));
-
-            // Store the file content
-            this->_fileData[filename] = content;
-        }
-
-        startPos = body.find(boundary, endPos + 4) + boundary.length() + 2;
-    }
+	std::string boundary = "--" + (findKey(httpRequest, "boundary=", '\r').substr(9)); // Find bounndary
+	std::string::size_type startPos = body.find(boundary) + boundary.length() + 2; // Skip the boundary and CRLF
+	while (startPos != std::string::npos)
+	{
+		std::string::size_type endPos = body.find(boundary, startPos) - 4; // Find the end boundary and subtract the CRLF
+		std::string part = body.substr(startPos, endPos - startPos); // This is the actual info we need
+		// Parse headers within the part
+		if (part == "\r\n")
+			break;
+		std::string::size_type headerEndPos = part.find("\r\n\r\n");
+		std::string headers = part.substr(0, headerEndPos);
+		std::string content = part.substr(headerEndPos + 4); // Skip the CRLF
+		// Parse Content-Disposition header
+		std::string disposition = findKey(headers, "Content-Disposition: ", '\r');
+		if (disposition.find("filename=\"") != std::string::npos) {
+			std::string filename = disposition.substr(disposition.find("filename=\"") + 10);
+			filename = filename.substr(0, filename.find("\""));
+			// Store the file content
+			this->_fileData[filename] = content;
+		}
+		startPos = body.find(boundary, endPos + 4) + boundary.length() + 2;
+	}
 }
 
 void Request::printFileData() {
 	if (this->_fileData.empty())
 		return ;
-    // Define a type for the map iterator
-    typedef std::map<std::string, std::string>::const_iterator MapIterator;
+	// Define a type for the map iterator
+	typedef std::map<std::string, std::string>::const_iterator MapIterator;
 
-    // Iterate over the map using iterators
-    for (MapIterator iter = _fileData.begin(); iter != _fileData.end(); ++iter) {
-        log(logDEBUG) << "Filename: " << iter->first << "\nContent: " << iter->second << "\n";
-    }
+	// Iterate over the map using iterators
+	for (MapIterator iter = _fileData.begin(); iter != _fileData.end(); ++iter) {
+		log(logDEBUG) << "Filename: " << iter->first << "\nContent: " << iter->second << "\n";
+	}
 }

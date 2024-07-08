@@ -17,18 +17,15 @@ int main(int argc, char **argv)
 		return (EXIT_SUCCESS);
 	}
 	std::string configPath(argv[1] ? argv[1] : DEFAULT_CONF);
-	// while (g_signal)
-	// {
-		try
-		{
-			Config conf(configPath);
-			log(logINFO) << "Loaded " << configPath;
-			Webserv server(conf);
-			return(server.run());
-		}
-		catch (std::exception &e)
-		{
-			log(logERROR) << e.what();
-		}
-	// }
+	try
+	{
+		Config conf(configPath);
+		log(logINFO) << "Loaded " << configPath;
+		Webserv server(conf);
+		return(server.run());
+	}
+	catch (std::exception &e)
+	{
+		log(logERROR) << e.what();
+	}
 }

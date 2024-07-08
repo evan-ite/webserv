@@ -15,7 +15,7 @@ Response::Response(std::string const &httpRequest, ConfigData confData)
 		postMethod(request);
 	else if (request._method == GET)
 		getMethod(request, root, index);
-	else 
+	else
 	{
         // Handle other methods or send a 405 Method Not Allowed response
         this->_status = 405;
@@ -112,7 +112,4 @@ void	Response::getMethod(Request request, std::string root, std::string index)
 	}
 }
 
-void	Response::deleteMethod()
-{
-
-}
+void	Response::deleteMethod() {}
