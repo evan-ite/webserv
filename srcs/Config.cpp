@@ -93,7 +93,8 @@ ConfigData Config::getConfigData(void) const {
 	return this->_configData;
 }
 
-std::ostream& operator<<(std::ostream& os, const ConfigData& configData) {
+std::ostream& operator<<(std::ostream& os, const Config& obj) {
+	const ConfigData& configData = obj.getConfigData();
 	os << "Server Name: " << configData.server_name << std::endl;
 	os << "Host: " << configData.host << std::endl;
 	os << "Port: " << configData.port << std::endl;

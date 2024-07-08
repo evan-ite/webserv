@@ -39,6 +39,6 @@ class Config {
 		ConfigData _configData;
 };
 
-std::ostream& operator<<(std::ostream& os, const ConfigData& configData);
+std::ostream& operator<<(std::ostream& os, const Config& obj);
 
 #endif
