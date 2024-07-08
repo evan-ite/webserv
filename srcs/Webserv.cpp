@@ -34,44 +34,59 @@ const char * Webserv::clientError::what() const throw()
 	return "Client did something weird";
 }
 
-int	Webserv::run()
+int Webserv::makeNonBlocking(int server_fd)
 {
-	int server_fd, new_socket;
-	struct sockaddr_in address;
-	int addrlen = sizeof(address);
+	int flags = fcntl(server_fd, F_GETFL, 0);
+	if (flags == -1)
+	{
+		log(logERROR) << "critical fcntl error";
+		return (-1);
+	}
+	flags |= O_NONBLOCK;
+	if (fcntl(server_fd, F_SETFL, flags) == -1)
+	{
+		log(logERROR) << "critical fcntl error";
+		return (-1);
+	}
+	return 0;
+}
 
-	server_fd = socket(AF_INET, SOCK_STREAM, 0); // we should close the fd on all failures below?
+int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
+{
+	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == 0)
 	{
 		log(logERROR) << "can't create server fd";
-		return(EXIT_FAILURE);
+		return (0);
 	}
-
-	if (make_socket_non_blocking(server_fd) == -1)
-		return(EXIT_FAILURE);
-
-	// do all the config stuff here!
+	if (this->makeNonBlocking(server_fd) == -1)
+		return (0);
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(this->_conf.getConfigData().port);
-
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
 		log(logERROR) << "bind failed";
 		close(server_fd);
-		return(EXIT_FAILURE);
+		return (0);
 	}
 	if (listen(server_fd, 3) < 0)
 	{
 		log(logERROR) << "listen failed";
-		return(EXIT_FAILURE);
+		close(server_fd);
+		return (0);
 	}
+	return (1);
+}
 
-	int epoll_fd = epoll_create1(0);
+int Webserv::setupEpoll(int server_fd, int &epoll_fd)
+{
+	epoll_fd = epoll_create1(0);
 	if (epoll_fd == -1)
 	{
 		log(logERROR) << "epoll_create1() failed";
-		return(EXIT_FAILURE);
+		return (0);
+
 	}
 
 	struct epoll_event event;
@@ -80,17 +95,28 @@ int	Webserv::run()
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1)
 	{
 		log(logERROR) << "epoll_ctl() failed";
-		return(EXIT_FAILURE);
+		close(epoll_fd);
+		return (0);
+
 	}
+	return (1);
 
-	std::vector<struct epoll_event> events(MAX_EVENTS);
+}
 
-	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name << " now listening on port " << this->_conf.getConfigData().port;
+
+void	Webserv::handleIncomingConnections(int server_fd, int epoll_fd, struct sockaddr_in &address, int addrlen)
+{
+	int								new_socket;
+	struct epoll_event				event;
+	std::vector<struct epoll_event>	events(MAX_EVENTS);
+
 	while (g_signal)
 	{
 		int n = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, -1);
-		for (int i = 0; i < n; i++) {
-			if (events[i].events & EPOLLERR || events[i].events & EPOLLHUP || !(events[i].events & EPOLLIN))
+		for (int i = 0; i < n; i++)
+		{
+			log(logINFO) << "WE ARE HERE 1";
+			if (events[i].events & (EPOLLERR | EPOLLHUP) || !(events[i].events & EPOLLIN))
 			{
 				log(logERROR) << "an error has occurred on this fd: " << server_fd;
 				log(logWARNING) << "server continues";
@@ -102,6 +128,7 @@ int	Webserv::run()
 				log(logINFO) << "new incoming connection";
 				while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) != -1)
 				{
+					log(logINFO) << "WE ARE HERE 2";
 					if (make_socket_non_blocking(new_socket) == -1)
 					{
 						close(new_socket);
@@ -112,41 +139,81 @@ int	Webserv::run()
 					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_socket, &event) == -1)
 					{
 						log(logERROR) << "epoll_ctl() error";
-						return(EXIT_FAILURE);
+						close(new_socket);
+						continue;
 					}
 				}
 			}
-			else
+		}
+		this->handleRequests(epoll_fd, events);
+	}
+}
+
+void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &events)
+{
+	for (std::vector<struct epoll_event>::iterator it = events.begin(); it != events.end(); ++it)
+	{
+		struct epoll_event &event = *it;
+		if (event.data.fd != -1 && (event.events & EPOLLIN))
+		{
+			char buffer[512];
+			int count;
+			std::string httpRequest;
+
+			log(logINFO) << "data on socket ready to read";
+
+			while ((count = read(event.data.fd, buffer, sizeof(buffer))) > 0)
+				httpRequest.append(buffer, count);
+			if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
 			{
-				log(logINFO) << "data on socket ready to read";
-				char buffer[512];
-				int count;
-				std::string httpRequest;
-				while ((count = read(events[i].data.fd, buffer, sizeof(buffer))) > 0)
-					httpRequest.append(buffer, count);
-				if (count == -1 && errno != EAGAIN) // check subject, errno is forbidden?
+				log(logERROR) << "socket read() error: " << strerror(errno);
+				close(event.data.fd);
+				continue;
+			}
+			if (!httpRequest.empty())
+			{
+				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
+				Response res(httpRequest, this->_conf.getConfigData());
+				std::string resString = res.makeResponse();
+				ssize_t sent = write(event.data.fd, resString.c_str(), resString.size());
+				if (sent == -1)
 				{
-					log(logERROR) << "socket read() error";
-					close(events[i].data.fd);
+					log(logERROR) << "socket write() error: " << strerror(errno);
+					close(event.data.fd);
+					continue;
 				}
-				if (httpRequest.size() > 1)
-				{
-					log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
-
-					// Create an http response basd on the http request
-					Response res(httpRequest, this->_conf.getConfigData());
-					std::string resString = res.makeResponse();
-
-					const char *resCStr = resString.data();
-					log(logDEBUG) << "--- RESPONSE ---\n" << resCStr;
-					// Send http response to client
-					write(events[i].data.fd, resCStr, resString.size());
+				log(logDEBUG) << "--- RESPONSE ---\n" << resString;
+				// Optionally modify epoll interest list, e.g., to re-arm the event.
+				struct epoll_event ev;
+				ev.data.fd = event.data.fd;
+				ev.events = EPOLLIN | EPOLLET; // example modification
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event.data.fd, &ev) == -1) {
+					log(logERROR) << "epoll_ctl() error: " << strerror(errno);
+					close(event.data.fd);
 				}
 			}
 		}
 	}
+}
+
+int	Webserv::run()
+{
+	int					server_fd;
+	int					epoll_fd;
+	struct sockaddr_in	address;
+	int					addrlen = sizeof(address);
+
+	if (!setupServerSocket(server_fd, address))
+		return (EXIT_FAILURE);
+	if (!setupEpoll(server_fd, epoll_fd))
+		return (EXIT_FAILURE);
+
+	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name \
+	<< " now listening on port " << this->_conf.getConfigData().port;
+	this->handleIncomingConnections(server_fd, epoll_fd, address, addrlen);
 	close(server_fd);
 	close(epoll_fd);
-	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name << " shutting down";
+	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name \
+	<< " shutting down";
 	return (EXIT_SUCCESS);
 }

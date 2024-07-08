@@ -20,10 +20,12 @@ class Webserv
 	private:
 		Webserv(const Webserv &copy);
 		Webserv();
-		// Response _res;
-		// Request _req;
-		Config _conf;
-
+		Config	_conf;
+		int		setupServerSocket(int &server_fd, struct sockaddr_in &address);
+		int		setupEpoll(int server_fd, int &epoll_fd);
+		void	handleIncomingConnections(int server_fd, int epoll_fd, struct sockaddr_in &address, int addrlen);
+		void	handleRequests(int epoll_fd, std::vector<struct epoll_event> &events);
+		int		makeNonBlocking(int server_fd);
 };
 
 #endif
