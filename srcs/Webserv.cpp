@@ -132,10 +132,14 @@ int	Webserv::run()
 				if (httpRequest.size() > 1)
 				{
 					log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
+
+					// Create an http response basd on the http request
 					Response res(httpRequest, this->_conf.getConfigData());
 					std::string resString = res.makeResponse();
+
 					const char *resCStr = resString.data();
 					log(logDEBUG) << "--- RESPONSE ---\n" << resCStr;
+					// Send http response to client
 					write(events[i].data.fd, resCStr, resString.size());
 				}
 			}
