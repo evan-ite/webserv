@@ -158,7 +158,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 			int count;
 			std::string httpRequest;
 
-			log(logINFO) << "data on socket ready to read";
+			log(logINFO) << "data sent, socket ready to read";
 
 			while ((count = read(event.data.fd, buffer, sizeof(buffer))) > 0)
 				httpRequest.append(buffer, count);
