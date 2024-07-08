@@ -1,5 +1,6 @@
 css,text/css
 gif,image/gif
+ico,image/gif
 html,text/html
 htm,text/html
 jpeg,image/jpeg

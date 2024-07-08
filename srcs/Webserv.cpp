@@ -54,6 +54,13 @@ int Webserv::makeNonBlocking(int server_fd)
 int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 {
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	const int enable = 1;
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		log(logERROR) << "setsockopt(SO_REUSEADDR) failed";
+		close(server_fd);
+		return (0);
+	}
 	if (server_fd == 0)
 	{
 		log(logERROR) << "can't create server fd";
@@ -70,7 +77,7 @@ int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 		close(server_fd);
 		return (0);
 	}
-	if (listen(server_fd, 3) < 0)
+	if (listen(server_fd, 6) < 0)
 	{
 		log(logERROR) << "listen failed";
 		close(server_fd);
@@ -91,16 +98,14 @@ int Webserv::setupEpoll(int server_fd, int &epoll_fd)
 
 	struct epoll_event event;
 	event.data.fd = server_fd;
-	event.events = EPOLLIN;
+	event.events = EPOLLIN | EPOLLET;
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1)
 	{
 		log(logERROR) << "epoll_ctl() failed";
 		close(epoll_fd);
 		return (0);
-
 	}
 	return (1);
-
 }
 
 
@@ -171,7 +176,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 			// }
 			if (!httpRequest.empty())
 			{
-				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
+				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 				Response res(httpRequest, this->_conf.getConfigData());
 				std::string resString = res.makeResponse();
 				ssize_t sent = write(event.data.fd, resString.c_str(), resString.size());
@@ -181,7 +186,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 					close(event.data.fd);
 					continue;
 				}
-				log(logDEBUG) << "--- RESPONSE ---\n" << resString;
+				log(logDEBUG) << "--- RESPONSE ---\n" << resString.substr(0, 1000);
 				// Optionally modify epoll interest list, e.g., to re-arm the event.
 				struct epoll_event ev;
 				ev.data.fd = event.data.fd;
