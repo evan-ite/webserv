@@ -162,12 +162,13 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 
 			while ((count = read(event.data.fd, buffer, sizeof(buffer))) > 0)
 				httpRequest.append(buffer, count);
-			if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
-			{
-				log(logERROR) << "socket read() error: " << strerror(errno);
-				close(event.data.fd);
-				continue;
-			}
+			// this below needs separate error handling, but we can't check errno from what I see?
+			// if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
+			// {
+			// 	log(logERROR) << "socket read() error: " << strerror(errno);
+			// 	close(event.data.fd);
+			// 	continue;
+			// }
 			if (!httpRequest.empty())
 			{
 				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
