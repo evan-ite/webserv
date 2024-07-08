@@ -39,19 +39,17 @@ void Config::parseConfigFile(const std::string &filename)
 		iss >> key >> value; // Assuming 'location /path/' format
 		if (!value.empty() && value[value.size() - 1] == ';')
 			value.erase(value.size() - 1);
+
+		if (line.find("}") != std::string::npos && parsingLocation) {
+			this->_configData.locations[currentLocation.path] = currentLocation;
+			log(logDEBUG) << "saved path config for " << currentLocation.path;
+			parsingLocation = false;
+			continue;
+		}
 		if (line.find("location") != std::string::npos)
 		{
-			if (parsingLocation)
-			{
-				this->_configData.locations[currentLocation.path] = currentLocation;
-				log(logDEBUG) << "saved path config for " << currentLocation.path;
-				parsingLocation = false;
-			}
-			else
-			{
-				currentLocation = LocationConfig(value);
-				parsingLocation = true;
-			}
+			currentLocation = LocationConfig(value);
+			parsingLocation = true;
 			continue;
 		}
 		if (!parsingLocation) {
