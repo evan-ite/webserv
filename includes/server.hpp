@@ -28,7 +28,7 @@
 
 # define MAX_EVENTS 1024
 # define HTTPVERSION "HTTP/1.1"
-# define MIMEFILE "MIME.txt"
+# define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
 # define DEFAULT_CONF "./conf/default.conf"
 # define SAMPLE_RES "HTTP/1.1 200 OK \

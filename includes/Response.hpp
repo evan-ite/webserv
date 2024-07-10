@@ -7,7 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(std::string const &httpRequest, ConfigData confData);
+		Response(std::string const &httpRequest, Server confData);
 		Response(const Response &copy);
 
 		// Destructor
@@ -20,9 +20,10 @@ class Response
 
 	private:
 		Response();
-		void	postMethod(Request request);
-		void	getMethod(Request request, std::string root, std::string index);
+		void	postMethod(Request request, Server serverData);
+		void	getMethod(Request request, Server serverData, std::string root, std::string index);
 		void	deleteMethod();
+		void	cgiMethod(Request request, Server serverData);
 
 		int	_status;
 		std::string	_reason;

@@ -25,7 +25,7 @@ void Config::parseConfigFile(const std::string &filename)
 	std::ifstream file(filename.c_str());
 	std::string line;
 	bool parsingLocation = false;
-	LocationConfig currentLocation("/");
+	Location currentLocation("/");
 
 	if (!file.is_open())
 		throw std::runtime_error("Error: could not open file");
@@ -48,7 +48,7 @@ void Config::parseConfigFile(const std::string &filename)
 		}
 		if (line.find("location") != std::string::npos)
 		{
-			currentLocation = LocationConfig(value);
+			currentLocation = Location(value);
 			parsingLocation = true;
 			continue;
 		}
@@ -87,18 +87,18 @@ void Config::parseConfigFile(const std::string &filename)
 	file.close();
 }
 
-ConfigData Config::getConfigData(void) const {
+Server Config::getConfigData(void) const {
 	return this->_configData;
 }
 
 std::ostream& operator<<(std::ostream& os, const Config& obj) {
-	const ConfigData& configData = obj.getConfigData();
+	const Server& configData = obj.getConfigData();
 	os << "Server Name: " << configData.server_name << std::endl;
 	os << "Host: " << configData.host << std::endl;
 	os << "Port: " << configData.port << std::endl;
 	os << "Locations:" << std::endl;
-	for (std::map<std::string, LocationConfig>::const_iterator it = configData.locations.begin(); it != configData.locations.end(); ++it) {
-		const LocationConfig& location = it->second;
+	for (std::map<std::string, Location>::const_iterator it = configData.locations.begin(); it != configData.locations.end(); ++it) {
+		const Location& location = it->second;
 		os << "  Path: " << location.path << std::endl;
 		os << "    Root: " << location.root << std::endl;
 		os << "    Index: " << location.index << std::endl;
