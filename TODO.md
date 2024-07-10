@@ -19,6 +19,7 @@
 - [x] Print logging
 - [x] Handle signals
 
+
 ## Parsing
 - [ ] Parsing config file into server object -- > Urbano
 	- [ ] config file into server stack
@@ -26,6 +27,7 @@
 	- [ ] add default values for empty and invalid keys
 	- [ ] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
 	- [ ] Directory Listing on/off (needs item in conf class)
+
 
 ## Handle requests
 - [ ] Post requests
