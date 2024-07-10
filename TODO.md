@@ -6,7 +6,7 @@
 -	Response Class
 -	Webserv Class
 
- *** Done ***
+## Done 
 - [x] loop over map and run servers (in main)
 - [X] Thread for listening asynchronous i/o
 - [x] Parse HTTP Request into object
@@ -19,7 +19,7 @@
 - [x] Print logging
 - [x] Handle signals
 
- *** Parsing ***
+## Parsing
 - [ ] Parsing config file into server object -- > Urbano
 	- [ ] config file into server stack
 	- [ ] validate servers (valid keys)
@@ -27,18 +27,18 @@
 	- [ ] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
 	- [ ] Directory Listing on/off (needs item in conf class)
 
-*** Handle requests ***
+## Handle requests
 - [ ] Post requests
 - [ ] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
 
 
-*** CGI ***
+## CGI
 - [ ] fork CGI (needs item in conf class)
 
 
-*** Extra ***
+## Extra
 - [ ] Implement time out limits set through header (or conf file?)
 - [ ] Create beautiful html <333
 - [ ] http redirects
