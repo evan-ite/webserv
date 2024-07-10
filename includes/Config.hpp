@@ -17,9 +17,9 @@ struct LocationConfig { //rename to Location?
 };
 
 struct ConfigData {
-	std::string server_name;
-	std::string host;
-	int port;
+	std::vector<std::string> server_names;
+	std::vector<std::string> hosts;
+	std::vector<int> ports;
 	std::map<std::string, LocationConfig> locations;
 };
 
