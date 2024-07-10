@@ -92,7 +92,28 @@ std::string getDateTime()
 	return std::string(buffer);
 }
 
-void	stringToFile(std::string str, std::string path)
+/* DEBUG ONLY write HTTP request or response to outfile */
+void stringToFile(const std::string& str, const std::string& path)
 {
-
+	std::ofstream file(path.c_str());
+	if (file.is_open())
+	{
+		file << str;
+		file.close();
+		log(logDEBUG) << "String written to file successfully";
+	}
+	else
+	{
+		std::ofstream newFile(path.c_str());
+		if (newFile.is_open())
+		{
+			newFile << str;
+			newFile.close();
+			log(logDEBUG) << "String written to NEW file successfully";
+		}
+		else
+			log(logDEBUG) << "File creation failed";
+	}
 }
+
+
