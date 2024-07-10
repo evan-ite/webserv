@@ -49,7 +49,7 @@ void Config::parseServer(std::string key, std::string value) {
 }
 
 bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value) {
-	if (line.find("}") != std::string::npos && parsingLocation)
+	if (line.find("}") != std::string::npos && *parsingLocation)
 	{
 		this->_Server.locations[currentLocation->path] = *currentLocation;
 		log(logDEBUG) << "saved path config for " << currentLocation->path;
