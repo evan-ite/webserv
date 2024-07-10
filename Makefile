@@ -4,7 +4,8 @@ CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -g #-Wshadow -Wno-shadow
 OBJDIR = obj
 OBJ = $(SRC:%.cpp=$(OBJDIR)/%.o)
 SRC = srcs/main.cpp srcs/Logger.cpp srcs/Request.cpp srcs/Response.cpp \
-	srcs/utils.cpp srcs/Config.cpp srcs/Webserv.cpp srcs/createResponse.cpp
+	srcs/utils.cpp srcs/Config.cpp srcs/Webserv.cpp srcs/createResponse.cpp \
+	srcs/Parser.cpp
 
 all: $(NAME)
 

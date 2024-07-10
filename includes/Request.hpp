@@ -6,7 +6,7 @@
 /*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/08 12:36:49 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/08 15:40:47 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class Request
 		
 		std::string	_location;
 		HttpMethod	_method;
-		std::map<std::string, std::string> _fileData;
+		std::vector<std::pair<std::string, std::string> > _fileData;
 		
 	private:
 		Request();
