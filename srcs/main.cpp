@@ -21,14 +21,10 @@ int main(int argc, char **argv)
 	{
 		// map<"127.0.0.1:8080", *conf>
 		std::map<std::string, Config>* allConfigsPtr = new std::map<std::string, Config>;
-		Parser::parse(configPath, allConfigsPtr); //uses stack internally
-		std::map<std::string, Config> ::iterator it;
-		for (it = (*allConfigsPtr).begin(); it != (*allConfigsPtr).end(); it++)
-		{
-			log(logINFO) << "Starting virtual server " << it->first;
-			Webserv server(it->second);
-			server.run();
-		}
+		Parser::parse(configPath, allConfigsPtr);
+		log(logINFO) << "Starting virtual server(s)";
+		// Webserv allServer(allConfigsPtr);
+		// allServer.run();
 		delete allConfigsPtr;
 
 		Config debug(configPath);
@@ -39,5 +35,4 @@ int main(int argc, char **argv)
 	{
 		log(logERROR) << e.what();
 	}
-
 }
