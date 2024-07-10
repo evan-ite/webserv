@@ -10,12 +10,14 @@ Response::Response(std::string const &httpRequest, Server serverData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	if (request._method == POST && request._location == "/upload")
-		postMethod(request, serverData);
-	else if (request._method == GET)
-		getMethod(request, serverData, root, index);
-	else
-	{
+	try {
+		if (request._method == POST && request._location == "/upload")
+			postMethod(request, serverData);
+		else if (request._method == GET)
+			getMethod(request, serverData, root, index);
+		log(logDEBUG) << "Response object succesfully created";
+	}
+	catch (ResponseException &e) {
         // Handle other methods or send a 405 Method Not Allowed response
         this->_status = 405;
         this->_reason = "Method Not Allowed";
@@ -25,7 +27,6 @@ Response::Response(std::string const &httpRequest, Server serverData)
         this->_len = _body.length();
         this->_date = getDateTime();
     }
-	log(logDEBUG) << "Response object succesfully created";
 }
 
 /* Sets date and time to moment of copy */
@@ -76,6 +77,7 @@ void	Response::postMethod(Request request, Server serverData)
 {
 	// if CGI
 		// cgi function
+	(void) serverData;
 	
 	// else
 	// Create all files
@@ -100,6 +102,8 @@ void	Response::postMethod(Request request, Server serverData)
 
 void	Response::getMethod(Request request, Server serverData, std::string root, std::string index)
 {
+	(void) serverData;
+
 	std::string file = root + request._location;
 	if (request._location == "/")
 		file = root + "/" + index;
@@ -132,13 +136,12 @@ void Response::cgiMethod(Request request, Server serverData)
     // Set up environment variables specific to GET or POST
     if (request._method == GET) {
     	setenv("REQUEST_METHOD", "GET", 1);
-        setenv("QUERY_STRING", request.getQueryString().c_str(), 1); // Add to request class?
+        setenv("QUERY_STRING", findKey(request._location, "?", ' ').c_str(), 1);
     } else if (request._method == POST) {
     	setenv("REQUEST_METHOD", "POST", 1);
-        setenv("CONTENT_TYPE", request.getContentType().c_str(), 1); // Need to store this in request parseMultistring
-        setenv("CONTENT_LENGTH", std::to_string(request.getContentLength()).c_str(), 1); // Need to store this in request parseMultistring
-    }
-    
+        setenv("CONTENT_TYPE", request._contentType.c_str(), 1);
+        setenv("CONTENT_LENGTH", std::to_string(request._contentLenght).c_str(), 1); 
+	}
 	// Set up common environment variables required by the CGI script
     setenv("SCRIPT_NAME", cgiScriptPath.c_str(), 1);
     setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
@@ -148,13 +151,16 @@ void Response::cgiMethod(Request request, Server serverData)
     // Prepare to capture the CGI script's output
     int pipefd[2];
     if (pipe(pipefd) == -1) {
-        handleError();  // Handle error appropriately
-    }
+        log(logERROR) << "Error creating pipe";
+		throw ResponseException();
+	}
 
     pid_t pid = fork();
     if (pid == -1) {
-        handleError();  // Handle error appropriately
-    } else if (pid == 0) {
+        log(logERROR) << "Error forking";
+		throw ResponseException();
+	}
+	else if (pid == 0) {
         // Child process: execute the CGI script
         close(pipefd[0]);  // Close read end of the pipe
         dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
@@ -164,15 +170,17 @@ void Response::cgiMethod(Request request, Server serverData)
             // Provide POST data to the CGI script via stdin
             int post_data_fd[2];
             if (pipe(post_data_fd) == -1) {
-                handleError();  // Handle error appropriately
+                log(logERROR) << "Error creating pipe in child";
+				exit(EXIT_FAILURE);
             }
             pid_t post_pid = fork();
             if (post_pid == -1) {
-                handleError();  // Handle error appropriately
+                log(logERROR) << "Error forking in child";
+				exit(EXIT_FAILURE);
             } else if (post_pid == 0) {
                 // Child process to handle POST data input
                 close(post_data_fd[0]);
-                write(post_data_fd[1], request.getBody().c_str(), request.getBody().length());
+                write(post_data_fd[1], this->_body.c_str(), this->_len);
                 close(post_data_fd[1]);
                 exit(0);
             } else {

@@ -18,6 +18,12 @@ class Response
 
 		std::string makeResponse();
 
+		class ResponseException : public std::exception {
+			public:
+				const char* what() const throw() 
+				{ return "Error creating response"; }
+		};
+
 	private:
 		Response();
 		void	postMethod(Request request, Server serverData);
