@@ -7,6 +7,11 @@
 -	Webserv Class
 
 - [ ] Parsing config file into server object -- > Urbano
+	- [ ] config file into server stack
+	- [ ] validate servers (valid keys)
+	- [ ] add default values for empty and invalid keys
+	- [ ] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
+- [ ] loop over map and run servers
 - [ ] Thread for listening asynchronous i/o
 - [x] Parse HTTP Request into object --> Jan
 - [ ] Process request and store in response object --> Elise
