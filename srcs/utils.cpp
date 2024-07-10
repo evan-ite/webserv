@@ -91,3 +91,8 @@ std::string getDateTime()
 	std::strftime(buffer, 30, "%a, %d %b %Y %H:%M:%S GMT", gmt_time);
 	return std::string(buffer);
 }
+
+void	stringToFile(std::string str, std::string path)
+{
+
+}

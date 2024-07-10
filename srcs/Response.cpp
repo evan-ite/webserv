@@ -10,7 +10,7 @@ Response::Response(std::string const &httpRequest, ConfigData confData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	if (request._method == POST && request._location == "/upload")
+	if (request._method == POST)
 		postMethod(request);
 	else if (request._method == GET)
 		getMethod(request, root, index);

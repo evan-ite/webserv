@@ -27,7 +27,7 @@ Request & Request::operator=(const Request &assign)
 	this->_location = assign._location;
 	this->_userAgent = assign._userAgent;
 	this->_connection = assign._connection;
-	return *this;
+	return (*this);
 }
 
 void Request::parse(std::string httpRequest)
@@ -42,7 +42,7 @@ void Request::parse(std::string httpRequest)
 	{
 		this->_method = POST;
 		this->_location = findKey(httpRequest, "POST ", ' ');
-		parseMultipart(httpRequest);
+		this->parseMultipart(httpRequest);
 	}
 	else if (method == "DELETE")
 	{
@@ -50,7 +50,7 @@ void Request::parse(std::string httpRequest)
 		this->_location = findKey(httpRequest, "DELETE ", ' ');
 	}
 	else
-		log(logERROR) << "Invlaid http mehtod\n" << httpRequest;
+		log(logERROR) << "Invalid http method" << httpRequest;
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
@@ -70,11 +70,11 @@ void Request::parseMultipart(std::string httpRequest)
 	while (startPos != std::string::npos)
 	{
 		// Find the end / in-between boundary and subtract the CRLF
-		std::string::size_type endPos = body.find("--" + boundary, startPos) - 2; 
-		if (endPos == std::string::npos) 
+		std::string::size_type endPos = body.find("--" + boundary, startPos) - 2;
+		if (endPos == std::string::npos)
 			endPos = body.find("--" + boundary + "--", startPos) - 2;
 		// Substract part in between boundaries
-		std::string part = body.substr(startPos, endPos - startPos); 
+		std::string part = body.substr(startPos, endPos - startPos);
 		if (part == "\r\n")
 			break;
 		// Parse headers and content
