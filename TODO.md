@@ -6,12 +6,7 @@
 -	Response Class
 -	Webserv Class
 
-- [ ] Parsing config file into server object -- > Urbano
-	- [ ] config file into server stack
-	- [ ] validate servers (valid keys)
-	- [ ] add default values for empty and invalid keys
-	- [ ] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
-	- [ ] Directory Listing on/off (needs item in conf class)
+ *** Done ***
 - [x] loop over map and run servers (in main)
 - [X] Thread for listening asynchronous i/o
 - [x] Parse HTTP Request into object
@@ -23,11 +18,32 @@
 - [x] Convert response object into HTTP Response
 - [x] Print logging
 - [x] Handle signals
-- [ ] Directory Listing (needs item in conf class)
-- [ ] fork CGI (needs item in conf class)
+
+ *** Parsing ***
+- [ ] Parsing config file into server object -- > Urbano
+	- [ ] config file into server stack
+	- [ ] validate servers (valid keys)
+	- [ ] add default values for empty and invalid keys
+	- [ ] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
+	- [ ] Directory Listing on/off (needs item in conf class)
+
+*** Handle requests ***
+- [ ] Post requests
+- [ ] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
+
+
+*** CGI ***
+- [ ] fork CGI (needs item in conf class)
+
+
+*** Extra ***
 - [ ] Implement time out limits set through header (or conf file?)
+- [ ] Create beautiful html <333
 - [ ] http redirects
 - [ ] Check forbidden functions
+- [ ] Directory Listing (needs item in conf class)
+	- [ ] Template for auto indexing 
+	- [ ] function to fill template
 
