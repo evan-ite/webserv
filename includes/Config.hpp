@@ -42,6 +42,7 @@ class Config {
 		void parseLocation(Location *currentLocation, std::string key, std::string value);
 		void parseServer(std::string key, std::string value);
 		bool locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value);
+		void temporaryName(const std::string &filename);
 };
 
 std::ostream& operator<<(std::ostream& os, const Config& obj);

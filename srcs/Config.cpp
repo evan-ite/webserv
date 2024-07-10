@@ -5,6 +5,7 @@ Config::Config(void) {}
 Config::Config(const std::string &filename)
 {
 	this->parseConfigFile(filename);
+	this->temporaryName(filename);
 }
 
 Config::Config(const Config &src) {
@@ -94,6 +95,72 @@ void Config::parseConfigFile(const std::string &filename) {
 		this->_Server.locations[currentLocation.path] = currentLocation;
 	file.close();
 }
+
+void Config::temporaryName(const std::string &filename)
+{
+	std::ifstream file(filename.c_str());
+	bool parseServer = false;
+	std::string line;
+	std::string server;
+
+	if (!file.is_open())
+		throw std::runtime_error("Error: could not open file");
+
+	while (std::getline(file, line))
+	{
+		if (line.find("server"))
+			parseServer = !parseServer;
+		if (parseServer)
+			server.append(line);
+		else {
+			std::cout << server << "here" << std::endl;
+			break;
+		}
+
+	}
+}
+
+/* TO-DO
+- extract a single server block.
+- read the ports. (external function)
+- Go through the server string and store configuration in the server struct. (modify exiting function).
+- loop through the ports:
+	- create a copy of the Server struct.
+	- change Port and Host to match the current port.
+	- insert the new pair in the map.
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Server Config::getServer(void) const {
 	return this->_Server;
