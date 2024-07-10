@@ -19,18 +19,20 @@ int main(int argc, char **argv)
 	std::string configPath(argv[1] ? argv[1] : DEFAULT_CONF);
 	try
 	{
-		map<std::string, &Config> allConfigs;
-		allConfigs = Parser::parse(configPath) //uses stack internally
-		map<std::string, &Config> ::iterator it;
-		for (it = allConfigs.begin(); it != allConfigs.end(); it++)
+		std::map<std::string, Config>* allConfigsPtr = new std::map<std::string, Config>;
+		Parser::parse(configPath, allConfigsPtr); //uses stack internally
+		std::map<std::string, Config> ::iterator it;
+		for (it = (*allConfigsPtr).begin(); it != (*allConfigsPtr).end(); it++)
 		{
 			log(logINFO) << "Starting server " << it->first;
 			Webserv server(it->second);
 			server.run();
 		}
+		delete allConfigsPtr;
 	}
 	catch (std::exception &e)
 	{
 		log(logERROR) << e.what();
 	}
+
 }
