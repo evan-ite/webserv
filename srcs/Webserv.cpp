@@ -53,7 +53,14 @@ int Webserv::makeNonBlocking(int server_fd)
 
 int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 {
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	const int enable = 1;
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		log(logERROR) << "setsockopt(SO_REUSEADDR) failed";
+		close(server_fd);
+		return (0);
+	}
 	if (server_fd == 0)
 	{
 		log(logERROR) << "can't create server fd";
@@ -61,6 +68,8 @@ int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 	}
 	if (this->makeNonBlocking(server_fd) == -1)
 		return (0);
+
+	// Jan needs to read this https://silviocesare.wordpress.com/2007/10/22/setting-sin_zero-to-0-in-struct-sockaddr_in/
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(this->_conf.getConfigData().port);
@@ -70,7 +79,7 @@ int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 		close(server_fd);
 		return (0);
 	}
-	if (listen(server_fd, 3) < 0)
+	if (listen(server_fd, 6) < 0)
 	{
 		log(logERROR) << "listen failed";
 		close(server_fd);
@@ -91,16 +100,14 @@ int Webserv::setupEpoll(int server_fd, int &epoll_fd)
 
 	struct epoll_event event;
 	event.data.fd = server_fd;
-	event.events = EPOLLIN;
+	event.events = EPOLLIN | EPOLLET;
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1)
 	{
 		log(logERROR) << "epoll_ctl() failed";
 		close(epoll_fd);
 		return (0);
-
 	}
 	return (1);
-
 }
 
 
@@ -127,7 +134,7 @@ void	Webserv::handleIncomingConnections(int server_fd, int epoll_fd, struct sock
 				log(logINFO) << "new incoming connection";
 				while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) != -1)
 				{
-					if (make_socket_non_blocking(new_socket) == -1)
+					if (this->makeNonBlocking(new_socket) == -1)
 					{
 						close(new_socket);
 						continue;
@@ -154,11 +161,11 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 		struct epoll_event &event = *it;
 		if (event.data.fd != -1 && (event.events & EPOLLIN))
 		{
-			char buffer[512];
+			char buffer[5120];
 			int count;
 			std::string httpRequest;
 
-			log(logINFO) << "data on socket ready to read";
+			log(logINFO) << "data sent, socket ready to read";
 
 			while ((count = read(event.data.fd, buffer, sizeof(buffer))) > 0)
 				httpRequest.append(buffer, count);
@@ -171,7 +178,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 			// }
 			if (!httpRequest.empty())
 			{
-				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest;
+				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 				Response res(httpRequest, this->_conf.getConfigData());
 				std::string resString = res.makeResponse();
 				ssize_t sent = write(event.data.fd, resString.c_str(), resString.size());
@@ -181,7 +188,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 					close(event.data.fd);
 					continue;
 				}
-				log(logDEBUG) << "--- RESPONSE ---\n" << resString;
+				log(logDEBUG) << "--- RESPONSE ---\n" << resString.substr(0, 1000);
 				// Optionally modify epoll interest list, e.g., to re-arm the event.
 				struct epoll_event ev;
 				ev.data.fd = event.data.fd;

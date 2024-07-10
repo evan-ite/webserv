@@ -17,6 +17,10 @@
 - [x] Convert response object into HTTP Response
 - [x] Print logging
 - [x] Handle signals
-
-
+- [ ] Directory Listing (needs item in conf class)
+- [ ] fork CGI (needs item in conf class)
+- [ ] Limit client body size for post requests
+- [ ] Chunked requests, what do we do about them!?!
+- [ ] Implement time out limits set through header (or conf file?)
+- [ ] http redirects
 
