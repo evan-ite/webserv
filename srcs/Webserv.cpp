@@ -72,7 +72,7 @@ int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 	// Jan needs to read this https://silviocesare.wordpress.com/2007/10/22/setting-sin_zero-to-0-in-struct-sockaddr_in/
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(this->_conf.getConfigData().port);
+	address.sin_port = htons(this->_conf.getServer().port);
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
 		log(logERROR) << "bind failed";
@@ -179,7 +179,7 @@ void Webserv::handleRequests(int epoll_fd, std::vector<struct epoll_event> &even
 			if (!httpRequest.empty())
 			{
 				log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-				Response res(httpRequest, this->_conf.getConfigData());
+				Response res(httpRequest, this->_conf.getServer());
 				std::string resString = res.makeResponse();
 				ssize_t sent = write(event.data.fd, resString.c_str(), resString.size());
 				if (sent == -1)
@@ -214,12 +214,12 @@ int	Webserv::run()
 	if (!setupEpoll(server_fd, epoll_fd))
 		return (EXIT_FAILURE);
 
-	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name \
-	<< " now listening on port " << this->_conf.getConfigData().port;
+	log(logINFO) << "Webserver " << this->_conf.getServer().server_name \
+	<< " now listening on port " << this->_conf.getServer().port;
 	this->handleIncomingConnections(server_fd, epoll_fd, address, addrlen);
 	close(server_fd);
 	close(epoll_fd);
-	log(logINFO) << "Webserver " << this->_conf.getConfigData().server_name \
+	log(logINFO) << "Webserver " << this->_conf.getServer().server_name \
 	<< " shutting down";
 	return (EXIT_SUCCESS);
 }

@@ -7,7 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(std::string const &httpRequest, ConfigData confData);
+		Response(std::string const &httpRequest, Server confData);
 		Response(const Response &copy);
 
 		// Destructor

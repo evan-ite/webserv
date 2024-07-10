@@ -2,7 +2,7 @@
 # define CONFIG_HPP
 # include "server.hpp"
 
-struct LocationConfig { //rename to Location?
+struct Location { //rename to Location?
 	std::string path;
 	std::string root;
 	std::string index;
@@ -12,15 +12,15 @@ struct LocationConfig { //rename to Location?
 	// bool allow_uploads = false; // cpp11
 	bool allow_uploads;
 
-	LocationConfig(const std::string& path) : path(path) {}
-	LocationConfig() : path("") {};
+	Location(const std::string& path) : path(path) {}
+	Location() : path("") {};
 };
 
-struct ConfigData {
+struct Server {
 	std::string server_name;
 	std::string host;
 	int port;
-	std::map<std::string, LocationConfig> locations;
+	std::map<std::string, Location> locations;
 };
 
 class Config {
@@ -33,10 +33,15 @@ class Config {
 		Config &operator=(const Config &rhs);
 
 		void parseConfigFile(const std::string &filename);
-		ConfigData getConfigData(void) const;
+		Server getServer(void) const;
 
 	private:
-		ConfigData _configData;
+		std::map<std::string, Config> _Servers;
+		Server _Server;
+
+		void parseLocation(Location *currentLocation, std::string key, std::string value);
+		void parseServer(std::string key, std::string value);
+		bool locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value);
 };
 
 std::ostream& operator<<(std::ostream& os, const Config& obj);
