@@ -19,13 +19,24 @@ int main(int argc, char **argv)
 	std::string configPath(argv[1] ? argv[1] : DEFAULT_CONF);
 	try
 	{
-		Config conf(configPath);
-		log(logINFO) << "Loaded " << configPath;
-		Webserv server(conf);
-		return(server.run());
+		// std::map<std::string, Config>* allConfigsPtr = new std::map<std::string, Config>;
+		// Parser::parse(configPath, allConfigsPtr); //uses stack internally
+		// std::map<std::string, Config> ::iterator it;
+		// for (it = (*allConfigsPtr).begin(); it != (*allConfigsPtr).end(); it++)
+		// {
+		// 	log(logINFO) << "Starting server " << it->first;
+		// 	Webserv server(it->second);
+		// 	server.run();
+		// }
+		// delete allConfigsPtr;
+
+		Config debug(configPath);
+		Webserv debugServ(debug);
+		debugServ.run();
 	}
 	catch (std::exception &e)
 	{
 		log(logERROR) << e.what();
 	}
+
 }

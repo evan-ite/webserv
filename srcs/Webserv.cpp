@@ -53,7 +53,7 @@ int Webserv::makeNonBlocking(int server_fd)
 
 int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 {
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	const int enable = 1;
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 	{
@@ -68,6 +68,8 @@ int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 	}
 	if (this->makeNonBlocking(server_fd) == -1)
 		return (0);
+
+	// Jan needs to read this https://silviocesare.wordpress.com/2007/10/22/setting-sin_zero-to-0-in-struct-sockaddr_in/
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(this->_conf.getConfigData().port);

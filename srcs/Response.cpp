@@ -1,8 +1,7 @@
 #include "../includes/server.hpp"
 
 // Constructors
-Response::Response()
-{}
+Response::Response() {}
 
 Response::Response(std::string const &httpRequest, ConfigData confData)
 {
@@ -76,7 +75,7 @@ std::string Response::makeResponse()
 void	Response::postMethod(Request request)
 {
 	// (void)request;
-	// Create all files 
+	// Create all files
 	for (size_t i = 0; i < request._fileData.size(); ++i) {
 
 		std::string filename = request._fileData[i].first;
@@ -84,7 +83,7 @@ void	Response::postMethod(Request request)
 
 		std::cout << "Filename: " << filename << "\nContent: " << content << "\n";
 	}
-	
+
 
 	// Process the POST data (e.g., save it, respond with a success message, etc.)
 	this->_status = 200;
