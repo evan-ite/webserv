@@ -91,3 +91,10 @@ std::string getDateTime()
 	std::strftime(buffer, 30, "%a, %d %b %Y %H:%M:%S GMT", gmt_time);
 	return std::string(buffer);
 }
+
+/* Int to string */
+std::string to_string(int value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}

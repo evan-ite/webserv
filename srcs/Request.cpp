@@ -68,6 +68,8 @@ void Request::parseMultipart(std::string httpRequest)
 	std::string body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4); // Find body
 	log(logDEBUG) << "MULTIPART BODY\n" << body;
 	std::string boundary = findKey(httpRequest, "boundary=", '\r'); // Find boundary
+	if (boundary.empty())
+		return;
 	std::string::size_type startPos = body.find("--" + boundary) + boundary.length() + 4; // Skip the boundary and CRLF
 	// Loop over all files in body
 	while (startPos != std::string::npos)

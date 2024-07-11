@@ -10,8 +10,15 @@ Response::Response(std::string const &httpRequest, Server serverData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
+	int cgi = (request._location.size() > 4 && 
+           request._location.substr(request._location.size() - 4) == ".cgi") ||
+          (request._location.find(".cgi?") != std::string::npos);
+		   // && serverData.cgi == "on"
+
 	try {
-		if (request._method == POST && request._location == "/upload")
+		if (cgi) 
+			cgiMethod(request, serverData);
+		else if (request._method == POST)
 			postMethod(request, serverData);
 		else if (request._method == GET)
 			getMethod(request, serverData, root, index);
@@ -22,7 +29,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
         this->_status = 405;
         this->_reason = "Method Not Allowed";
         this->_type = "text/plain";
-        this->_body = "Method Not Allowed";
+        this->_body = readFileToString("content/error/405.html");
         this->_connection = "close";
         this->_len = _body.length();
         this->_date = getDateTime();
@@ -75,11 +82,9 @@ std::string Response::makeResponse()
 
 void	Response::postMethod(Request request, Server serverData)
 {
-	// if CGI
-		// cgi function
+
 	(void) serverData;
 	
-	// else
 	// Create all files
 	for (size_t i = 0; i < request._fileData.size(); ++i) {
 
@@ -88,7 +93,6 @@ void	Response::postMethod(Request request, Server serverData)
 
 		std::cout << "Filename: " << filename << "\nContent: " << content << "\n";
 	}
-
 
 	// Process the POST data (e.g., save it, respond with a success message, etc.)
 	this->_status = 200;
@@ -120,7 +124,7 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 		this->_status = 404;
 		this->_reason = "not found";
 		this->_type = "";
-		this->_body = "";
+		this->_body = readFileToString("content/error/404.html");;
 		this->_connection = "close";
 		this->_len = 0;
 	}
@@ -130,8 +134,12 @@ void	Response::deleteMethod() {}
 
 void Response::cgiMethod(Request request, Server serverData)
 {
+	(void) serverData;
+
+	log(logINFO) << "Using CGI to fetch data";
+
     // Determine the path to the CGI script based on the request
-    std::string cgiScriptPath = serverData.cgi_bin;
+    std::string cgiScriptPath = "content/cgi-bin/simple.py"; //serverData.cgi_bin + request._location;
 
     // Set up environment variables specific to GET or POST
     if (request._method == GET) {
@@ -140,7 +148,7 @@ void Response::cgiMethod(Request request, Server serverData)
     } else if (request._method == POST) {
     	setenv("REQUEST_METHOD", "POST", 1);
         setenv("CONTENT_TYPE", request._contentType.c_str(), 1);
-        setenv("CONTENT_LENGTH", std::to_string(request._contentLenght).c_str(), 1); 
+        setenv("CONTENT_LENGTH", to_string(request._contentLenght).c_str(), 1); 
 	}
 	// Set up common environment variables required by the CGI script
     setenv("SCRIPT_NAME", cgiScriptPath.c_str(), 1);
@@ -163,38 +171,29 @@ void Response::cgiMethod(Request request, Server serverData)
 	else if (pid == 0) {
         // Child process: execute the CGI script
         close(pipefd[0]);  // Close read end of the pipe
-        dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
-        dup2(pipefd[1], STDERR_FILENO);  // Redirect stderr to the pipe
-
+		// If POST, write the data to the pipe
         if (request._method == POST) {
-            // Provide POST data to the CGI script via stdin
-            int post_data_fd[2];
-            if (pipe(post_data_fd) == -1) {
-                log(logERROR) << "Error creating pipe in child";
-				exit(EXIT_FAILURE);
-            }
-            pid_t post_pid = fork();
-            if (post_pid == -1) {
-                log(logERROR) << "Error forking in child";
-				exit(EXIT_FAILURE);
-            } else if (post_pid == 0) {
-                // Child process to handle POST data input
-                close(post_data_fd[0]);
-                write(post_data_fd[1], this->_body.c_str(), this->_len);
-                close(post_data_fd[1]);
-                exit(0);
-            } else {
-                close(post_data_fd[1]);
-                dup2(post_data_fd[0], STDIN_FILENO);
-                close(post_data_fd[0]);
-            }
+            write(pipefd[1], this->_body.c_str(), this->_len);
         }
 
-        execl(cgiScriptPath.c_str(), cgiScriptPath.c_str(), nullptr);
-        exit(EXIT_FAILURE);  // Exit if execl fails
+        dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
+        dup2(pipefd[1], STDERR_FILENO);  // Redirect stderr to the pipe
+        close(pipefd[1]);  // Close write end of the pipe
+		
+        // Prepare arguments for execve
+        char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
+
+        // Convert environment variables to char* array
+        extern char **environ;
+        execve(cgiScriptPath.c_str(), args, environ);
+
+        log(logERROR) << "Error executing cgi script";
+		throw ResponseException();
     } else {
+        log(logDEBUG) << "Back in parent process";
         // Parent process: read the CGI script's output
         close(pipefd[1]);  // Close write end of the pipe
+
         std::string cgiOutput;
         char buffer[512];
         ssize_t bytesRead;
@@ -214,11 +213,12 @@ void Response::cgiMethod(Request request, Server serverData)
             this->_date = getDateTime();
         } else {
             // Handle case where CGI script produces no output
+        	log(logERROR) << "CGI output empty";
             this->_status = 500;
-            this->_body = "Internal Server Error";
+            this->_body = readFileToString("content/error/500.html");
             this->_len = _body.length();
             this->_reason = "Internal Server Error";
-            this->_type = "text/plain";
+            this->_type = "text/html";
             this->_connection = "close";
             this->_date = getDateTime();
         }
