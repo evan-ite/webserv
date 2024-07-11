@@ -19,6 +19,7 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <algorithm>
+# include <cctype>
 // local header files
 # include "Config.hpp"
 # include "Logger.hpp"

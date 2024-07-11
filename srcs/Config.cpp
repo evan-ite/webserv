@@ -2,20 +2,21 @@
 
 Config::Config(void) {}
 
-Config::Config(const std::string &filename)
+Config::Config(const std::string &filename) // To-DO
 {
 	this->readServer(filename);
 }
 
-Config::Config(const Config &src) {
+Config::Config(const Config &src) { //To-DO
 	*this = src;
 }
 
 Config::~Config(void) {}
 
-Config &Config::operator=(const Config &rhs) {
+Config &Config::operator=(const Config &rhs) // To-DO
+{
 	if (this != &rhs)
-		this->_Server = rhs._Server;
+		this->_tempServer = rhs._tempServer;
 	return *this;
 }
 
@@ -36,22 +37,22 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 
 void Config::parseServer(std::string key, std::string value) {
 	if (key == "server_name")
-		this->_Server.server_name = value;
+		this->_tempServer.server_name = value;
 	else if (key == "host")
-		this->_Server.host = value;
+		this->_tempServer.host = value;
 	else if (key == "listen") {
 		std::istringstream iss(value);
 		int port;
 		if (!(iss >> port))
 			throw std::runtime_error("Error: invalid port number");
-		this->_Server.port = port;
+		this->_tempServer.port = port;
 	}
 }
 
 bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value) {
 	if (line.find("}") != std::string::npos && *parsingLocation)
 	{
-		this->_Server.locations[currentLocation->path] = *currentLocation;
+		this->_tempServer.locations[currentLocation->path] = *currentLocation;
 		log(logDEBUG) << "saved path config for " << currentLocation->path;
 		*parsingLocation = false;
 		return (true);
@@ -72,7 +73,7 @@ void Config::countBraces(std::string line, int *braceCount)
 	*braceCount += openBraces - closeBraces;
 }
 
-void Config::parseConfigString(const std::string &configString) {
+void Config::loadServerStruct(const std::string &configString) {
 	std::istringstream configStream(configString);
 	std::string line;
 	bool parsingLocation = false;
@@ -94,7 +95,7 @@ void Config::parseConfigString(const std::string &configString) {
 			parseLocation(&currentLocation, key, value);
 	}
 	if (parsingLocation)
-		this->_Server.locations[currentLocation.path] = currentLocation;
+		this->_tempServer.locations[currentLocation.path] = currentLocation;
 }
 
 std::vector<std::string> Config::getPorts(std::string server) {
@@ -121,14 +122,59 @@ std::vector<std::string> Config::getPorts(std::string server) {
 	return ports;
 }
 
-void Config::readServer(const std::string &filename)
+std::vector<std::string> Config::getHosts(std::string server) {
+	std::vector<std::string> hosts;
+	size_t startPos = 0;
+
+	while (true) {
+		size_t pos = server.find("host", startPos);
+		if (pos == std::string::npos || !isblank(server[pos + 4])) break;
+		size_t endPos = server.find(";", pos);
+		if (endPos == std::string::npos) break;
+
+		std::string hostStr = server.substr(pos + 5, endPos - pos - 5);
+		std::istringstream iss(hostStr);
+		std::string host;
+		while (iss >> host)
+			hosts.push_back(host);
+		startPos = endPos + 1;
+	}
+		// ONLY FOR TESTING
+/* 	for (size_t i = 0; i < hosts.size(); ++i) {
+		std::cout << "Host " << i + 1 << ": " << hosts[i] << std::endl;
+	} */
+	return hosts;
+}
+
+void Config::parseMultipleServers(std::string server)
+{
+	std::vector<std::string> ports = getPorts(server);
+	std::vector<std::string> hosts = getHosts(server);
+
+	loadServerStruct(server);
+	for (size_t i = 0; i < hosts.size(); ++i) {
+		for (size_t j = 0; j < ports.size(); ++j) {
+			Server newServer = this->_tempServer;
+
+			newServer.host = hosts[i];
+			std::istringstream iss(ports[j]);
+			iss >> newServer.port;
+
+			std::string key = hosts[i] + ":" + ports[j];
+			this->_Servers.insert(std::make_pair(key, newServer));
+
+			log(logDEBUG) << "Server " << key << " loaded";
+		}
+	}
+}
+
+void Config::readServer(const std::string &filename) // Add logs to this function and test it thoroughly.
 {
 	std::ifstream file(filename.c_str());
 	bool parseServer = false;
 	std::string line;
 	std::string server;
 	int braceCount = 0;
-	int i = 0; // to remove
 
 	if (!file.is_open())
 		throw std::runtime_error("Error: could not open file");
@@ -142,10 +188,7 @@ void Config::readServer(const std::string &filename)
 			countBraces(line, &braceCount);
 
 			if (braceCount == 0 && parseServer) {
-				i++;
-				std::cout << "Server " << i << ":" << server << std::endl;
-				getPorts(server);
-				parseConfigString(server);
+				parseMultipleServers(server);
 				server.clear();
 				parseServer = false;
 			}
@@ -197,8 +240,8 @@ X read the ports. (external function)
 
 
 
-Server Config::getServer(void) const {
-	return this->_Server;
+Server Config::getServer(void) const { //To-Do: Server getServer(std::string server_IP) const
+	return this->_tempServer;
 }
 
 std::ostream& operator<<(std::ostream& os, const Config& obj) {
