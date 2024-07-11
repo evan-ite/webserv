@@ -4,7 +4,6 @@ Config::Config(void) {}
 
 Config::Config(const std::string &filename)
 {
-	this->parseConfigFile(filename);
 	this->readServer(filename);
 }
 
@@ -66,17 +65,20 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 	return (false);
 }
 
-void Config::parseConfigFile(const std::string &filename) {
-	std::ifstream file(filename.c_str());
+void Config::countBraces(std::string line, int *braceCount)
+{
+	size_t openBraces = std::count(line.begin(), line.end(), '{');
+	size_t closeBraces = std::count(line.begin(), line.end(), '}');
+	*braceCount += openBraces - closeBraces;
+}
+
+void Config::parseConfigString(const std::string &configString) {
+	std::istringstream configStream(configString);
 	std::string line;
 	bool parsingLocation = false;
 	Location currentLocation("/");
 
-	if (!file.is_open())
-		throw std::runtime_error("Error: could not open file");
-
-	while (std::getline(file, line))
-	{
+	while (std::getline(configStream, line)) {
 		std::istringstream iss(line);
 		std::string key;
 		std::string value;
@@ -93,14 +95,30 @@ void Config::parseConfigFile(const std::string &filename) {
 	}
 	if (parsingLocation)
 		this->_Server.locations[currentLocation.path] = currentLocation;
-	file.close();
 }
 
-void Config::countBraces(std::string line, int *braceCount)
-{
-	size_t openBraces = std::count(line.begin(), line.end(), '{');
-	size_t closeBraces = std::count(line.begin(), line.end(), '}');
-	*braceCount += openBraces - closeBraces;
+std::vector<std::string> Config::getPorts(std::string server) {
+	std::vector<std::string> ports;
+	size_t startPos = 0;
+
+	while (true) {
+		size_t pos = server.find("listen", startPos);
+		if (pos == std::string::npos) break;
+		size_t endPos = server.find(";", pos);
+		if (endPos == std::string::npos) break;
+
+		std::string portStr = server.substr(pos + 7, endPos - pos - 7);
+		std::istringstream iss(portStr);
+		std::string port;
+		while (iss >> port)
+			ports.push_back(port);
+		startPos = endPos + 1;
+	}
+	// ONLY FOR TESTING
+/* 	for (size_t i = 0; i < ports.size(); ++i) {
+		std::cout << "Port " << i + 1 << ": " << ports[i] << std::endl;
+	} */
+	return ports;
 }
 
 void Config::readServer(const std::string &filename)
@@ -110,7 +128,7 @@ void Config::readServer(const std::string &filename)
 	std::string line;
 	std::string server;
 	int braceCount = 0;
-	int i = 0;
+	int i = 0; // to remove
 
 	if (!file.is_open())
 		throw std::runtime_error("Error: could not open file");
@@ -123,9 +141,11 @@ void Config::readServer(const std::string &filename)
 			server.append(line + "\n");
 			countBraces(line, &braceCount);
 
-			if (braceCount == 0 && parseServer) { //
+			if (braceCount == 0 && parseServer) {
 				i++;
 				std::cout << "Server " << i << ":" << server << std::endl;
+				getPorts(server);
+				parseConfigString(server);
 				server.clear();
 				parseServer = false;
 			}
@@ -134,13 +154,15 @@ void Config::readServer(const std::string &filename)
 }
 
 /* TO-DO
-- extract a single server block.
-- read the ports. (external function)
+X extract a single server block.
+X read the ports. (external function)
 - Go through the server string and store configuration in the server struct. (modify exiting function).
 - loop through the ports:
 	- create a copy of the Server struct.
 	- change Port and Host to match the current port.
 	- insert the new pair in the map.
+- load the default configuration before loading the user configuration.
+- apply convertions where it is necessary.
 */
 
 

@@ -32,11 +32,12 @@ class Config {
 
 		Config &operator=(const Config &rhs);
 
-		void parseConfigFile(const std::string &filename);
+		void parseConfigString(const std::string &configString);
 		Server getServer(void) const;
+		// TO-DO: Server getServer(std::string server_IP) const;
 
 	private:
-		std::map<std::string, Config> _Servers;
+		std::map<std::string, Server> _Servers;
 		Server _Server;
 
 		void parseLocation(Location *currentLocation, std::string key, std::string value);
@@ -44,6 +45,7 @@ class Config {
 		bool locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value);
 		void readServer(const std::string &filename);
 		void countBraces(std::string line, int *braceCount);
+		std::vector<std::string> getPorts(std::string server);
 };
 
 std::ostream& operator<<(std::ostream& os, const Config& obj);
