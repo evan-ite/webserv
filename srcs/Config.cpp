@@ -5,7 +5,7 @@ Config::Config(void) {}
 Config::Config(const std::string &filename)
 {
 	this->parseConfigFile(filename);
-	this->temporaryName(filename);
+	this->readServer(filename);
 }
 
 Config::Config(const Config &src) {
@@ -96,27 +96,40 @@ void Config::parseConfigFile(const std::string &filename) {
 	file.close();
 }
 
-void Config::temporaryName(const std::string &filename)
+void Config::countBraces(std::string line, int *braceCount)
+{
+	size_t openBraces = std::count(line.begin(), line.end(), '{');
+	size_t closeBraces = std::count(line.begin(), line.end(), '}');
+	*braceCount += openBraces - closeBraces;
+}
+
+void Config::readServer(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());
 	bool parseServer = false;
 	std::string line;
 	std::string server;
+	int braceCount = 0;
+	int i = 0;
 
 	if (!file.is_open())
 		throw std::runtime_error("Error: could not open file");
 
 	while (std::getline(file, line))
 	{
-		if (line.find("server"))
-			parseServer = !parseServer;
-		if (parseServer)
-			server.append(line);
-		else {
-			std::cout << server << "here" << std::endl;
-			break;
-		}
+		if (line.find("server") != std::string::npos)
+			parseServer = true;
+		if (parseServer) {
+			server.append(line + "\n");
+			countBraces(line, &braceCount);
 
+			if (braceCount == 0 && parseServer) { //
+				i++;
+				std::cout << "Server " << i << ":" << server << std::endl;
+				server.clear();
+				parseServer = false;
+			}
+		}
 	}
 }
 
