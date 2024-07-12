@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 		//delete allConfigsPtr;
 
 		Config debug(configPath);
+		std::cout << debug << std::endl;
 		Webserv debugServ(debug);
 		debugServ.run();
 	}

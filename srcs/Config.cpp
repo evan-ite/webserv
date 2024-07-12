@@ -4,7 +4,7 @@ Config::Config(void) {}
 
 Config::Config(const std::string &filename) // To-DO
 {
-	this->readServer(filename);
+	this->parseConfig(filename);
 }
 
 Config::Config(const Config &src) { //To-DO
@@ -38,6 +38,8 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 void Config::parseServer(std::string key, std::string value) {
 	if (key == "server_name")
 		this->_tempServer.server_name = value;
+	else if (key == "root")
+		this->_tempServer.root = value;
 	else if (key == "host")
 		this->_tempServer.host = value;
 	else if (key == "listen") {
@@ -151,7 +153,9 @@ void Config::parseMultipleServers(std::string server)
 	std::vector<std::string> ports = getPorts(server);
 	std::vector<std::string> hosts = getHosts(server);
 
-	loadServerStruct(server);
+	//initialize _tempServer with fallback values
+	this->_tempServer = this->_fallBackServer;
+	loadServerStruct(server); // load user configuration
 	for (size_t i = 0; i < hosts.size(); ++i) {
 		for (size_t j = 0; j < ports.size(); ++j) {
 			Server newServer = this->_tempServer;
@@ -168,7 +172,7 @@ void Config::parseMultipleServers(std::string server)
 	}
 }
 
-void Config::readServer(const std::string &filename) // Add logs to this function and test it thoroughly.
+void Config::readServer(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());
 	bool parseServer = false;
@@ -196,14 +200,39 @@ void Config::readServer(const std::string &filename) // Add logs to this functio
 	}
 }
 
+void Config::loadFallback(const std::string &filename) {
+	std::ifstream file(filename.c_str());
+	std::string line;
+	std::string server;
+
+	if (!file.is_open())
+		throw std::runtime_error("Error: could not open fallback file");
+
+	while (std::getline(file, line))
+		server.append(line + "\n");
+	loadServerStruct(server);
+	this->_fallBackServer = this->_tempServer;
+}
+
+void Config::parseConfig(const std::string &filename) {
+	try {
+		loadFallback(FALLBACK_CONF);
+		readServer(filename);
+	}
+	catch (std::exception &e) {
+		log(logERROR) << e.what();
+	}
+}
+
+
 /* TO-DO
 X extract a single server block.
 X read the ports. (external function)
-- Go through the server string and store configuration in the server struct. (modify exiting function).
-- loop through the ports:
-	- create a copy of the Server struct.
-	- change Port and Host to match the current port.
-	- insert the new pair in the map.
+X Go through the server string and store configuration in the server struct. (modify exiting function).
+X loop through the ports:
+	X create a copy of the Server struct.
+	X change Port and Host to match the current port.
+	X insert the new pair in the map.
 - load the default configuration before loading the user configuration.
 - apply convertions where it is necessary.
 */
@@ -245,20 +274,25 @@ Server Config::getServer(void) const { //To-Do: Server getServer(std::string ser
 }
 
 std::ostream& operator<<(std::ostream& os, const Config& obj) {
-	const Server& Server = obj.getServer();
-	os << "Server Name: " << Server.server_name << std::endl;
-	os << "Host: " << Server.host << std::endl;
-	os << "Port: " << Server.port << std::endl;
-	os << "Locations:" << std::endl;
-	for (std::map<std::string, Location>::const_iterator it = Server.locations.begin(); it != Server.locations.end(); ++it) {
-		const Location& location = it->second;
-		os << "  Path: " << location.path << std::endl;
-		os << "    Root: " << location.root << std::endl;
-		os << "    Index: " << location.index << std::endl;
-		os << "    Error Page: " << location.error_page << std::endl;
-		os << "    CGI: " << location.cgi << std::endl;
-		os << "    Client Max Body Size: " << location.client_max_body_size << std::endl;
-		os << "    Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
+	for (std::map<std::string, Server>::const_iterator serverPair = obj._Servers.begin(); \
+		serverPair != obj._Servers.end(); ++serverPair) {
+		const Server& server = serverPair->second;
+		os << "Server Name: " << server.server_name << std::endl;
+		os << "Root: " << server.root << std::endl;
+		os << "Host: " << server.host << std::endl;
+		os << "Port: " << server.port << std::endl;
+		os << "Locations:" << std::endl;
+		for (std::map<std::string, Location>::const_iterator locationPair = server.locations.begin(); \
+			locationPair != server.locations.end(); ++locationPair) {
+			const Location& location = locationPair->second;
+			os << "  Path: " << location.path << std::endl;
+			os << "    Root: " << location.root << std::endl;
+			os << "    Index: " << location.index << std::endl;
+			os << "    Error Page: " << location.error_page << std::endl;
+			os << "    CGI: " << location.cgi << std::endl;
+			os << "    Client Max Body Size: " << location.client_max_body_size << std::endl;
+			os << "    Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
+		}
 	}
 	return os;
 }

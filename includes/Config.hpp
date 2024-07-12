@@ -18,6 +18,7 @@ struct Location { //rename to Location?
 
 struct Server {
 	std::string server_name;
+	std::string root;
 	std::string host;
 	int port;
 	std::map<std::string, Location> locations;
@@ -35,9 +36,9 @@ class Config {
 		void loadServerStruct(const std::string &configString);
 		Server getServer(void) const;
 		// TO-DO: Server getServer(std::string server_IP) const;
+		std::map<std::string, Server> _Servers;
 
 	private:
-		std::map<std::string, Server> _Servers;
 		Server _tempServer;
 		Server _fallBackServer;
 
@@ -49,6 +50,8 @@ class Config {
 		std::vector<std::string> getPorts(std::string server);
 		std::vector<std::string> getHosts(std::string server);
 		void parseMultipleServers(std::string server);
+		void loadFallback(const std::string &filename);
+		void parseConfig(const std::string &filename);
 };
 
 std::ostream& operator<<(std::ostream& os, const Config& obj);
