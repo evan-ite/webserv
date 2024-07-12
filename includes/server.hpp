@@ -21,6 +21,8 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <fstream>
+# include <algorithm>
+# include <cctype>
 // local header files
 # include "Config.hpp"
 # include "Logger.hpp"

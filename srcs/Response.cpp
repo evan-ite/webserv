@@ -3,10 +3,10 @@
 // Constructors
 Response::Response() {}
 
-Response::Response(std::string const &httpRequest, ConfigData confData)
+Response::Response(std::string const &httpRequest, Server confData)
 {
 	Request request(httpRequest);
-	LocationConfig loc = confData.locations["/"];
+	Location loc = confData.locations["/"];
 	std::string index = loc.index;
 	std::string root = loc.root;
 
