@@ -2,21 +2,21 @@
 
 Config::Config(void) {}
 
-Config::Config(const std::string &filename) // To-DO
-{
+Config::Config(const std::string &filename) {
 	this->parseConfig(filename);
 }
 
-Config::Config(const Config &src) { //To-DO
+Config::Config(const Config &src) {
 	*this = src;
 }
 
 Config::~Config(void) {}
 
-Config &Config::operator=(const Config &rhs) // To-DO
-{
-	if (this != &rhs)
-		this->_tempServer = rhs._tempServer;
+Config &Config::operator=(const Config &rhs) {
+	if (this != &rhs) {
+		this->_Servers = rhs._Servers;
+		this->_fallBackServer = rhs._fallBackServer;
+	}
 	return *this;
 }
 
@@ -224,56 +224,19 @@ void Config::parseConfig(const std::string &filename) {
 	}
 }
 
-
-/* TO-DO
-X extract a single server block.
-X read the ports. (external function)
-X Go through the server string and store configuration in the server struct. (modify exiting function).
-X loop through the ports:
-	X create a copy of the Server struct.
-	X change Port and Host to match the current port.
-	X insert the new pair in the map.
-- load the default configuration before loading the user configuration.
-- apply convertions where it is necessary.
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Server Config::getServer(void) const { //To-Do: Server getServer(std::string server_IP) const
+/* Server Config::getServer() const { // TO BE DELETED
 	return this->_tempServer;
+} */
+
+Server Config::getServer(std::string serverIP) const { //Throws an exception (std::out_of_range) if the key doesn't exist in the map.
+	return this->_Servers.at(serverIP);
 }
 
-std::ostream& operator<<(std::ostream& os, const Config& obj) {
+std::map<std::string, Server> Config::getServersMap(void) const {
+	return this->_Servers;
+}
+
+/* std::ostream& operator<<(std::ostream& os, const Config& obj) { // For testing purposes ONLY.
 	for (std::map<std::string, Server>::const_iterator serverPair = obj._Servers.begin(); \
 		serverPair != obj._Servers.end(); ++serverPair) {
 		const Server& server = serverPair->second;
@@ -295,4 +258,17 @@ std::ostream& operator<<(std::ostream& os, const Config& obj) {
 		}
 	}
 	return os;
-}
+} */
+
+
+/* TO-DO
+X extract a single server block.
+X read the ports. (external function)
+X Go through the server string and store configuration in the server struct. (modify exiting function).
+X loop through the ports:
+	X create a copy of the Server struct.
+	X change Port and Host to match the current port.
+	X insert the new pair in the map.
+X load the default configuration before loading the user configuration.
+- apply convertions where it is necessary.
+*/

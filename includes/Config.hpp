@@ -34,11 +34,13 @@ class Config {
 		Config &operator=(const Config &rhs);
 
 		void loadServerStruct(const std::string &configString);
-		Server getServer(void) const;
-		// TO-DO: Server getServer(std::string server_IP) const;
-		std::map<std::string, Server> _Servers;
+		//Server getServer(void) const; // Used to compile while the rest of codebase is incompatible with the Map formatt.
+		Server getServer(std::string server_IP) const;
+		std::map<std::string, Server> getServersMap(void) const;
+
 
 	private:
+		std::map<std::string, Server> _Servers;
 		Server _tempServer;
 		Server _fallBackServer;
 
@@ -54,6 +56,6 @@ class Config {
 		void parseConfig(const std::string &filename);
 };
 
-std::ostream& operator<<(std::ostream& os, const Config& obj);
+//std::ostream& operator<<(std::ostream& os, const Config& obj);
 
 #endif
