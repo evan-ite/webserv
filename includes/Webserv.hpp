@@ -6,8 +6,8 @@
 class Webserv
 {
 	public:
-		Webserv(Config conf);
-		Webserv(std::map<std::string, Config> confs);
+		// Webserv(Config conf);
+		Webserv(std::map<std::string, Server> allServers);
 		~Webserv();
 		Webserv & operator=(const Webserv &assign);
 		int	run();
@@ -27,7 +27,7 @@ class Webserv
 	private:
 		Webserv(const Webserv &copy);
 		Webserv();
-		std::map<std::string, Config>	_confs;
+		std::map<std::string, Server>	_allServers;
 		int								setupServerSocket(int &server_fd, struct sockaddr_in &address);
 		int								setupEpoll(int server_fd, int &epoll_fd);
 		void							handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers);

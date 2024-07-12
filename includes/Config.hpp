@@ -35,9 +35,9 @@ class Config {
 		void loadServerStruct(const std::string &configString);
 		Server getServer(void) const;
 		// TO-DO: Server getServer(std::string server_IP) const;
+		std::map<std::string, Server> _Servers;
 
 	private:
-		std::map<std::string, Server> _Servers;
 		Server _tempServer;
 		Server _fallBackServer;
 
