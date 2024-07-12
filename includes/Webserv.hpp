@@ -30,8 +30,8 @@ class Webserv
 		std::map<std::string, Config>	_confs;
 		int								setupServerSocket(int &server_fd, struct sockaddr_in &address);
 		int								setupEpoll(int server_fd, int &epoll_fd);
-		void							handleIncomingConnections(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers);
-		void							handleRequest(int socket_fd, const struct sockaddr_in& client_addr);
+		void							handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers);
+		void							readRequest(int socket_fd);
 		int								makeNonBlocking(int server_fd);
 };
 

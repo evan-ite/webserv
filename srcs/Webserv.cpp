@@ -90,55 +90,94 @@ int Webserv::setupEpoll(int server_fd, int &	epoll_fd)
 	return (1);
 }
 
-void Webserv::handleIncomingConnections(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers)
+void Webserv::handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers)
 {
 	struct epoll_event events[MAX_EVENTS];
+	int client_fd;
 	while (g_signal)
 	{
 		int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
 		if (num_events == -1)
+		{
+			close(epoll_fd);
+			log(logERROR) << "epoll_wait error: " << strerror(errno);
 			throw epollError();
-		// needs all kinds of other error handling
+		}
 		for (int i = 0; i < num_events; ++i)
 		{
 			int socket_fd = events[i].data.fd;
-			const struct sockaddr_in& client_addr = initServers[socket_fd].second;
-			if (events[i].events & EPOLLIN)
-				this->handleRequest(socket_fd, client_addr);
+			bool new_conn = false;
+
+			// Check if this is a new connection on any listening socket
+			std::vector< std::pair<int, struct sockaddr_in> >::iterator it;
+			for (it = initServers.begin(); it != initServers.end(); ++it)
+			{
+				if (it->first == socket_fd)
+				{
+					new_conn = true;
+					struct sockaddr_in client_addr;
+					socklen_t client_len = sizeof(client_addr);
+					client_fd = accept(socket_fd, (struct sockaddr*)&client_addr, &client_len);
+					if (client_fd >= 0) {
+						log(logDEBUG) << "New connection on fd " << client_fd;
+						if (this->makeNonBlocking(client_fd) == -1)
+							throw socketError();
+						struct epoll_event client_event;
+						client_event.data.fd = client_fd;
+						client_event.events = EPOLLIN | EPOLLET;
+						if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
+							log(logERROR) << "epoll_ctl error: " << strerror(errno);
+							close(client_fd); // Close client_fd on failure
+						}
+					} else {
+						log(logERROR) << "Accept error: " << strerror(errno);
+					}
+					break; // Found the matching listening socket, no need to continue
+				}
+			}
+
+			if (!new_conn) {
+				client_fd = socket_fd;
+				this->readRequest(client_fd);
+			}
 		}
 	}
+	close(epoll_fd);
 }
 
-void Webserv::handleRequest(int socket_fd, const struct sockaddr_in& client_addr)
+void Webserv::readRequest(int client_fd)
 {
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
-	log(logINFO) << "Reading from socket, FD:" << socket_fd;
-	while ((count = read(socket_fd, buffer, BUFFER_SIZE)) > 0)
+	log(logINFO) << "Reading from socket, FD: " << client_fd;
+
+	while ((count = read(client_fd, buffer, BUFFER_SIZE)) > 0)
 		httpRequest.append(buffer, count);
-	log(logDEBUG) << errno;
+	if (count == -1)
+	{
+		close(client_fd); // Close on read error
+		log(logERROR) << "Read error: " << strerror(errno);
+		return ;
+	}
 	if (!httpRequest.empty())
 	{
 		log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-		// Response res(httpRequest, this->_conf.getConfigData());
-		// std::string resString = res.makeResponse();
-		// debug only
 		const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
-		ssize_t sent = write(socket_fd, response, strlen(response));
+		ssize_t sent = write(client_fd, response, strlen(response));
 		if (sent == -1)
 		{
-			log(logERROR) << "Error writing to socket, FD:" << socket_fd;
-			throw socketError();
+			close(client_fd); // Close on write error
+			log(logERROR) << "Error writing to socket, FD: " << client_fd;
 		}
 	}
 	else
 	{
-		log(logERROR) << "Error reading from socket, FD:" << socket_fd;
-		throw socketError();
+		close(client_fd); // Close on empty request
+		log(logERROR) << "Empty request or client disconnected, FD: " << client_fd;
 	}
-	log(logINFO) << "Handled request from client " << inet_ntoa(client_addr.sin_addr);
 }
+
 
 
 
@@ -212,7 +251,7 @@ int	Webserv::run()
 		initServers.push_back(std::make_pair(server_fd, address));
 		log(logINFO) << "Server listening: " << it->first;
 	}
-	this->handleIncomingConnections(epoll_fd, initServers);
+	this->handleEpollEvents(epoll_fd, initServers);
 	for (std::vector<int>::size_type i = 0; i < initServers.size(); ++i)
 		close(initServers[i].first);
 	close(epoll_fd);
