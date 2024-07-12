@@ -39,7 +39,11 @@ const char * Webserv::clientError::what() const throw()
 }
 const char * Webserv::socketError::what() const throw()
 {
-	return "Socket or epoll did something weird";
+	return "Socket did something weird";
+}
+const char * Webserv::epollError::what() const throw()
+{
+	return "Epoll did something weird";
 }
 
 int Webserv::makeNonBlocking(int server_fd)
@@ -82,7 +86,7 @@ int Webserv::setupEpoll(int server_fd, int &	epoll_fd)
 	event.data.fd = server_fd;
 	event.events = EPOLLIN | EPOLLET;
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1)
-		throw socketError();
+		throw epollError();
 	return (1);
 }
 
@@ -93,7 +97,7 @@ void Webserv::handleIncomingConnections(int epoll_fd, std::vector< std::pair<int
 	{
 		int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
 		if (num_events == -1)
-			throw socketError();
+			throw epollError();
 		// needs all kinds of other error handling
 		for (int i = 0; i < num_events; ++i)
 		{
@@ -193,7 +197,7 @@ int	Webserv::run()
 	std::map<std::string, Config> ::iterator		it;
 	int												epoll_fd = epoll_create1(0);
 	if (epoll_fd == -1)
-		throw socketError();
+		throw epollError();
 	for (it = this->_confs.begin(); it != this->_confs.end(); it++)
 	{
 		int					server_fd;
@@ -209,7 +213,6 @@ int	Webserv::run()
 		log(logINFO) << "Server listening: " << it->first;
 	}
 	this->handleIncomingConnections(epoll_fd, initServers);
-		throw socketError();
 	for (std::vector<int>::size_type i = 0; i < initServers.size(); ++i)
 		close(initServers[i].first);
 	close(epoll_fd);

@@ -20,6 +20,9 @@ class Webserv
 		class socketError : public std::exception {
 			virtual const char* what() const throw();
 		};
+		class epollError : public std::exception {
+			virtual const char* what() const throw();
+		};
 
 	private:
 		Webserv(const Webserv &copy);
