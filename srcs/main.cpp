@@ -20,18 +20,11 @@ int main(int argc, char **argv)
 	std::string configPath(argv[1] ? argv[1] : DEFAULT_CONF);
 	try
 	{
-		// map<"127.0.0.1:8080", *conf>
-		//std::map<std::string, Config>* allConfigsPtr = new std::map<std::string, Config>;
-		//Parser::parse(configPath, allConfigsPtr);
 		log(logINFO) << "Starting virtual server(s)";
-		// Webserv allServer(allConfigsPtr);
-		// allServer.run();
-		//delete allConfigsPtr;
-
-		Config debug(configPath);
-		//std::cout << debug << std::endl;
-		Webserv debugServ(debug);
-		debugServ.run();
+		Config conf(configPath);
+		std::map<std::string, Server> allServers = conf.getServersMap();
+		Webserv webserv(allServers);
+		webserv.run();
 	}
 	catch (std::exception &e)
 	{
