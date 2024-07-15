@@ -29,7 +29,6 @@
 # include "Request.hpp"
 # include "Response.hpp"
 # include "Webserv.hpp"
-# include "Parser.hpp"
 
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets

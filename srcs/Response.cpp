@@ -131,6 +131,7 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 	}
 }
 
+
 void	Response::deleteMethod() {}
 
 void Response::cgiMethod(Request request, Server serverData)
