@@ -3,6 +3,15 @@
 
 # include "server.hpp"
 
+typedef struct s_connection
+{
+	std::string						key;
+	int								fd;
+	struct sockaddr_in				address;
+	std::vector<int>				c_fds; // c is short for "client", Elise
+	std::vector<struct sockaddr_in>	c_address;
+} t_conn;
+
 class Webserv
 {
 	public:
@@ -30,8 +39,8 @@ class Webserv
 		std::map<std::string, Server>	_allServers;
 		int								setupServerSocket(int &server_fd, struct sockaddr_in &address);
 		int								setupEpoll(int server_fd, int &epoll_fd);
-		void							handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers);
-		void							readRequest(int socket_fd);
+		void							handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers);
+		void							readRequest(Server serv, int client_fd);
 		int								makeNonBlocking(int server_fd);
 };
 

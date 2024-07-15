@@ -80,7 +80,7 @@ int Webserv::setupServerSocket(int &server_fd, struct sockaddr_in &address)
 	return (1);
 }
 
-int Webserv::setupEpoll(int server_fd, int &	epoll_fd)
+int Webserv::setupEpoll(int server_fd, int &epoll_fd)
 {
 	struct epoll_event event;
 	event.data.fd = server_fd;
@@ -90,7 +90,7 @@ int Webserv::setupEpoll(int server_fd, int &	epoll_fd)
 	return (1);
 }
 
-void Webserv::handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct sockaddr_in> > initServers)
+void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 {
 	struct epoll_event events[MAX_EVENTS];
 	int client_fd;
@@ -106,18 +106,20 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct
 		for (int i = 0; i < num_events; ++i)
 		{
 			int socket_fd = events[i].data.fd;
-			bool new_conn = false;
+			// bool new_conn = false;
 
 			// Check if this is a new connection on any listening socket
-			std::vector< std::pair<int, struct sockaddr_in> >::iterator it;
+			std::vector<t_conn>::iterator it;
 			for (it = initServers.begin(); it != initServers.end(); ++it)
 			{
-				if (it->first == socket_fd)
+				if (it->fd == socket_fd)
 				{
-					new_conn = true;
+					// new_conn = true;
 					struct sockaddr_in client_addr;
 					socklen_t client_len = sizeof(client_addr);
 					client_fd = accept(socket_fd, (struct sockaddr*)&client_addr, &client_len);
+					it->c_address.push_back(client_addr);
+					it->c_fds.push_back(client_fd);
 					if (client_fd >= 0) {
 						log(logDEBUG) << "New connection on fd " << client_fd;
 						if (this->makeNonBlocking(client_fd) == -1)
@@ -132,34 +134,40 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector< std::pair<int, struct
 					} else {
 						log(logERROR) << "Accept error: " << strerror(errno);
 					}
+
 					break; // Found the matching listening socket, no need to continue
 				}
+				else if (std::find(it->c_fds.begin(), it->c_fds.end(), socket_fd) != it->c_fds.end())
+					this->readRequest(this->_allServers[it->key], socket_fd);
+
 			}
 
-			if (!new_conn) {
-				client_fd = socket_fd;
-				this->readRequest(client_fd);
-			}
+			// if (!new_conn)
+			// {
+			// 	client_fd = socket_fd;
+			// 	this->readRequest(client_fd);
+			// }
 		}
 	}
 	close(epoll_fd);
 }
 
-void Webserv::readRequest(int client_fd)
+
+void Webserv::readRequest(Server serv, int client_fd)
 {
 	char buffer[BUFFER_SIZE];
+	(void) serv;
 	ssize_t count;
 	std::string httpRequest;
 	log(logINFO) << "Reading from socket, FD: " << client_fd;
-
 	while ((count = read(client_fd, buffer, BUFFER_SIZE)) > 0)
 		httpRequest.append(buffer, count);
-	if (count == -1)
-	{
-		close(client_fd); // Close on read error
-		log(logERROR) << "Read error: " << strerror(errno);
-		return ;
-	}
+	// if (count == -1)
+	// {
+	// 	close(client_fd); // Close on read error
+	// 	log(logERROR) << "Read error: " << strerror(errno);
+	// 	return ;
+	// }
 	if (!httpRequest.empty())
 	{
 		log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
@@ -182,30 +190,29 @@ void Webserv::readRequest(int client_fd)
 int	Webserv::run()
 {
 
-	std::vector< std::pair<int, struct sockaddr_in> >	initServers;
-	std::map<std::string, Server> ::iterator		it;
-	int												epoll_fd = epoll_create1(0);
+	std::vector<t_conn>							initServers;
+	std::map<std::string, Server> ::iterator	it;
+	int											epoll_fd = epoll_create1(0);
 	if (epoll_fd == -1)
 		throw epollError();
 	log(logDEBUG) << "No of Servers in conf " << this->_allServers.size();
 	for (it = this->_allServers.begin(); it != this->_allServers.end(); it++)
 	{
-		int					server_fd;
-		struct sockaddr_in	address;
-		// Jan needs to read this https://silviocesare.wordpress.com/2007/10/22/setting-sin_zero-to-0-in-struct-sockaddr_in/
-		memset(&address, 0, sizeof(address));
-		address.sin_port = htons(it->second.port);
-		address.sin_family = AF_INET;
-		address.sin_addr.s_addr = INADDR_ANY;
-		this->setupServerSocket(server_fd, address);
-		this->setupEpoll(server_fd, epoll_fd);
-		initServers.push_back(std::make_pair(server_fd, address));
+		t_conn conn;
+		conn.key = it->first;
+		memset(&conn.address, 0, sizeof(conn.address));
+		conn.address.sin_port = htons(it->second.port);
+		conn.address.sin_family = AF_INET;
+		conn.address.sin_addr.s_addr = INADDR_ANY;
+		this->setupServerSocket(conn.fd, conn.address);
+		this->setupEpoll(conn.fd, epoll_fd);
+		initServers.push_back(conn);
 		log(logINFO) << "Server listening: " << it->first;
 	}
 	if (initServers.size() > 0)
 		this->handleEpollEvents(epoll_fd, initServers);
 	for (std::vector<int>::size_type i = 0; i < initServers.size(); ++i)
-		close(initServers[i].first);
+		close(initServers[i].fd);
 	close(epoll_fd);
 	return (EXIT_SUCCESS);
 }
