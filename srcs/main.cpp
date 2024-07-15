@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 
 		Config debug(configPath);
 		//std::cout << debug << std::endl;
+		debug.getServersMap();
 		Webserv debugServ(debug);
 		debugServ.run();
 	}

@@ -118,9 +118,9 @@ std::vector<std::string> Config::getPorts(std::string server) {
 		startPos = endPos + 1;
 	}
 	// ONLY FOR TESTING
-/* 	for (size_t i = 0; i < ports.size(); ++i) {
+	for (size_t i = 0; i < ports.size(); ++i) {
 		std::cout << "Port " << i + 1 << ": " << ports[i] << std::endl;
-	} */
+	}
 	return ports;
 }
 
@@ -130,9 +130,15 @@ std::vector<std::string> Config::getHosts(std::string server) {
 
 	while (true) {
 		size_t pos = server.find("host", startPos);
-		if (pos == std::string::npos || !isblank(server[pos + 4])) break;
+		bool isValidBefore = (pos == 0) || isblank(server[pos - 1]);
+		bool isValidAfter = (pos + 4 == server.length()) || isblank(server[pos + 4]) || server[pos + 4] == ';';
+
 		size_t endPos = server.find(";", pos);
 		if (endPos == std::string::npos) break;
+		if (!isValidBefore || !isValidAfter) {
+			startPos = endPos + 1;
+			continue;
+		}
 
 		std::string hostStr = server.substr(pos + 5, endPos - pos - 5);
 		std::istringstream iss(hostStr);
@@ -142,9 +148,9 @@ std::vector<std::string> Config::getHosts(std::string server) {
 		startPos = endPos + 1;
 	}
 		// ONLY FOR TESTING
-/* 	for (size_t i = 0; i < hosts.size(); ++i) {
+	for (size_t i = 0; i < hosts.size(); ++i) {
 		std::cout << "Host " << i + 1 << ": " << hosts[i] << std::endl;
-	} */
+	}
 	return hosts;
 }
 
@@ -155,6 +161,7 @@ void Config::parseMultipleServers(std::string server)
 
 	//initialize _tempServer with fallback values
 	this->_tempServer = this->_fallBackServer;
+
 	loadServerStruct(server); // load user configuration
 	for (size_t i = 0; i < hosts.size(); ++i) {
 		for (size_t j = 0; j < ports.size(); ++j) {
@@ -233,6 +240,7 @@ Server Config::getServer(std::string serverIP) const { //Throws an exception (st
 }
 
 std::map<std::string, Server> Config::getServersMap(void) const {
+	std::cout << "Size: " << this->_Servers.size() << std::endl;
 	return this->_Servers;
 }
 
