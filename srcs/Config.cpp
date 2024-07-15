@@ -20,22 +20,30 @@ Config &Config::operator=(const Config &rhs) {
 	return *this;
 }
 
-void Config::parseLocation(Location *currentLocation, std::string key, std::string value) {
+void Config::parseLocation(Location *currentLocation, std::string key, std::string value, std::string line) {
 	if (key == "root")
 		currentLocation->root = value;
 	else if (key == "index")
 		currentLocation->index = value;
 	else if (key == "error_page")
 		currentLocation->error_page = value;
-	else if (key == "cgi")
-		currentLocation->cgi = value;
-	else if (key == "client_max_body_size")
-		currentLocation->client_max_body_size = value;
 	else if (key == "allow_uploads")
 		currentLocation->allow_uploads = (value == "on");
+	else if (key == "autoindex")
+		currentLocation->autoindex = (value == "on");
+	else if (key == "rewrite")
+		currentLocation->rewrite = value;
+	else if (key == "allow") {
+		std::istringstream iss(line);
+		std::string allow;
+		iss >> allow;
+		while (iss >> allow)
+			currentLocation->allow.push_back(allow);
+	}
 }
 
-void Config::parseServer(std::string key, std::string value) {
+void Config::parseServer(std::string key, std::string value, std::string line) {
+	(void)line;
 	if (key == "server_name")
 		this->_tempServer.server_name = value;
 	else if (key == "root")
@@ -49,6 +57,50 @@ void Config::parseServer(std::string key, std::string value) {
 			throw std::runtime_error("Error: invalid port number");
 		this->_tempServer.port = port;
 	}
+	else if (key == "client_max_body_size") {
+		std::istringstream iss(value);
+		int size;
+		if (!(iss >> size))
+			throw std::runtime_error("Error: invalid client_max_body_size");
+		this->_tempServer.client_max_body_size = size;
+	}
+	else if (key == "client_body_in_file_only")
+		this->_tempServer.client_body_in_file_only = (value == "on");
+	else if (key == "client_body_buffer_size") {
+		std::istringstream iss(value);
+		int size;
+		if (!(iss >> size))
+			throw std::runtime_error("Error: invalid client_body_buffer_size");
+		this->_tempServer.client_body_buffer_size = size;
+	}
+	else if (key == "client_body_timeout") {
+		std::istringstream iss(value);
+		int timeout;
+		if (!(iss >> timeout))
+			throw std::runtime_error("Error: invalid client_body_timeout");
+		this->_tempServer.client_body_timeout = timeout;
+	}
+	else if (key == "cgi") {
+		this->_tempServer.cgi = (value == "on");
+	}
+	else if (key == "cgi_extension") {
+		this->_tempServer.cgi_extension = value;
+	}
+	else if (key == "cgi_bin") {
+		this->_tempServer.cgi_bin = value;
+	}
+	else if (key == "error_page") {
+		std::istringstream iss(line);
+		std::string error_code;
+		std::string error_page;
+		iss >> error_code;
+		if (!(iss >> error_code))
+			throw std::runtime_error("Error: invalid error code");
+		if (!(iss >> error_page))
+			throw std::runtime_error("Error: invalid error page");
+		this->_tempServer.error_pages[error_code] = error_page;
+	}
+
 }
 
 bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value) {
@@ -92,9 +144,9 @@ void Config::loadServerStruct(const std::string &configString) {
 		if (locationMode(line, &parsingLocation, &currentLocation, value))
 			continue;
 		if (!parsingLocation)
-			parseServer(key, value);
+			parseServer(key, value, line);
 		else
-			parseLocation(&currentLocation, key, value);
+			parseLocation(&currentLocation, key, value, line);
 	}
 	if (parsingLocation)
 		this->_tempServer.locations[currentLocation.path] = currentLocation;
@@ -231,10 +283,6 @@ void Config::parseConfig(const std::string &filename) {
 	}
 }
 
-/* Server Config::getServer() const { // TO BE DELETED
-	return this->_tempServer;
-} */
-
 Server Config::getServer(std::string serverIP) const { //Throws an exception (std::out_of_range) if the key doesn't exist in the map.
 	return this->_Servers.at(serverIP);
 }
@@ -244,29 +292,55 @@ std::map<std::string, Server> Config::getServersMap(void) const {
 	return this->_Servers;
 }
 
-/* std::ostream& operator<<(std::ostream& os, const Config& obj) { // For testing purposes ONLY.
-	for (std::map<std::string, Server>::const_iterator serverPair = obj._Servers.begin(); \
-		serverPair != obj._Servers.end(); ++serverPair) {
-		const Server& server = serverPair->second;
-		os << "Server Name: " << server.server_name << std::endl;
-		os << "Root: " << server.root << std::endl;
-		os << "Host: " << server.host << std::endl;
-		os << "Port: " << server.port << std::endl;
-		os << "Locations:" << std::endl;
-		for (std::map<std::string, Location>::const_iterator locationPair = server.locations.begin(); \
-			locationPair != server.locations.end(); ++locationPair) {
-			const Location& location = locationPair->second;
-			os << "  Path: " << location.path << std::endl;
-			os << "    Root: " << location.root << std::endl;
-			os << "    Index: " << location.index << std::endl;
-			os << "    Error Page: " << location.error_page << std::endl;
-			os << "    CGI: " << location.cgi << std::endl;
-			os << "    Client Max Body Size: " << location.client_max_body_size << std::endl;
-			os << "    Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
-		}
+//################################################ Testing functions ################################################
+void Config::printServers(void) const {
+	for (std::map<std::string, Server>::const_iterator serverPair = _Servers.begin(); \
+		serverPair != _Servers.end(); ++serverPair) {
+		std::cout << serverPair->second << std::endl;
+	}
+}
+
+std::ostream& operator<<(std::ostream& os, const Location& location) {
+	os << " Path: " << location.path << std::endl;
+	os << " Root: " << location.root << std::endl;
+	os << " Index: " << location.index << std::endl;
+	os << " Error Page: " << location.error_page << std::endl;
+	os << " Rewrite: " << location.rewrite << std::endl;
+	os << " Autoindex: " << (location.autoindex ? "true" : "false") << std::endl;
+
+	os << " Allow:" << std::endl;
+	for (std::vector<std::string>::const_iterator it = location.allow.begin(); it != location.allow.end(); ++it) {
+		os << "  - " << *it << std::endl;
+	}
+
+	os << " Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Server& server) {
+	os << "Server Name: " << server.server_name << std::endl;
+	os << "Root: " << server.root << std::endl;
+	os << "Host: " << server.host << std::endl;
+	os << "Port: " << server.port << std::endl;
+	os << "Client Max Body Size: " << server.client_max_body_size << std::endl;
+	os << "Client Body In File Only: " << (server.client_body_in_file_only ? "true" : "false") << std::endl;
+	os << "Client Body Buffer Size: " << server.client_body_buffer_size << std::endl;
+	os << "Client Body Timeout: " << server.client_body_timeout << std::endl;
+	os << "CGI: " << (server.cgi ? "true" : "false") << std::endl;
+	os << "CGI Extension: " << server.cgi_extension << std::endl;
+	os << "CGI Bin: " << server.cgi_bin << std::endl;
+
+	os << "Error Pages:" << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
+		os << " " << it->first << ": " << it->second << std::endl;
+	}
+
+	os << "Locations:" << std::endl;
+	for (std::map<std::string, Location>::const_iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
+		os << it->first << ":" << std::endl << it->second;
 	}
 	return os;
-} */
+}
 
 
 /* TO-DO

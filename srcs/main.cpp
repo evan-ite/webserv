@@ -22,6 +22,7 @@ int main(int argc, char **argv)
 	{
 		log(logINFO) << "Starting virtual server(s)";
 		Config conf(configPath);
+		//conf.printServers(); //for debugging the servers map.
 		std::map<std::string, Server> allServers = conf.getServersMap();
 		log(logINFO) << "Size " << allServers.size();
 
