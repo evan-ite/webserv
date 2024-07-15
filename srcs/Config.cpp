@@ -129,9 +129,15 @@ std::vector<std::string> Config::getHosts(std::string server) {
 
 	while (true) {
 		size_t pos = server.find("host", startPos);
-		if (pos == std::string::npos || !isblank(server[pos + 4])) break;
+		bool isValidBefore = (pos == 0) || isblank(server[pos - 1]);
+		bool isValidAfter = (pos + 4 == server.length()) || isblank(server[pos + 4]) || server[pos + 4] == ';';
+
 		size_t endPos = server.find(";", pos);
 		if (endPos == std::string::npos) break;
+		if (!isValidBefore || !isValidAfter) {
+			startPos = endPos + 1;
+			continue;
+		}
 
 		std::string hostStr = server.substr(pos + 5, endPos - pos - 5);
 		std::istringstream iss(hostStr);
@@ -154,6 +160,7 @@ void Config::parseMultipleServers(std::string server)
 
 	//initialize _tempServer with fallback values
 	this->_tempServer = this->_fallBackServer;
+
 	loadServerStruct(server); // load user configuration
 	for (size_t i = 0; i < hosts.size(); ++i) {
 		for (size_t j = 0; j < ports.size(); ++j) {
