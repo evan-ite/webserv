@@ -118,9 +118,9 @@ std::vector<std::string> Config::getPorts(std::string server) {
 		startPos = endPos + 1;
 	}
 	// ONLY FOR TESTING
-	for (size_t i = 0; i < ports.size(); ++i) {
+/* 	for (size_t i = 0; i < ports.size(); ++i) {
 		std::cout << "Port " << i + 1 << ": " << ports[i] << std::endl;
-	}
+	} */
 	return ports;
 }
 
@@ -148,9 +148,9 @@ std::vector<std::string> Config::getHosts(std::string server) {
 		startPos = endPos + 1;
 	}
 		// ONLY FOR TESTING
-	for (size_t i = 0; i < hosts.size(); ++i) {
+/* 	for (size_t i = 0; i < hosts.size(); ++i) {
 		std::cout << "Host " << i + 1 << ": " << hosts[i] << std::endl;
-	}
+	} */
 	return hosts;
 }
 
