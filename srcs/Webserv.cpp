@@ -96,6 +96,7 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 	int client_fd;
 	while (g_signal)
 	{
+		log(logDEBUG) << "Let's epoll wait for events...";
 		int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
 		if (num_events == -1)
 		{
@@ -106,7 +107,6 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 		for (int i = 0; i < num_events; ++i)
 		{
 			int socket_fd = events[i].data.fd;
-			// bool new_conn = false;
 
 			// Check if this is a new connection on any listening socket
 			std::vector<t_conn>::iterator it;
@@ -114,22 +114,23 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 			{
 				if (it->fd == socket_fd)
 				{
-					// new_conn = true;
 					struct sockaddr_in client_addr;
 					socklen_t client_len = sizeof(client_addr);
 					client_fd = accept(socket_fd, (struct sockaddr*)&client_addr, &client_len);
-					it->c_address.push_back(client_addr);
-					it->c_fds.push_back(client_fd);
 					if (client_fd >= 0) {
 						log(logDEBUG) << "New connection on fd " << client_fd;
 						if (this->makeNonBlocking(client_fd) == -1)
 							throw socketError();
 						struct epoll_event client_event;
 						client_event.data.fd = client_fd;
-						client_event.events = EPOLLIN | EPOLLET;
+						client_event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
 						if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
 							log(logERROR) << "epoll_ctl error: " << strerror(errno);
 							close(client_fd); // Close client_fd on failure
+						}
+						else {
+							it->c_address.push_back(client_addr);
+							it->c_fds.push_back(client_fd);
 						}
 					} else {
 						log(logERROR) << "Accept error: " << strerror(errno);
@@ -137,21 +138,17 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 
 					break; // Found the matching listening socket, no need to continue
 				}
-				else if (std::find(it->c_fds.begin(), it->c_fds.end(), socket_fd) != it->c_fds.end())
+				else if (std::find(it->c_fds.begin(), it->c_fds.end(), socket_fd) != it->c_fds.end()) {
 					this->readRequest(this->_allServers[it->key], socket_fd);
+					// close(socket_fd);
+					break;
+				}
 
 			}
-
-			// if (!new_conn)
-			// {
-			// 	client_fd = socket_fd;
-			// 	this->readRequest(client_fd);
-			// }
 		}
 	}
 	close(epoll_fd);
 }
-
 
 void Webserv::readRequest(Server serv, int client_fd)
 {
@@ -159,8 +156,10 @@ void Webserv::readRequest(Server serv, int client_fd)
 	ssize_t count;
 	std::string httpRequest;
 	log(logINFO) << "Reading from socket, FD: " << client_fd;
-	while ((count = read(client_fd, buffer, BUFFER_SIZE)) > 0)
+	while ((count = read(client_fd, buffer, BUFFER_SIZE)) > 0) {
+		// log(logDEBUG) << "Reading http request ... \n" << buffer;
 		httpRequest.append(buffer, count);
+	}
 	// if (count == -1)
 	// {
 	// 	close(client_fd); // Close on read error
@@ -170,9 +169,12 @@ void Webserv::readRequest(Server serv, int client_fd)
 	if (!httpRequest.empty())
 	{
 		log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-		const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
-		ssize_t sent = write(client_fd, response, strlen(response));
 		Response res(httpRequest, serv);
+		std::string resString = res.makeResponse();
+		log(logDEBUG) << "--- RESPONSE ---\n" << resString.substr(0, 1000);
+		const char *resCStr = resString.data();
+		log(logDEBUG) << "--- RESPONSE ---\n" << resCStr;
+		ssize_t sent = write(client_fd, resCStr, resString.size());
 		if (sent == -1)
 		{
 			close(client_fd); // Close on write error

@@ -55,7 +55,6 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 	if (line.find("}") != std::string::npos && *parsingLocation)
 	{
 		this->_tempServer.locations[currentLocation->path] = *currentLocation;
-		log(logDEBUG) << "saved path config for " << currentLocation->path;
 		*parsingLocation = false;
 		return (true);
 	}
@@ -233,7 +232,6 @@ Server Config::getServer(std::string serverIP) const { //Throws an exception (st
 }
 
 std::map<std::string, Server> Config::getServersMap(void) const {
-	log(logINFO) << "Size " << this->_Servers.size();
 	return this->_Servers;
 }
 

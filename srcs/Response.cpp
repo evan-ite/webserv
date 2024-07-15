@@ -13,7 +13,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
 	int cgi = (request._location.size() > 4 && 
            request._location.substr(request._location.size() - 4) == ".cgi") ||
           (request._location.find(".cgi?") != std::string::npos);
-		   // && serverData.cgi == "on"
+		//    && serverData.cgi == "on"
 
 	try {
 		if (cgi) 
@@ -109,6 +109,7 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 	(void) serverData;
 
 	std::string file = root + request._location;
+	log(logDEBUG) << "get file : " << file;
 	if (request._location == "/")
 		file = root + "/" + index;
 	this->_status = 200;
