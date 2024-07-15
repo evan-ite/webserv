@@ -18,6 +18,7 @@ struct Location { //rename to Location?
 
 struct Server {
 	std::string server_name;
+	std::string root;
 	std::string host;
 	int port;
 	std::map<std::string, Location> locations;
@@ -32,13 +33,31 @@ class Config {
 
 		Config &operator=(const Config &rhs);
 
-		void parseConfigFile(const std::string &filename);
-		Server getConfigData(void) const;
+		void loadServerStruct(const std::string &configString);
+		//Server getServer(void) const; // Used to compile while the rest of codebase is incompatible with the Map formatt.
+		Server getServer(std::string server_IP) const;
+		std::map<std::string, Server> getServersMap(void) const;
+
 
 	private:
-		Server _configData;
+		std::map<std::string, Server> _Servers;
+
+	private:
+		Server _tempServer;
+		Server _fallBackServer;
+
+		void parseLocation(Location *currentLocation, std::string key, std::string value);
+		void parseServer(std::string key, std::string value);
+		bool locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value);
+		void readServer(const std::string &filename);
+		void countBraces(std::string line, int *braceCount);
+		std::vector<std::string> getPorts(std::string server);
+		std::vector<std::string> getHosts(std::string server);
+		void parseMultipleServers(std::string server);
+		void loadFallback(const std::string &filename);
+		void parseConfig(const std::string &filename);
 };
 
-std::ostream& operator<<(std::ostream& os, const Config& obj);
+//std::ostream& operator<<(std::ostream& os, const Config& obj);
 
 #endif

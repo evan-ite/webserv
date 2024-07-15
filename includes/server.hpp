@@ -10,6 +10,7 @@
 # include <ctime>
 # include <stdio.h>
 # include <stdlib.h>
+# include <stack>
 # include <map>
 # include <vector>
 # include <signal.h>
@@ -18,6 +19,10 @@
 # include <fcntl.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
+# include <arpa/inet.h>
+# include <fstream>
+# include <algorithm>
+# include <cctype>
 // local header files
 # include "Config.hpp"
 # include "Logger.hpp"
@@ -27,10 +32,12 @@
 # include "Parser.hpp"
 
 # define MAX_EVENTS 1024
+# define BUFFER_SIZE 1024 //read buffer size for sockets
 # define HTTPVERSION "HTTP/1.1"
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
 # define DEFAULT_CONF "./conf/default.conf"
+# define FALLBACK_CONF "./conf/fallback.conf"
 # define SAMPLE_RES "HTTP/1.1 200 OK \
 Date: Fri, 05 Jul 2024 12:00:00 GMT \
 Server: Apache/2.4.41 (Ubuntu) \
