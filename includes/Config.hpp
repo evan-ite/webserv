@@ -41,6 +41,8 @@ class Config {
 
 	private:
 		std::map<std::string, Server> _Servers;
+
+	private:
 		Server _tempServer;
 		Server _fallBackServer;
 

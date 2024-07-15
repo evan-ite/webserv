@@ -10,6 +10,7 @@
 # include <ctime>
 # include <stdio.h>
 # include <stdlib.h>
+# include <stack>
 # include <map>
 # include <vector>
 # include <signal.h>
@@ -18,6 +19,8 @@
 # include <fcntl.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
+# include <arpa/inet.h>
+# include <fstream>
 # include <algorithm>
 # include <cctype>
 // local header files
@@ -29,6 +32,7 @@
 # include "Parser.hpp"
 
 # define MAX_EVENTS 1024
+# define BUFFER_SIZE 1024 //read buffer size for sockets
 # define HTTPVERSION "HTTP/1.1"
 # define MIMEFILE "MIME.txt"
 # define LOGLEVEL logDEBUG

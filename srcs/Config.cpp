@@ -240,7 +240,7 @@ Server Config::getServer(std::string serverIP) const { //Throws an exception (st
 }
 
 std::map<std::string, Server> Config::getServersMap(void) const {
-	std::cout << "Size: " << this->_Servers.size() << std::endl;
+	log(logINFO) << "Size " << this->_Servers.size();
 	return this->_Servers;
 }
 
