@@ -156,7 +156,6 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 void Webserv::readRequest(Server serv, int client_fd)
 {
 	char buffer[BUFFER_SIZE];
-	(void) serv;
 	ssize_t count;
 	std::string httpRequest;
 	log(logINFO) << "Reading from socket, FD: " << client_fd;
@@ -173,6 +172,7 @@ void Webserv::readRequest(Server serv, int client_fd)
 		log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		const char* response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
 		ssize_t sent = write(client_fd, response, strlen(response));
+		Response res(httpRequest, serv);
 		if (sent == -1)
 		{
 			close(client_fd); // Close on write error
