@@ -1,32 +1,20 @@
 #include "../includes/server.hpp"
 
-// Webserv::Webserv(Config conf)
-// {
-// 	std::map<std::string, Config> singleServer;
-// 	std::stringstream ss;
-// 	ss << conf.getConfigData().port;
-// 	singleServer[conf.getConfigData().host + ":" + ss.str()] = conf;
-// 	log(logDEBUG) << conf.getConfigData().host;
-// 	this->_allServers = singleServer;
-// }
-
-Webserv::Webserv(std::map<std::string, Server> allServers) : _allServers(allServers) {}
-
 Webserv::Webserv() {}
+
+Webserv::Webserv(Config &conf) : _conf(conf) {}
 
 Webserv::Webserv(const Webserv &copy)
 {
-	this->_allServers = copy._allServers;
+	this->_conf = copy._conf;
 }
 
 Webserv::~Webserv() {}
 
 Webserv & Webserv::operator=(const Webserv &assign)
 {
-	// this->_res = assign._res;
-	// this->_req = assign._req;
-	this->_allServers = assign._allServers;
-	return *this;
+	this->_conf = assign._conf;
+	return (*this);
 }
 
 const char * Webserv::configError::what() const throw()
@@ -139,8 +127,7 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 					break; // Found the matching listening socket, no need to continue
 				}
 				else if (std::find(it->c_fds.begin(), it->c_fds.end(), socket_fd) != it->c_fds.end()) {
-					this->readRequest(this->_allServers[it->key], socket_fd);
-					// close(socket_fd);
+					this->readRequest((this->_conf.getServersMap())[it->key], socket_fd);
 					break;
 				}
 
@@ -157,7 +144,6 @@ void Webserv::readRequest(Server serv, int client_fd)
 	std::string httpRequest;
 	log(logINFO) << "Reading from socket, FD: " << client_fd;
 	while ((count = read(client_fd, buffer, BUFFER_SIZE)) > 0) {
-		// log(logDEBUG) << "Reading http request ... \n" << buffer;
 		httpRequest.append(buffer, count);
 	}
 	// if (count == -1)
@@ -194,11 +180,11 @@ int	Webserv::run()
 
 	std::vector<t_conn>							initServers;
 	std::map<std::string, Server> ::iterator	it;
+	std::map<std::string, Server>				map = this->_conf.getServersMap();
 	int											epoll_fd = epoll_create1(0);
 	if (epoll_fd == -1)
 		throw epollError();
-	log(logDEBUG) << "No of Servers in conf " << this->_allServers.size();
-	for (it = this->_allServers.begin(); it != this->_allServers.end(); it++)
+	for (it = map.begin(); it != map.end(); it++)
 	{
 		t_conn conn;
 		conn.key = it->first;
