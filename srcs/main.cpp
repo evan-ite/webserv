@@ -9,7 +9,7 @@ void signalhandler(int sig)
 	log(logINFO) << "SIGINT received, shutting down";
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv, char **env)
 {
 	signal(SIGINT, signalhandler);
 	if (argc > 2)
@@ -17,6 +17,8 @@ int main(int argc, char **argv)
 		std::cout << "Usage: ./webserv [config_file]" << std::endl;
 		return (EXIT_SUCCESS);
 	}
+	for (int i = 0; i < 10; i++)
+		log(logDEBUG) << env[i];
 	std::string configPath(argv[1] ? argv[1] : DEFAULT_CONF);
 	try
 	{

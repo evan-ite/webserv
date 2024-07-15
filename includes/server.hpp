@@ -69,6 +69,7 @@ std::string	checkMime(const std::string &extension);
 std::string	findType(const std::string &filename);
 std::string getDateTime();
 std::string to_string(int value);
+char**      vectorToCharStarStar(const std::vector<std::string>& vec); 
 
 
 #endif

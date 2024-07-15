@@ -141,22 +141,24 @@ void Response::cgiMethod(Request request, Server serverData)
 	log(logINFO) << "Using CGI to fetch data";
 
     // Determine the path to the CGI script based on the request
-    std::string cgiScriptPath = "content/cgi-bin/simple.py"; //serverData.cgi_bin + request._location;
+    std::string					cgiScriptPath = "content/cgi-bin/simple.py"; //serverData.cgi_bin + request._location;
+	std::vector<std::string>	envVec;
 
     // Set up environment variables specific to GET or POST
     if (request._method == GET) {
-    	setenv("REQUEST_METHOD", "GET", 1);
-        setenv("QUERY_STRING", findKey(request._location, "?", ' ').c_str(), 1);
+    	envVec.push_back("REQUEST_METHOD=GET");
+        envVec.push_back("QUERY_STRING=" + findKey(request._location, "?", ' '));
     } else if (request._method == POST) {
-    	setenv("REQUEST_METHOD", "POST", 1);
-        setenv("CONTENT_TYPE", request._contentType.c_str(), 1);
-        setenv("CONTENT_LENGTH", to_string(request._contentLenght).c_str(), 1); 
+    	envVec.push_back("REQUEST_METHOD=POST");
+        envVec.push_back("CONTENT_TYPE=" + request._contentType);
+        envVec.push_back("CONTENT_LENGTH" + to_string(request._contentLenght)); 
 	}
 	// Set up common environment variables required by the CGI script
-    setenv("SCRIPT_NAME", cgiScriptPath.c_str(), 1);
-    setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
-    setenv("SERVER_SOFTWARE", "MyServer/1.0", 1);
+    envVec.push_back("SCRIPT_NAME=" + cgiScriptPath);
+    envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    envVec.push_back("SERVER_SOFTWARE=MyServer/1.0");
 
+	char **env = vectorToCharStarStar(envVec);
 
     // Prepare to capture the CGI script's output
     int pipefd[2];
@@ -175,7 +177,7 @@ void Response::cgiMethod(Request request, Server serverData)
         close(pipefd[0]);  // Close read end of the pipe
 		// If POST, write the data to the pipe
         if (request._method == POST) {
-            write(pipefd[1], this->_body.c_str(), this->_len);
+            write(pipefd[1], this->_body.data(), this->_len);
         }
 
         dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
@@ -186,8 +188,7 @@ void Response::cgiMethod(Request request, Server serverData)
         char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
 
         // Convert environment variables to char* array
-        extern char **environ;
-        execve(cgiScriptPath.c_str(), args, environ);
+        execve(cgiScriptPath.c_str(), args, env);
 
         log(logERROR) << "Error executing cgi script";
 		throw ResponseException();
