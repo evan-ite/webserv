@@ -9,7 +9,7 @@ class Cgi
 {
 	public:
 		// Constructors
-		Cgi(Request request, Server serverData);
+		Cgi(Request *request, Server *serverData);
 		
 		// Destructor
 		~Cgi();
@@ -18,7 +18,7 @@ class Cgi
 		Cgi & operator=(const Cgi &assign);
 		
 		void	execute(Response &response);
-		int		isTrue();
+		bool	isTrue();
 
 		class CgiException : public std::exception {
 			public:

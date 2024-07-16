@@ -4,15 +4,18 @@
 Cgi::Cgi():  _request(NULL), _serverData(NULL), _isTrue(false)
 {}
 
-Cgi::Cgi(Request request, Server serverData) 
+Cgi::Cgi(Request *request, Server *serverData) 
 {
-	if (((request._location.size() > 4 
-		&& request._location.substr(request._location.size() - 4) == ".cgi") 
-		|| (request._location.find(".cgi?") != std::string::npos))
-		&& serverData.cgi) {
+	std::string ext = (*serverData).cgi_extension; // default ".cgi"
+	std::size_t	len = ext.length();
+
+	if ((((*request)._location.length() >= len
+		&& (*request)._location.substr((*request)._location.size() - len) == ext) 
+		|| ((*request)._location.find(ext + "?") != std::string::npos))
+		&& (*serverData).cgi) {
 			this->_isTrue = true;
-			this->_request = &request;
-			this->_serverData = &serverData;
+			this->_request = request;
+			this->_serverData = serverData;
 		}
 	else {
 		this->_isTrue = false;
@@ -41,23 +44,26 @@ Cgi & Cgi::operator=(const Cgi &assign)
 	return *this;
 }
 
-int	Cgi::isTrue() {
+bool	Cgi::isTrue() {
 	return this->_isTrue;
 }
 
 void	Cgi::execute(Response &response) {
-	Request request = *(this->_request);
-	Server serverData = *(this->_serverData);
+	Request request = *this->_request;
+	Server serverData = *this->_serverData;
 
+	if (!this->_isTrue)
+		return ;
 	try 
 	{
 		log(logINFO) << "Using CGI to fetch data";
-
-		// Determine the path to the CGI script based on the request
-		std::string					cgiScriptPath = "content/cgi-bin/simple.py"; //serverData.cgi_bin + request._location;
+		// Determine the path to the CGI script based on the request and serverData
+		std::size_t					i = request._location.rfind("/");
+		std::string					cgiScript = request._location.substr(i);
+		std::string					cgiScriptPath = serverData.root + serverData.cgi_bin + cgiScript;
 		std::vector<std::string>	envVec;
 
-		log(logDEBUG) << "this is the body nnow!!: \n" << request._body;
+		log(logDEBUG) << "this is the body now!!: \n" << request._body;
 		// Set up environment variables specific to GET or POST
 		if (request._method == GET) {
 			envVec.push_back("REQUEST_METHOD=GET");

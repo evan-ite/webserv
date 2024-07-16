@@ -34,10 +34,10 @@ Response::Response(std::string const &httpRequest, Server serverData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	Cgi cgi(request, serverData);
+	Cgi cgi(&request, &serverData);
 
 	try {
-		if (cgi.isTrue()) 
+		if (cgi.isTrue())
 			cgi.execute(*this);
 		else if (request._method == POST)
 			postMethod(request, serverData);
@@ -49,7 +49,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
         // Handle other methods or send a 405 Method Not Allowed response
         this->_status = 405;
         this->_reason = "Method Not Allowed";
-        this->_type = "text/plain";
+        this->_type = "text/html";
         this->_body = readFileToString("content/error/405.html");
         this->_connection = "close";
         this->_len = _body.length();
@@ -145,7 +145,7 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 	if (this->_body == "" || this->_type == "") {
 		this->_status = 404;
 		this->_reason = "not found";
-		this->_type = "";
+		this->_type = "text/html";
 		this->_body = readFileToString("content/error/404.html");;
 		this->_connection = "close";
 		this->_len = 0;
