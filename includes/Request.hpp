@@ -6,7 +6,7 @@
 /*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/10 18:31:14 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/16 11:44:03 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ class Request
 		std::string _contentType;
 		HttpMethod	_method;
 		int			_contentLenght;
+		std::string _body;
 		std::vector<std::pair<std::string, std::string> > _fileData;
 		
 	private:

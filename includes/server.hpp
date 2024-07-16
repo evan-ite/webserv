@@ -23,12 +23,14 @@
 # include <fstream>
 # include <algorithm>
 # include <cctype>
+# include <sys/wait.h>
 // local header files
 # include "Config.hpp"
 # include "Logger.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
 # include "Webserv.hpp"
+# include "Cgi.hpp"
 
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets

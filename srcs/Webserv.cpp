@@ -159,7 +159,6 @@ void Webserv::readRequest(Server serv, int client_fd)
 		std::string resString = res.makeResponse();
 		log(logDEBUG) << "--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
-		log(logDEBUG) << "--- RESPONSE ---\n" << resCStr;
 		ssize_t sent = write(client_fd, resCStr, resString.size());
 		if (sent == -1)
 		{

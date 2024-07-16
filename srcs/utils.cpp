@@ -104,7 +104,7 @@ char** vectorToCharStarStar(const std::vector<std::string>& vec) {
     int numElements = vec.size();
 
     // Allocate memory for an array of char* pointers
-    char** charArray = new char*[numElements];
+    char** charArray = new char*[numElements + 1];
 
     // Copy each string from the vector into the char* array
     for (int i = 0; i < numElements; ++i) {
@@ -112,6 +112,8 @@ char** vectorToCharStarStar(const std::vector<std::string>& vec) {
         charArray[i] = new char[vec[i].length() + 1];  // +1 for null terminator
         std::strcpy(charArray[i], vec[i].c_str());
     }
+
+	charArray[numElements] = NULL;
 
     return charArray;
 }
