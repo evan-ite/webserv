@@ -18,15 +18,6 @@ Response::Response(int	status,
 	this->_body = body;
 }
 
-/*
-location /: This configuration matches any request path that starts with /. It effectively serves as a catch-all for all requests that don't match more specific location blocks.
-
-index index.html: Specifies that if the URL path ends with /, the server should look for index.html in the directory specified by root.
-
-root content: Sets the root directory from which files will be served. In this case, files will be served from the content directory relative to Nginx's configured root.
-
-error_page 404 /404.html: Defines the error page to display when a resource is not found (404 error).
-*/
 Response::Response(std::string const &httpRequest, Server serverData)
 {
 	Request request(httpRequest);
@@ -51,7 +42,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
         this->_reason = "Method Not Allowed";
         this->_type = "text/html";
         this->_body = readFileToString("content/error/405.html");
-        this->_connection = "close";
+        this->_connection = "keep-alive";
         this->_len = _body.length();
         this->_date = getDateTime();
     }
@@ -147,8 +138,8 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 		this->_reason = "not found";
 		this->_type = "text/html";
 		this->_body = readFileToString("content/error/404.html");;
-		this->_connection = "close";
-		this->_len = 0;
+		this->_connection = "keep-alive";
+		this->_len = this->_body.size();
 	}
 }
 

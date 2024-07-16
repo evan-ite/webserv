@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <link rel="stylesheet" href="styles.css">
+    <title>Webserv</title>
 </head>
 <body>
-    <h1>Hello, Elise!!!</h1>
+    <h1>Hi Queen!!!</h1>
 	<form action="/upload" method="POST" enctype="multipart/form-data">
         <input type="file" name="file"><br><br>
-        <input type="submit" value="Upload">
+        <input class="btn" type="submit" value="Upload">
     </form>
-    <img src="no-man.png" alt="No Man" width="200">
-    <video width="320" height="240" controls>
-        <source src="office.mp4" type="video/mp4">
-    </video>
+    <div class="memebox">
+        <img class="meme" src="internet-meme.jpeg" alt="How do I download an internet" width="300">
+        <video class="meme" width="320" height="240" controls>
+            <source src="office.mp4" type="video/mp4">
+        </video>
+    </div>
     <h2>Test my crazy cgi skills here </h2>
     <form action="/content/cgi-bin/simple.cgi" method="post">
-        Name: <input type="text" name="name"><br>
-        Age: <input type="text" name="age"><br>
-        <input type="submit" value="Submit">
-      </form>
+        Name: <input class="cgi-input" type="text" name="name"><br>
+        Age: <input class="cgi-input" type="text" name="age"><br>
+        <input class="btn" type="submit" value="Submit">
+    </form>
 </body>
 </html>

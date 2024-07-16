@@ -132,7 +132,7 @@ void	Cgi::execute(Response &response) {
 		response.setBody(readFileToString("content/error/500.html"));
 		response.setReason("Internal Server Error");
 		response.setType("text/html");
-		response.setConnection("close");
+		response.setConnection("keep-alive");
 	}
 
 }
