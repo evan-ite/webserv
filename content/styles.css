@@ -1,0 +1,43 @@
+
+body {
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #f0f0f0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #f80e8f;
+}
+
+.btn {
+    background-color: #f80e8f;
+    color: #f0f0f0;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 200;
+    width: 10%;
+    height: 20%;
+    border-style: hidden;
+    margin: 1%;
+    padding: 1%;
+}
+
+.cgi-input {
+    margin: 1%;
+}
+
+.memebox {
+    display: flex;
+    margin: 5%;
+    border-color: #f80e8f;
+    border-width: 3px;
+    border-style: solid;
+    align-items: center;
+    justify-content: center; 
+}
+
+.meme {
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center;
+    margin: 1%;
+}
