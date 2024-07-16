@@ -15,8 +15,8 @@ typedef struct s_connection
 class Webserv
 {
 	public:
-		// Webserv(Config conf);
-		Webserv(std::map<std::string, Server> allServers);
+		Webserv(Config &conf);
+		// Webserv(std::map<std::string, Server> allServers);
 		~Webserv();
 		Webserv & operator=(const Webserv &assign);
 		int	run();
@@ -36,7 +36,8 @@ class Webserv
 	private:
 		Webserv(const Webserv &copy);
 		Webserv();
-		std::map<std::string, Server>	_allServers;
+		Config							_conf;
+		// std::map<std::string, Server>	_allServers;
 		int								setupServerSocket(int &server_fd, struct sockaddr_in &address);
 		int								setupEpoll(int server_fd, int &epoll_fd);
 		void							handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers);
