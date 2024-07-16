@@ -21,12 +21,12 @@
 
 
 ## Parsing
-- [ ] Parsing config file into server object -- > Urbano
-	- [ ] config file into server stack
-	- [ ] validate servers (valid keys)
-	- [ ] add default values for empty and invalid keys
-	- [ ] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
-	- [ ] Directory Listing on/off (needs item in conf class)
+- [x] Parsing config file into server object -- > Urbano
+	- [x] config file into server stack
+	- [x] validate servers (valid keys)
+	- [x] add default values for empty and invalid keys
+	- [x] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
+	- [x] Directory Listing on/off (needs item in conf class)
 
 
 ## Start server(s)
