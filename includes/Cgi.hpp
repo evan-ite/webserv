@@ -34,6 +34,7 @@ class Cgi
 		Server	*_serverData;
 		bool	_isTrue;
 		
+		char ** createEnv(std::string const &cgiPath, std::string const &cgiFile);
 };
 
 #endif

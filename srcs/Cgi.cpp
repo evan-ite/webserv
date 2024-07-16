@@ -6,13 +6,13 @@ Cgi::Cgi():  _request(NULL), _serverData(NULL), _isTrue(false)
 
 Cgi::Cgi(Request *request, Server *serverData) 
 {
-	std::string ext = (*serverData).cgi_extension; // default ".cgi"
+	std::string ext = serverData->cgi_extension; // default ".cgi"
 	std::size_t	len = ext.length();
 
-	if ((((*request)._location.length() >= len
-		&& (*request)._location.substr((*request)._location.size() - len) == ext) 
-		|| ((*request)._location.find(ext + "?") != std::string::npos))
-		&& (*serverData).cgi) {
+	if (((request->_location.length() >= len
+		&& request->_location.substr(request->_location.size() - len) == ext) 
+		|| request->_location.find(ext + "?") != std::string::npos)
+		&& serverData->cgi) {
 			this->_isTrue = true;
 			this->_request = request;
 			this->_serverData = serverData;
@@ -49,8 +49,8 @@ bool	Cgi::isTrue() {
 }
 
 void	Cgi::execute(Response &response) {
-	Request request = *this->_request;
-	Server serverData = *this->_serverData;
+	Request *request = this->_request;
+	Server *serverData = this->_serverData;
 
 	if (!this->_isTrue)
 		return ;
@@ -58,32 +58,13 @@ void	Cgi::execute(Response &response) {
 	{
 		log(logINFO) << "Using CGI to fetch data";
 		// Determine the path to the CGI script based on the request and serverData
-		std::size_t					i = request._location.rfind("/");
-		std::string					cgiScript = request._location.substr(i);
-		std::string					cgiScriptPath = serverData.root + serverData.cgi_bin + cgiScript;
-		std::vector<std::string>	envVec;
+		std::size_t					i = request->_location.rfind("/");
+		std::size_t					j = request->_location.rfind(serverData->cgi_extension);
+		std::string					cgiFile = request->_location.substr(i, j - i + serverData->cgi_extension.length());
+		std::string					cgiScriptPath = serverData->root + serverData->cgi_bin + cgiFile;
 
-		log(logDEBUG) << "this is the body now!!: \n" << request._body;
-		// Set up environment variables specific to GET or POST
-		if (request._method == GET) {
-			envVec.push_back("REQUEST_METHOD=GET");
-			envVec.push_back("QUERY_STRING=" + findKey(request._location, "?", ' '));
-		} else if (request._method == POST) {
-			envVec.push_back("REQUEST_METHOD=POST");
-			envVec.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
-			envVec.push_back("CONTENT_LENGTH=" + to_string(request._contentLenght)); 
-		}
-		// Set up common environment variables required by the CGI script
-		envVec.push_back("SCRIPT_NAME=" + cgiScriptPath);
-		envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
-		envVec.push_back("SERVER_SOFTWARE=MyServer/1.0");
-
-		for (size_t i = 0; i < envVec.size(); ++i) {
-			std::cout << envVec[i] << std::endl;
-		}
-
-		//char **env = vectorToCharStarStar(envVec);
-
+		char **env = createEnv(cgiScriptPath, cgiFile);
+		
 		// Prepare to capture the CGI script's output
 		int pipefd[2];
 		if (pipe(pipefd) == -1) {
@@ -96,31 +77,30 @@ void	Cgi::execute(Response &response) {
 			log(logERROR) << "Error forking";
 			throw CgiException();
 		}
-		else if (pid == 0) {
-			// Child process: execute the CGI script
+		else if (pid == 0) { // Child process: execute the CGI script
+		
 			// If POST, write the data to the pipe
-			if (request._method == POST) {
-				write(pipefd[1], request._body.data(), request._body.size());
+			if (request->_method == POST) {
+				write(pipefd[1], request->_body.data(), request->_body.size());
 			}
 
-			dup2(pipefd[0], STDIN_FILENO);
+			dup2(pipefd[0], STDIN_FILENO);	// Redirect stdin to the pipe
+			close(pipefd[0]);  
 			dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
-			// dup2(pipefd[1], STDERR_FILENO);  // Redirect stderr to the pipe
-			close(pipefd[0]);  // Close read end of the pipe
-			close(pipefd[1]);  // Close write end of the pipe
+			close(pipefd[1]); 
 			
 			// Prepare arguments for execve
 			char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
 
-			extern char **environ;
 			// Convert environment variables to char* array
-			execve(cgiScriptPath.c_str(), args, environ);
+			execve(cgiScriptPath.c_str(), args, env);
 
 			log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
 			throw CgiException();
 		} 
 		else 
 		{
+			waitpid(pid, NULL, 0);
 			log(logDEBUG) << "Back in parent process";
 			// Parent process: read the CGI script's output
 			close(pipefd[1]);  // Close write end of the pipe
@@ -130,10 +110,9 @@ void	Cgi::execute(Response &response) {
 			ssize_t bytesRead;
 			while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
 				cgiOutput.append(buffer, bytesRead);
-				// log(logDEBUG) << "reading buffer... \n output: " << cgiOutput;
+				log(logDEBUG) << "reading buffer... \n output: " << cgiOutput;
 			}
 			close(pipefd[0]);
-			waitpid(pid, NULL, 0);
 
 			log(logDEBUG) << "pipes closed";
 
@@ -156,4 +135,45 @@ void	Cgi::execute(Response &response) {
 		response.setConnection("close");
 	}
 
+}
+
+char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile) 
+{
+	Request *request = this->_request;
+	Server *serverData = this->_serverData;
+	std::vector<std::string>	envVec;
+
+	// Set up environment variables specific to GET or POST
+	if (request->_method == GET) {
+		envVec.push_back("REQUEST_METHOD=GET");
+		envVec.push_back("QUERY_STRING=" + findKey(request->_location, "?", ' '));
+	} else if (request->_method == POST) {
+		envVec.push_back("REQUEST_METHOD=POST");
+		envVec.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
+		envVec.push_back("CONTENT_LENGTH=" + toString(request->_contentLenght)); 
+	}
+	// Set up common environment variables required by the CGI script
+	envVec.push_back("REDIRECT_STATUS=200");
+	envVec.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	envVec.push_back("REQUEST_URI=" + request->_location);
+	
+	envVec.push_back("SCRIPT_NAME=" + cgiPath);
+	envVec.push_back("SCRIPT_FILENAME=" + cgiFile);
+	// envVec.push_back("PATH_INFO=");
+
+	envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	envVec.push_back("SERVER_SOFTWARE=Webserv/1.0");
+	envVec.push_back("SERVER_PORT=" + toString(serverData->port));
+	envVec.push_back("SERVER_NAME=" + serverData->server_name);
+	envVec.push_back("SERVER_ADDR=" + serverData->host);
+
+	// envVec.push_back("REMOTE_ADDR=");
+	// envVec.push_back("REMOTE_IDENT=");
+	// envVec.push_back("REMOTE_USER=");
+
+	// for (size_t i = 0; i < envVec.size(); ++i) {
+	// 	std::cout << envVec[i] << std::endl;
+	// }
+
+	return vectorToCharStarStar(envVec);
 }

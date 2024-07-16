@@ -93,7 +93,7 @@ std::string getDateTime()
 }
 
 /* Int to string */
-std::string to_string(int value) {
+std::string toString(int value) {
     std::ostringstream oss;
     oss << value;
     return oss.str();

@@ -70,7 +70,7 @@ int			make_socket_non_blocking(int sfd);
 std::string	checkMime(const std::string &extension);
 std::string	findType(const std::string &filename);
 std::string getDateTime();
-std::string to_string(int value);
+std::string toString(int value);
 char**      vectorToCharStarStar(const std::vector<std::string>& vec); 
 
 
