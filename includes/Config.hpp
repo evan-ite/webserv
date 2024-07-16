@@ -46,6 +46,7 @@ class Config {
 		Server getServer(std::string server_IP) const;
 		std::map<std::string, Server> getServersMap(void) const;
 		void printServers(void) const;
+		void printFallback(void) const;
 
 
 	private:
@@ -65,6 +66,7 @@ class Config {
 		void parseMultipleServers(std::string server);
 		void loadFallback(const std::string &filename);
 		void parseConfig(const std::string &filename);
+		void removeCharacter(std::string& str, char charToRemove);
 };
 
 std::ostream& operator<<(std::ostream& os, const Location& location);

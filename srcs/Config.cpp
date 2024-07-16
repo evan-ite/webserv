@@ -31,19 +31,29 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->allow_uploads = (value == "on");
 	else if (key == "autoindex")
 		currentLocation->autoindex = (value == "on");
-	else if (key == "rewrite")
-		currentLocation->rewrite = value;
+	else if (key == "rewrite") {
+		std::istringstream iss(line);
+		std::string rewrite;
+		iss >> rewrite;
+		iss >> rewrite;
+		if (!(iss >> rewrite))
+			throw std::runtime_error("Error: invalid rewrite value");
+		removeCharacter(rewrite, ';');
+		removeCharacter(rewrite, '"');
+		currentLocation->rewrite = rewrite;
+	}
 	else if (key == "allow") {
 		std::istringstream iss(line);
 		std::string allow;
 		iss >> allow;
-		while (iss >> allow)
+		while (iss >> allow) {
+			removeCharacter(allow, ';');
 			currentLocation->allow.push_back(allow);
+		}
 	}
 }
 
 void Config::parseServer(std::string key, std::string value, std::string line) {
-	(void)line;
 	if (key == "server_name")
 		this->_tempServer.server_name = value;
 	else if (key == "root")
@@ -80,15 +90,12 @@ void Config::parseServer(std::string key, std::string value, std::string line) {
 			throw std::runtime_error("Error: invalid client_body_timeout");
 		this->_tempServer.client_body_timeout = timeout;
 	}
-	else if (key == "cgi") {
+	else if (key == "cgi")
 		this->_tempServer.cgi = (value == "on");
-	}
-	else if (key == "cgi_extension") {
+	else if (key == "cgi_extension")
 		this->_tempServer.cgi_extension = value;
-	}
-	else if (key == "cgi_bin") {
+	else if (key == "cgi_bin")
 		this->_tempServer.cgi_bin = value;
-	}
 	else if (key == "error_page") {
 		std::istringstream iss(line);
 		std::string error_code;
@@ -98,21 +105,20 @@ void Config::parseServer(std::string key, std::string value, std::string line) {
 			throw std::runtime_error("Error: invalid error code");
 		if (!(iss >> error_page))
 			throw std::runtime_error("Error: invalid error page");
+		removeCharacter(error_page, ';');
+		removeCharacter(error_page, '"');
 		this->_tempServer.error_pages[error_code] = error_page;
 	}
-
 }
 
 bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value) {
-	if (line.find("}") != std::string::npos && *parsingLocation)
-	{
+	if (line.find("}") != std::string::npos && *parsingLocation) {
 		this->_tempServer.locations[currentLocation->path] = *currentLocation;
-		log(logDEBUG) << "saved path config for " << currentLocation->path;
+		//log(logDEBUG) << "saved path config for " << currentLocation->path;
 		*parsingLocation = false;
 		return (true);
 	}
-	if (line.find("location") != std::string::npos)
-	{
+	if (line.find("location") != std::string::npos) {
 		*currentLocation = Location(value);
 		*parsingLocation = true;
 		return (true);
@@ -120,8 +126,7 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 	return (false);
 }
 
-void Config::countBraces(std::string line, int *braceCount)
-{
+void Config::countBraces(std::string line, int *braceCount) {
 	size_t openBraces = std::count(line.begin(), line.end(), '{');
 	size_t closeBraces = std::count(line.begin(), line.end(), '}');
 	*braceCount += openBraces - closeBraces;
@@ -139,8 +144,8 @@ void Config::loadServerStruct(const std::string &configString) {
 		std::string value;
 
 		iss >> key >> value; // Assuming 'location /path/' format
-		if (!value.empty() && value[value.size() - 1] == ';')
-			value.erase(value.size() - 1);
+		removeCharacter(value, ';');
+		removeCharacter(value, '"');
 		if (locationMode(line, &parsingLocation, &currentLocation, value))
 			continue;
 		if (!parsingLocation)
@@ -226,7 +231,7 @@ void Config::parseMultipleServers(std::string server)
 			std::string key = hosts[i] + ":" + ports[j];
 			this->_Servers.insert(std::make_pair(key, newServer));
 
-			log(logDEBUG) << "Server " << key << " loaded";
+			log(logINFO) << "Server " << key << " loaded";
 		}
 	}
 }
@@ -288,16 +293,28 @@ Server Config::getServer(std::string serverIP) const { //Throws an exception (st
 }
 
 std::map<std::string, Server> Config::getServersMap(void) const {
-	log(logINFO) << "Size " << this->_Servers.size();
+	//log(logDEBUG) << "Size " << this->_Servers.size();
 	return this->_Servers;
 }
 
+void Config::removeCharacter(std::string& str, char charToRemove) {
+	for (std::string::size_type i = 0; i < str.size(); ) {
+		if (str[i] == charToRemove)
+			str.erase(i, 1);
+		else
+			++i;
+	}
+}
 //################################################ Testing functions ################################################
 void Config::printServers(void) const {
 	for (std::map<std::string, Server>::const_iterator serverPair = _Servers.begin(); \
 		serverPair != _Servers.end(); ++serverPair) {
 		std::cout << serverPair->second << std::endl;
 	}
+}
+
+void Config::printFallback(void) const {
+	std::cout << this->_fallBackServer << std::endl;
 }
 
 std::ostream& operator<<(std::ostream& os, const Location& location) {
@@ -318,6 +335,7 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Server& server) {
+	os << "================ Server ===================" << std::endl;
 	os << "Server Name: " << server.server_name << std::endl;
 	os << "Root: " << server.root << std::endl;
 	os << "Host: " << server.host << std::endl;
@@ -337,20 +355,7 @@ std::ostream& operator<<(std::ostream& os, const Server& server) {
 
 	os << "Locations:" << std::endl;
 	for (std::map<std::string, Location>::const_iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
-		os << it->first << ":" << std::endl << it->second;
+		os << "============ Location " << it->first << " ==============="<< std::endl << it->second;
 	}
 	return os;
 }
-
-
-/* TO-DO
-X extract a single server block.
-X read the ports. (external function)
-X Go through the server string and store configuration in the server struct. (modify exiting function).
-X loop through the ports:
-	X create a copy of the Server struct.
-	X change Port and Host to match the current port.
-	X insert the new pair in the map.
-X load the default configuration before loading the user configuration.
-- apply convertions where it is necessary.
-*/
