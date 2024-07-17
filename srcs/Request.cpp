@@ -109,3 +109,27 @@ void Request::printFileData() {
         log(logDEBUG) << "Pair " << i+1 << ": (" << _fileData[i].first << ", " << _fileData[i].second << ")\n";
     }
 }
+
+std::string 	Request::getLoc() {
+	return this->_location;
+}
+
+std::string		Request::getContentType() {
+	return this->_contentType;
+}
+
+HttpMethod		Request::getMethod() {
+	return this->_method;
+}
+
+int				Request::getContentLen() {
+	return this->_contentLenght;
+}
+
+std::string		Request::getBody() {
+	return this->_body;
+}
+
+std::vector<std::pair<std::string, std::string> >	Request::getFileData() {
+	return this->_fileData;
+}
