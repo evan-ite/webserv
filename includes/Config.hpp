@@ -1,8 +1,8 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
-# include "server.hpp"
+# include "settings.hpp"
 
-struct Location { //rename to Location?
+struct Location {
 	std::string path;
 	std::string root;
 	std::string index;
@@ -16,7 +16,7 @@ struct Location { //rename to Location?
 	Location() : path("") {};
 };
 
-struct Server {
+struct ServerSettings {
 	std::string server_name;
 	std::string root;
 	std::string host;
@@ -43,18 +43,18 @@ class Config {
 		Config &operator=(const Config &rhs);
 
 		void loadServerStruct(const std::string &configString);
-		Server getServer(std::string server_IP) const;
-		std::map<std::string, Server> getServersMap(void) const;
+		ServerSettings getServer(std::string server_IP) const;
+		std::map<std::string, ServerSettings> getServersMap(void) const;
 		void printServers(void) const;
 		void printFallback(void) const;
 
 
 	private:
-		std::map<std::string, Server> _Servers;
+		std::map<std::string, ServerSettings> _Servers;
 
 	private:
-		Server _tempServer;
-		Server _fallBackServer;
+		ServerSettings _tempServer;
+		ServerSettings _fallBackServer;
 
 		void parseLocation(Location *currentLocation, std::string key, std::string value, std::string line);
 		void parseServer(std::string key, std::string value, std::string line);
@@ -70,6 +70,6 @@ class Config {
 };
 
 std::ostream& operator<<(std::ostream& os, const Location& location);
-std::ostream& operator<<(std::ostream& os, const Server& server);
+std::ostream& operator<<(std::ostream& os, const ServerSettings& server);
 
 #endif

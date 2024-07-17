@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 // Constructors
 Response::Response() {}
@@ -7,18 +7,18 @@ Response::Response(int	status,
 		std::string	reason,
 		std::string	type,
 		std::string	connection,
-		std::string	body) 
+		std::string	body)
 {
 	this->_status = status;
 	this->_reason = reason;
 	this->_type = type;
 	this->_len = body.size();
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 	this->_connection = connection;
 	this->_body = body;
 }
 
-Response::Response(std::string const &httpRequest, Server serverData)
+Response::Response(std::string const &httpRequest, ServerSettings serverData)
 {
 	Request request(httpRequest);
 	Location loc = findLoc(request, serverData);
@@ -44,7 +44,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
         this->_body = readFileToString("content/error/405.html");
         this->_connection = "keep-alive";
         this->_len = _body.length();
-        this->_date = getDateTime();
+        this->_date = getDateTimeStr();
     }
 }
 
@@ -54,7 +54,7 @@ Response::Response(const Response &copy) :
 	_reason(copy._reason),
 	_type(copy._type),
 	_len(copy._len),
-	_date(getDateTime()),
+	_date(getDateTimeStr()),
 	_connection(copy._connection),
 	_body(copy._body)
 {}
@@ -92,11 +92,11 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request request, Server serverData)
+void	Response::postMethod(Request request, ServerSettings serverData)
 {
 
 	(void) serverData;
-	
+
 	// Create all files
 	for (size_t i = 0; i < request.getFileData().size(); ++i) {
 
@@ -113,10 +113,10 @@ void	Response::postMethod(Request request, Server serverData)
 	this->_reason = "ok";
 	this->_type = "text/plain";
 	this->_connection = "close"; // Generally, you close the connection after handling POST
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 }
 
-void	Response::getMethod(Request request, Server serverData, std::string root, std::string index)
+void	Response::getMethod(Request request, ServerSettings serverData, std::string root, std::string index)
 {
 	(void) serverData;
 
@@ -130,7 +130,7 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 	this->_reason = "ok";
 	this->_type = findType(file);
 	this->_connection = "keep-alive";
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 
 	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "") {
@@ -149,7 +149,7 @@ void	Response::deleteMethod() {}
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location	Response::findLoc(Request request, Server serverData) {
+Location	Response::findLoc(Request request, ServerSettings serverData) {
 	Location	loc;
 	bool		match = false;
 
@@ -168,7 +168,7 @@ Location	Response::findLoc(Request request, Server serverData) {
 
 void	Response::setStatus(int status) {
 	this->_status = status;
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 }
 
 void	Response::setReason(std::string reason) {

@@ -1,6 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-# include "server.hpp"
+# include "settings.hpp"
 
 enum loglevel_e
 {

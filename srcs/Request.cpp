@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 Request::Request(std::string httpRequest)
 {
@@ -57,7 +57,7 @@ void Request::parse(std::string httpRequest)
 	this->_contentLenght = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
-    	this->_contentType = "application/octet-stream"; 
+    	this->_contentType = "application/octet-stream";
 	log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLenght << "\n body: " << this->_body;
 	printFileData();
 }

@@ -1,13 +1,13 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include "server.hpp"
+# include "settings.hpp"
 
 class Response
 {
 	public:
 		// Constructors
-		Response(std::string const &httpRequest, Server confData);
+		Response(std::string const &httpRequest, ServerSettings confData);
 		Response(int	status,
 				std::string	reason,
 				std::string	type,
@@ -29,7 +29,7 @@ class Response
 
 		class ResponseException : public std::exception {
 			public:
-				const char* what() const throw() 
+				const char* what() const throw()
 				{ return "Error creating response"; }
 		};
 
@@ -37,10 +37,10 @@ class Response
 		Response(const Response &copy);
 		Response();
 
-		void		postMethod(Request request, Server serverData);
-		void		getMethod(Request request, Server serverData, std::string root, std::string index);
+		void		postMethod(Request request, ServerSettings serverData);
+		void		getMethod(Request request, ServerSettings serverData, std::string root, std::string index);
 		void		deleteMethod();
-		Location	findLoc(Request request, Server serverData);
+		Location	findLoc(Request request, ServerSettings serverData);
 
 		int	_status;
 		std::string	_reason;

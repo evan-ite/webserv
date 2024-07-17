@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/17 11:00:36 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/17 13:33:10 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
-# include "server.hpp"
+# include "settings.hpp"
 
 enum HttpMethod {
 	GET,
@@ -35,22 +35,22 @@ class Request
 				return "Invalid HTTP method.";
 			}
 		};
-		
+
 		std::string 	getLoc();
 		std::string		getContentType();
 		HttpMethod		getMethod();
 		int				getContentLen();
 		std::string		getBody();
-		
+
 		std::vector<std::pair<std::string, std::string> >	getFileData();
 
-		
+
 	private:
 		Request();
 		void parse(std::string httpRequest);
 		void parseMultipart(std::string httpRequest);
-		void printFileData(); 
-		
+		void printFileData();
+
 		std::string	_location;
 		HttpMethod	_method;
 		std::string _body;
@@ -59,7 +59,7 @@ class Request
 		std::string _host; //mandatory!
 		std::string _userAgent;
 		std::string _connection;
-		
+
 		std::vector<std::pair<std::string, std::string> > _fileData;
 };
 
