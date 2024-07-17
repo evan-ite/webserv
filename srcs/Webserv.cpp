@@ -45,22 +45,23 @@ void Webserv::handleEpollEvents()
 	while (g_signal)
 	{
 		int num_events = epoll_wait(this->getEpollFD(), events, MAX_EVENTS, -1);
-		log(logDEBUG) << "epoll events "<< num_events;
 		if (num_events == -1)
 			throw epollError();
 		for (int i = 0; i < num_events; ++i)
 		{
 			int active_fd = events[i].data.fd;
 			std::vector<int> activeFDs = this->getActiveFDs();
+			log(logDEBUG) << "active fd " << active_fd;
 			if (std::find(activeFDs.begin(), activeFDs.end(), active_fd) != activeFDs.end())
 			{
 				// new conn
+				log(logDEBUG) << "asd new";
 				Client c(this->findServer(active_fd), active_fd);
 				this->addClient(c);
-				log(logDEBUG) << "New connection";
 			}
 			else
 				// old conn
+				log(logDEBUG) << "asd old";
 				this->handleRequest(this->findClient(active_fd), active_fd);
 		}
 	}
@@ -117,7 +118,7 @@ int	Webserv::getNumberServers()
 int	Webserv::run()
 {
 	this->setupEpoll();
-	std::map<std::string, ServerSettings>		sMap = this->_conf.getServersMap();
+	std::map<std::string, ServerSettings>				sMap = this->_conf.getServersMap();
 	std::map<std::string, ServerSettings> ::iterator	it = sMap.begin();
 	for (; it != sMap.end(); it++)
 	{
@@ -125,6 +126,7 @@ int	Webserv::run()
 		this->addServer(s);
 		log(logINFO) << "Server listening: " << it->first;
 	}
+
 	if (this->getNumberServers())
 		this->handleEpollEvents();
 	return (EXIT_SUCCESS);

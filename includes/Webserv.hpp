@@ -7,7 +7,6 @@ class Webserv
 {
 	public:
 		Webserv(Config &conf);
-		// Webserv(std::map<std::string, Server> allServers);
 		~Webserv();
 		Webserv & operator=(const Webserv &assign);
 		int					run();

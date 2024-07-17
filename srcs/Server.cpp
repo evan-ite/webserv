@@ -19,7 +19,8 @@ Server::Server(std::string key, ServerSettings settings)
 	memset(&(this->_address), 0, sizeof(this->_address));
 	this->_address.sin_port = htons(this->_settings.port);
 	this->_address.sin_family = AF_INET;
-	this->_address.sin_addr.s_addr = inet_addr(this->_settings.host.c_str());
+	// this->_address.sin_addr.s_addr = inet_addr(this->_settings.host.c_str());
+	this->_address.sin_addr.s_addr = INADDR_ANY;
 	this->setupServerSocket();
 }
 

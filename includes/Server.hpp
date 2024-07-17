@@ -6,7 +6,6 @@ class Server
 {
 	public:
 		// Constructors
-		Server();
 		Server(std::string key, ServerSettings settings);
 		Server(const Server &copy);
 		// Destructor
@@ -26,6 +25,7 @@ class Server
 			virtual const char* what() const throw();
 		};
 	private:
+		Server();
 		int						_fd;
 		struct sockaddr_in		_address;
 		std::string				_key;
