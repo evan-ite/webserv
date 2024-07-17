@@ -30,9 +30,9 @@ Response::Response(std::string const &httpRequest, Server serverData)
 	try {
 		if (cgi.isTrue())
 			cgi.execute(*this);
-		else if (request._method == POST)
+		else if (request.getMethod() == POST)
 			postMethod(request, serverData);
-		else if (request._method == GET)
+		else if (request.getMethod() == GET)
 			getMethod(request, serverData, root, index);
 		log(logDEBUG) << "Response object succesfully created";
 	}
@@ -98,10 +98,10 @@ void	Response::postMethod(Request request, Server serverData)
 	(void) serverData;
 	
 	// Create all files
-	for (size_t i = 0; i < request._fileData.size(); ++i) {
+	for (size_t i = 0; i < request.getFileData().size(); ++i) {
 
-		std::string filename = request._fileData[i].first;
-		std::string content = request._fileData[i].second;
+		std::string filename = request.getFileData()[i].first;
+		std::string content = request.getFileData()[i].second;
 
 		std::cout << "Filename: " << filename << "\nContent: " << content << "\n";
 	}
@@ -120,9 +120,9 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 {
 	(void) serverData;
 
-	std::string file = root + request._location;
+	std::string file = root + request.getLoc();
 	// log(logDEBUG) << " " << file;
-	if (request._location == "/")
+	if (request.getLoc() == "/")
 		file = root + "/" + index;
 	this->_status = 200;
 	this->_body = readFileToString(file);
@@ -155,7 +155,7 @@ Location	Response::findLoc(Request request, Server serverData) {
 
 	std::map<std::string, Location>::iterator it;
     for (it = serverData.locations.begin(); it != serverData.locations.end(); ++it) {
-		std::size_t i = request._location.find(it->first);
+		std::size_t i = request.getLoc().find(it->first);
 		if (i == 0) {
 			match = true;
 			loc = it->second;
