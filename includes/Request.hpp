@@ -6,7 +6,7 @@
 /*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/10 18:31:14 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:00:36 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,11 +36,14 @@ class Request
 			}
 		};
 		
-		std::string	_location;
-		std::string _contentType;
-		HttpMethod	_method;
-		int			_contentLenght;
-		std::vector<std::pair<std::string, std::string> > _fileData;
+		std::string 	getLoc();
+		std::string		getContentType();
+		HttpMethod		getMethod();
+		int				getContentLen();
+		std::string		getBody();
+		
+		std::vector<std::pair<std::string, std::string> >	getFileData();
+
 		
 	private:
 		Request();
@@ -48,9 +51,16 @@ class Request
 		void parseMultipart(std::string httpRequest);
 		void printFileData(); 
 		
+		std::string	_location;
+		HttpMethod	_method;
+		std::string _body;
+		std::string _contentType;
+		int			_contentLenght;
 		std::string _host; //mandatory!
 		std::string _userAgent;
 		std::string _connection;
+		
+		std::vector<std::pair<std::string, std::string> > _fileData;
 };
 
 #endif

@@ -6,13 +6,16 @@ import cgitb
 
 cgitb.enable()  # Enables CGI error reporting
 
-print("Content-Type: text/html")
+print("<!DOCTYPE html>")
+print("<html lang='en'>")
 print()  # End of headers
 
 form = cgi.FieldStorage()
 
-print("<html>")
 print("<head>")
+print("<meta charset='UTF-8'>")
+print("<meta name='viewport' content='width=device-width, initial-scale=1.0'>")
+print("<link rel='stylesheet' href='../styles.css'>")
 print("<title>Simple CGI Script</title>")
 print("</head>")
 print("<body>")
@@ -38,3 +41,5 @@ elif os.environ['REQUEST_METHOD'] == 'POST':
 
 print("</body>")
 print("</html>")
+
+

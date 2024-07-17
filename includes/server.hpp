@@ -23,13 +23,14 @@
 # include <fstream>
 # include <algorithm>
 # include <cctype>
+# include <sys/wait.h>
 // local header files
 # include "Config.hpp"
 # include "Logger.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
 # include "Webserv.hpp"
-# include "Parser.hpp"
+# include "Cgi.hpp"
 
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets
@@ -69,7 +70,8 @@ int			make_socket_non_blocking(int sfd);
 std::string	checkMime(const std::string &extension);
 std::string	findType(const std::string &filename);
 std::string getDateTime();
-std::string to_string(int value);
+std::string toString(int value);
+char**      vectorToCharStarStar(const std::vector<std::string>& vec); 
 
 
 #endif

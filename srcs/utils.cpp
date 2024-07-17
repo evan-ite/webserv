@@ -93,9 +93,27 @@ std::string getDateTime()
 }
 
 /* Int to string */
-std::string to_string(int value) {
+std::string toString(int value) {
     std::ostringstream oss;
     oss << value;
     return oss.str();
 }
 
+// Function to convert std::vector<std::string> to char**
+char** vectorToCharStarStar(const std::vector<std::string>& vec) {
+    int numElements = vec.size();
+
+    // Allocate memory for an array of char* pointers
+    char** charArray = new char*[numElements + 1];
+
+    // Copy each string from the vector into the char* array
+    for (int i = 0; i < numElements; ++i) {
+        // Allocate memory for each string and copy it
+        charArray[i] = new char[vec[i].length() + 1];  // +1 for null terminator
+        std::strcpy(charArray[i], vec[i].c_str());
+    }
+
+	charArray[numElements] = NULL;
+
+    return charArray;
+}

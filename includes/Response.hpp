@@ -8,7 +8,11 @@ class Response
 	public:
 		// Constructors
 		Response(std::string const &httpRequest, Server confData);
-		Response(const Response &copy);
+		Response(int	status,
+				std::string	reason,
+				std::string	type,
+				std::string	connection,
+				std::string	body);
 
 		// Destructor
 		~Response();
@@ -17,6 +21,11 @@ class Response
 		Response & operator=(const Response &assign);
 
 		std::string makeResponse();
+		void		setStatus(int status);
+		void		setReason(std::string reason);
+		void		setType(std::string type);
+		void		setBody(std::string body);
+		void		setConnection(std::string connection);
 
 		class ResponseException : public std::exception {
 			public:
@@ -25,11 +34,13 @@ class Response
 		};
 
 	private:
+		Response(const Response &copy);
 		Response();
-		void	postMethod(Request request, Server serverData);
-		void	getMethod(Request request, Server serverData, std::string root, std::string index);
-		void	deleteMethod();
-		void	cgiMethod(Request request, Server serverData);
+
+		void		postMethod(Request request, Server serverData);
+		void		getMethod(Request request, Server serverData, std::string root, std::string index);
+		void		deleteMethod();
+		Location	findLoc(Request request, Server serverData);
 
 		int	_status;
 		std::string	_reason;
