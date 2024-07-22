@@ -5,6 +5,7 @@
 class Client
 {
 	public:
+		Client();
 		Client(std::string key, int fd);
 		Client(const Client &copy);
 		Client & operator=(const Client &assign);
@@ -24,7 +25,6 @@ class Client
 		};
 
 	private:
-		Client();
 		std::time_t						_lastSeen;
 		std::string						_key;
 		int								_fd;

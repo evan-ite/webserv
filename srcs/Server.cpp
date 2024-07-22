@@ -45,7 +45,7 @@ int Server::getFd() const
 	return (this->_fd);
 }
 
-std::string Server::getKey() const
+const std::string& Server::getKey() const
 {
 	return (this->_key);
 }
@@ -62,14 +62,14 @@ const char * Server::socketError::what() const throw()
 void Server::setupServerSocket()
 {
 	this->_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-	if (this->_fd == 0)
+	if (this->_fd < 0)
 		throw socketError();
 	const int enable = 1;
 	if (setsockopt(this->_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 		throw socketError();
 	if (!makeNonBlocking(this->_fd))
 		throw socketError();
-	if (bind(this->_fd, (struct sockaddr *)&(this->_address), sizeof(this->_address)) < 0)
+	if (bind(this->_fd, reinterpret_cast<struct sockaddr*>(&_address), sizeof(this->_address)) < 0)
 		throw socketError();
 	if (listen(this->_fd, 6) < 0)
 		throw socketError();

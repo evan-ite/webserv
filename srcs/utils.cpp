@@ -134,3 +134,19 @@ int	makeNonBlocking(int fd)
 	}
 	return 1;
 }
+
+/* Takes a string, splits it on delim and returns a vector of std::string tokens */
+std::vector<std::string> split(const std::string& str, char del)
+{
+	std::vector<std::string> tokens;
+	size_t start = 0;
+	size_t end = str.find(del);
+
+	while (end != std::string::npos) {
+		tokens.push_back(str.substr(start, end - start));
+		start = end + 1;
+		end = str.find(del, start);
+	}
+	tokens.push_back(str.substr(start));
+	return (tokens);
+}

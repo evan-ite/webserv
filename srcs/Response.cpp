@@ -18,14 +18,14 @@ Response::Response(int	status,
 	this->_body = body;
 }
 
-Response::Response(std::string const &httpRequest, ServerSettings serverData)
+Response::Response(std::string const &httpRequest, ServerSettings* serverData)
 {
 	Request request(httpRequest);
-	Location loc = findLoc(request, serverData);
+	Location loc = findLoc(request.getLoc(), serverData);
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	Cgi cgi(&request, &serverData);
+	Cgi cgi(&request, serverData);
 
 	try {
 		if (cgi.isTrue())
@@ -37,15 +37,15 @@ Response::Response(std::string const &httpRequest, ServerSettings serverData)
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
-        // Handle other methods or send a 405 Method Not Allowed response
-        this->_status = 405;
-        this->_reason = "Method Not Allowed";
-        this->_type = "text/html";
-        this->_body = readFileToString("content/error/405.html");
-        this->_connection = "keep-alive";
-        this->_len = _body.length();
-        this->_date = getDateTimeStr();
-    }
+		// Handle other methods or send a 405 Method Not Allowed response
+		this->_status = 405;
+		this->_reason = "Method Not Allowed";
+		this->_type = "text/html";
+		this->_body = readFileToString("content/error/405.html");
+		this->_connection = "keep-alive";
+		this->_len = _body.length();
+		this->_date = getDateTimeStr();
+	}
 }
 
 /* Sets date and time to moment of copy */
@@ -92,7 +92,7 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request request, ServerSettings serverData)
+void	Response::postMethod(Request request, ServerSettings* serverData)
 {
 
 	(void) serverData;
@@ -116,7 +116,7 @@ void	Response::postMethod(Request request, ServerSettings serverData)
 	this->_date = getDateTimeStr();
 }
 
-void	Response::getMethod(Request request, ServerSettings serverData, std::string root, std::string index)
+void	Response::getMethod(Request request, ServerSettings* serverData, std::string root, std::string index)
 {
 	(void) serverData;
 
@@ -149,22 +149,46 @@ void	Response::deleteMethod() {}
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location	Response::findLoc(Request request, ServerSettings serverData) {
-	Location	loc;
-	bool		match = false;
+// Location	Response::findLoc(std::string uri, ServerSettings* serverData)
+// {
+// 	size_t pos = uri.find('/');
+// 	if (pos == std::string::npos)
+// 		return (serverData->locations.at(0))
 
-	std::map<std::string, Location>::iterator it;
-    for (it = serverData.locations.begin(); it != serverData.locations.end(); ++it) {
-		std::size_t i = request.getLoc().find(it->first);
-		if (i == 0) {
-			match = true;
-			loc = it->second;
+// 	std::string shortURI = str.substr(0, pos);
+// 	std::vector::iterator it = serverData->locations.begin();
+// 	for (; it != serverData->locations.end(); ++it)
+// 	{
+// 		if (it->first == shortURI)
+// 			return (it->second)
+// 	}
+// 	this->findLoc(uri.substr(pos + 1), serverData);
+// }
+
+Location Response::findLoc(const std::string& uri, ServerSettings* serverData)
+{
+	log(logDEBUG) << uri;
+	if (uri.empty() || uri == "/")
+	{
+		return(serverData->locations["/"]);
+	}
+
+	size_t pos = uri.find('/');
+	std::string shortURI = (pos == std::string::npos) ? uri : uri.substr(0, pos);
+
+	std::map<std::string, Location>::iterator it = serverData->locations.begin();
+	for (; it != serverData->locations.end(); ++it) {
+		if (it->first == shortURI) {
+			return it->second;
 		}
 	}
-	if (!match)
-		loc = serverData.locations.begin()->second; // Possible problem cause map doesn't preserve order of initiaization
-	return loc;
+
+	if (pos != std::string::npos)
+		return (findLoc(uri.substr(pos + 1), serverData));
+	else
+		return (serverData->locations.at(0));
 }
+
 
 void	Response::setStatus(int status) {
 	this->_status = status;

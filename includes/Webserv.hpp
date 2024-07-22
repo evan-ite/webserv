@@ -21,27 +21,28 @@ class Webserv
 		};
 
 	private:
-		void				addClient(Client c);
+		void				addClient(Client* c);
 		void				removeClient(Client c);
 		void				addServer(Server s);
 		void				removeServer(Server s);
-		std::vector<int>	getActiveFDs();
+		// std::vector<int>	getActiveFDs();
 		int					getEpollFD();
 		void				epollAddFD(int fd);
 		int					getNumberServers();
-		std::string			findServer(int fd);
-		ServerSettings		findClient(int fd);
+		const std::string*	findServer(int fd);
+		ServerSettings*		findClient(int fd);
 
 		Webserv(const Webserv &copy);
 		Webserv();
 		Config							_conf;
 		int								_epoll_fd;
 		std::vector<Server>				_servers;
-		std::vector<Client>				_clients;
-		std::vector<int>				_activeFDs;
+		// std::vector<Client>				_clients;
+		// std::vector<int>				_activeFDs;
+		Client							*_clients[MAX_EVENTS];
 		void							setupEpoll();
 		void							handleEpollEvents();
-		void							handleRequest(ServerSettings sett, int client_fd);
+		void							handleRequest(ServerSettings* sett, int client_fd);
 };
 
 #endif

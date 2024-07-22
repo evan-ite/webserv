@@ -14,7 +14,7 @@ class Server
 		Server & operator=(const Server &assign);
 		// Getters / Setters
 		int					getFd() const;
-		std::string			getKey() const;
+		const std::string&	getKey() const;
 		int					getNumberActiveClients();
 		void				addClient(Client c);
 		void				setupServerSocket();

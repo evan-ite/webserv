@@ -1,8 +1,14 @@
 #include "../includes/settings.hpp"
 
-Webserv::Webserv() {}
+Webserv::Webserv()
+{
+	memset(this->_clients, 0, sizeof(this->_clients));
+}
 
-Webserv::Webserv(Config &conf) : _conf(conf) {}
+Webserv::Webserv(Config &conf) : _conf(conf)
+{
+	memset(this->_clients, 0, sizeof(this->_clients));
+}
 
 Webserv::Webserv(const Webserv &copy)
 {
@@ -49,48 +55,42 @@ void Webserv::handleEpollEvents()
 			throw epollError();
 		for (int i = 0; i < num_events; ++i)
 		{
-			int active_fd = events[i].data.fd;
-			std::vector<int> activeFDs = this->getActiveFDs();
-			log(logDEBUG) << "active fd " << active_fd;
-			if (std::find(activeFDs.begin(), activeFDs.end(), active_fd) != activeFDs.end())
+			int activeFD = events[i].data.fd;
+			if (this->findClient(activeFD) != NULL)
+				this->handleRequest(this->findClient(activeFD), activeFD);
+			else if (this->findServer(activeFD))
 			{
-				// new conn
-				log(logDEBUG) << "asd new " << active_fd;
-				Client c(this->findServer(active_fd), active_fd);
+				std::string servKey = *this->findServer(activeFD);
+				log(logDEBUG) << "Finding val to key " << servKey;
+				Client *c = new Client(servKey, activeFD);
 				this->addClient(c);
-				activeFDs = this->getActiveFDs();
 			}
 			else
-			{
-				// old conn
-				log(logDEBUG) << "asd old";
-				this->handleRequest(this->findClient(active_fd), active_fd);
-			}
+				throw epollError();
 		}
 	}
 }
 
-void Webserv::handleRequest(ServerSettings sett, int fd)
+void Webserv::handleRequest(ServerSettings* sett, int fd)
 {
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
 	log(logINFO) << "Reading from socket, FD: " << fd;
-	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0) {
+	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
 		httpRequest.append(buffer, count);
-	}
-	if (count == -1)
-	{
-		close(fd); // Close on read error
-		log(logERROR) << "Read error: " << strerror(errno);
-		return ;
-	}
+	// if (count == -1)
+	// {
+	// 	close(fd); // Close on read error
+	// 	log(logERROR) << "Read error: " << strerror(errno);
+	// 	return ;
+	// }
 	if (!httpRequest.empty())
 	{
-		log(logDEBUG) << "--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Response res(httpRequest, sett);
 		std::string resString = res.makeResponse();
-		log(logDEBUG) << "--- RESPONSE ---\n" << resString.substr(0, 1000);
+		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
@@ -136,101 +136,60 @@ int	Webserv::run()
 }
 
 
-std::string	Webserv::findServer(int fd)
+const std::string* Webserv::findServer(int fd)
 {
-	std::vector<Server>::iterator it = this->_servers.begin();
-	for (; it != this->_servers.end(); it++)
+	for (std::vector<Server>::iterator it = this->_servers.begin(); it != this->_servers.end(); ++it)
 	{
-		log(logDEBUG) << "iterate fd " << it->getFd();
 		if (it->getFd() == fd)
-			return (it->getKey());
+			return &(it->getKey());
 	}
 	log(logERROR) << "Server not found for fd: " << fd;
-	throw internalError();
+	return NULL;
 }
 
-ServerSettings	Webserv::findClient(int fd)
+ServerSettings* Webserv::findClient(int fd)
 {
-	std::vector<Client>::iterator it = this->_clients.begin();
-	for (; it != this->_clients.end(); it++)
+	if (this->_clients[fd] != 0)
 	{
-		if (it->getFd() == fd)
-			return (this->_conf.getServersMap()[it->getKey()]);
+		return &(this->_conf.getServersMap().at(this->_clients[fd]->getKey()));
 	}
-	log(logERROR) << "Client not found for fd: " << fd;
-	throw internalError();
+	else
+		return (NULL);
 }
 
-
-void	Webserv::addClient(Client c)
+void	Webserv::addClient(Client* c)
 {
-	this->_clients.push_back(c);
-	this->_activeFDs.push_back(c.getFd());
-	this->epollAddFD(c.getFd());
+	this->_clients[c->getFd()] = c;
+	this->epollAddFD(c->getFd());
 }
+
 
 void	Webserv::removeClient(Client c)
 {
-	int fd;
-	std::vector<Client>::iterator it = this->_clients.begin();
-	for (; it != this->_clients.end(); it++)
-	{
-		if (*it == c)
-		{
-			fd = it->getFd();
-			this->_clients.erase(it);
-			break ;
-		}
-	}
-	std::vector<int>::iterator fd_it = this->_activeFDs.begin();
-	for (; fd_it != this->_activeFDs.end(); it++)
-	{
-		if (*fd_it == fd)
-		{
-			this->_activeFDs.erase(fd_it);
-			return ;
-		}
-	}
-	log(logERROR) << "Cannot remove client - not found";
-	throw internalError();
+	this->_clients[c.getFd()] = NULL;
+	close(c.getFd());
 }
 
 void	Webserv::addServer(Server s)
 {
 	this->_servers.push_back(s);
-	this->_activeFDs.push_back(s.getFd());
 	this->epollAddFD(s.getFd());
 }
 
 void	Webserv::removeServer(Server s)
 {
-	int fd;
+	close(s.getFd());
 	std::vector<Server>::iterator it = this->_servers.begin();
 	for (; it != this->_servers.end(); it++)
 	{
 		if (*it == s)
 		{
-			fd = it->getFd();
 			this->_servers.erase(it);
-			break ;
-		}
-	}
-	std::vector<int>::iterator fd_it = this->_activeFDs.begin();
-	for (; fd_it != this->_activeFDs.end(); it++)
-	{
-		if (*fd_it == fd)
-		{
-			this->_activeFDs.erase(fd_it);
 			return ;
 		}
 	}
 	log(logERROR) << "Cannot remove server - not found";
 	throw internalError();
-}
-
-std::vector<int>	Webserv::getActiveFDs()
-{
-	return (this->_activeFDs);
 }
 
 int	Webserv::getEpollFD()
