@@ -19,15 +19,15 @@ Webserv & Webserv::operator=(const Webserv &assign)
 
 const char * Webserv::configError::what() const throw()
 {
-	return "Config did something weird";
+	return ("Config did something weird");
 }
 const char * Webserv::internalError::what() const throw()
 {
-	return "Webserv did something weird";
+	return ("Webserv did something weird");
 }
 const char * Webserv::epollError::what() const throw()
 {
-	return "Epoll did something weird";
+	return ("Epoll did something weird");
 }
 
 void Webserv::epollAddFD(int fd)
@@ -55,14 +55,17 @@ void Webserv::handleEpollEvents()
 			if (std::find(activeFDs.begin(), activeFDs.end(), active_fd) != activeFDs.end())
 			{
 				// new conn
-				log(logDEBUG) << "asd new";
+				log(logDEBUG) << "asd new " << active_fd;
 				Client c(this->findServer(active_fd), active_fd);
 				this->addClient(c);
+				activeFDs = this->getActiveFDs();
 			}
 			else
+			{
 				// old conn
 				log(logDEBUG) << "asd old";
 				this->handleRequest(this->findClient(active_fd), active_fd);
+			}
 		}
 	}
 }
@@ -138,6 +141,7 @@ std::string	Webserv::findServer(int fd)
 	std::vector<Server>::iterator it = this->_servers.begin();
 	for (; it != this->_servers.end(); it++)
 	{
+		log(logDEBUG) << "iterate fd " << it->getFd();
 		if (it->getFd() == fd)
 			return (it->getKey());
 	}
