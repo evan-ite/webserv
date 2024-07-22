@@ -6,7 +6,7 @@
 /*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/22 13:04:08 by ubazzane         ###   ########.fr       */
+/*   Updated: 2024/07/22 17:28:00 by ubazzane         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,10 @@ class Request
 	private:
 		Request();
 		void parse(std::string httpRequest);
-		void parseMultipart(std::string httpRequest);
 		void printFileData();
-	//	std::string findBoundary(const std::string& httpRequest);
-	//	void parsePart(const std::string& part);
-	//	void parseMultipart(const std::string& httpRequest);
+		std::string findBoundary(const std::string& httpRequest);
+		void parsePart(const std::string& part);
+		void parseMultipart(const std::string& httpRequest);
 
 		std::string	_location;
 		HttpMethod	_method;

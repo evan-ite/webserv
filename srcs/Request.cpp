@@ -62,47 +62,8 @@ void Request::parse(std::string httpRequest)
 	printFileData();
 }
 
-void Request::parseMultipart(std::string httpRequest)
-{
-	int			i = 0;
-	std::string body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4); // Find body
-	// log(logDEBUG) << "MULTIPART BODY\n" << body;
-	std::string boundary = findKey(httpRequest, "boundary=", '\r'); // Find boundary
-	if (boundary.empty()) {
-		this->_body = body;
-		return;
-	}
-	std::string::size_type startPos = body.find("--" + boundary) + boundary.length() + 4; // Skip the boundary and CRLF
-	// Loop over all files in body
-	while (startPos != std::string::npos)
-	{
-		// Find the end / in-between boundary and subtract the CRLF
-		std::string::size_type endPos = body.find("--" + boundary, startPos) - 2;
-		if (endPos == std::string::npos)
-			endPos = body.find("--" + boundary + "--", startPos) - 2;
-		// Substract part in between boundaries
-		std::string part = body.substr(startPos, endPos - startPos);
-		if (part == "\r\n")
-			break;
-		// Parse headers and content
-		std::string::size_type headerEndPos = part.find("\r\n\r\n");
-		std::string headers = part.substr(0, headerEndPos);
-		std::string content = part.substr(headerEndPos + 4); // Skip the CRLF
-		// Parse Content-Disposition header
-		std::string disposition = findKey(headers, "Content-Disposition: ", '\r');
-		if (disposition.find("filename=\"") != std::string::npos) {
-			std::string filename = disposition.substr(disposition.find("filename=\"") + 10);
-			filename = filename.substr(0, filename.find("\""));
-			// Store the file content
-			this->_fileData.push_back(std::make_pair(filename, content ));
-		}
-		startPos = body.find(boundary, endPos + 4) + boundary.length() + 2;
-		i++;
-	}
-}
 
-
-/* std::string Request::findBoundary(const std::string& httpRequest) {
+std::string Request::findBoundary(const std::string& httpRequest) {
 	size_t pos = httpRequest.find("boundary=");
 	if (pos == std::string::npos) return "";
 	pos += 9; // Length of "boundary="
@@ -130,7 +91,10 @@ void Request::parsePart(const std::string& part) {
 void Request::parseMultipart(const std::string& httpRequest) {
 	std::string boundary = findBoundary(httpRequest);
 	//log(logDEBUG) << "BOUNDARY: " << boundary;
-	if (boundary.empty()) return;
+	if (boundary.empty()) {
+		_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
+		return;
+	}
 
 	std::istringstream stream(httpRequest);
 	std::string line;
@@ -148,15 +112,15 @@ void Request::parseMultipart(const std::string& httpRequest) {
 			part += line + "\n";
 		}
 	}
-} */
+}
 
 void Request::printFileData() {
 	if (this->_fileData.empty())
 		return ;
 
 	for (size_t i = 0; i < _fileData.size(); ++i) {
-        log(logDEBUG) << "Pair " << i+1 << ": (" << _fileData[i].first << ", " << _fileData[i].second << ")\n";
-    }
+		log(logDEBUG) << "Pair " << i+1 << ": (" << _fileData[i].first << ", " << _fileData[i].second << ")\n";
+	}
 }
 
 std::string 	Request::getLoc() {
