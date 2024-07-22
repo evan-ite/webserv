@@ -57,7 +57,7 @@ void Request::parse(std::string httpRequest)
 	this->_contentLenght = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
-    	this->_contentType = "application/octet-stream"; 
+    	this->_contentType = "application/octet-stream";
 	log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLenght << "\n body: " << this->_body;
 	printFileData();
 }
@@ -100,6 +100,55 @@ void Request::parseMultipart(std::string httpRequest)
 		i++;
 	}
 }
+
+
+/* std::string Request::findBoundary(const std::string& httpRequest) {
+	size_t pos = httpRequest.find("boundary=");
+	if (pos == std::string::npos) return "";
+	pos += 9; // Length of "boundary="
+	size_t endPos = httpRequest.find("\r", pos);
+	return "--" + httpRequest.substr(pos, endPos - pos);
+}
+
+void Request::parsePart(const std::string& part) {
+	std::string::size_type headerEndPos = part.find("\r\n\r\n");
+	//log(logDEBUG) << "HEADER END POS: " << headerEndPos;
+	if (headerEndPos == std::string::npos) return;
+
+	std::string headers = part.substr(0, headerEndPos);
+	std::string content = part.substr(headerEndPos + 4); // Skip the CRLF
+
+	size_t filenamePos = headers.find("filename=\"");
+	if (filenamePos != std::string::npos) {
+		filenamePos += 10; // Length of "filename=\""
+		size_t filenameEndPos = headers.find("\"", filenamePos);
+		std::string filename = headers.substr(filenamePos, filenameEndPos - filenamePos);
+		_fileData.push_back(std::make_pair(filename, content));
+	}
+}
+
+void Request::parseMultipart(const std::string& httpRequest) {
+	std::string boundary = findBoundary(httpRequest);
+	//log(logDEBUG) << "BOUNDARY: " << boundary;
+	if (boundary.empty()) return;
+
+	std::istringstream stream(httpRequest);
+	std::string line;
+	bool inPart = false;
+	std::string part;
+
+	while (std::getline(stream, line)) {
+		if (line.find(boundary) != std::string::npos) {
+			if (inPart) {
+				parsePart(part);
+				part.clear();
+			}
+			inPart = !inPart;
+		} else if (inPart) {
+			part += line + "\n";
+		}
+	}
+} */
 
 void Request::printFileData() {
 	if (this->_fileData.empty())

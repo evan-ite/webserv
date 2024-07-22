@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/17 14:20:53 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/22 13:04:08 by ubazzane         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,22 +35,25 @@ class Request
 				return "Invalid HTTP method.";
 			}
 		};
-		
+
 		std::string 	getLoc();
 		std::string		getContentType();
 		HttpMethod		getMethod();
 		int				getContentLen();
 		std::string		getBody();
-		
+
 		std::vector<std::pair<std::string, std::string> >	getFileData();
 
-		
+
 	private:
 		Request();
 		void parse(std::string httpRequest);
 		void parseMultipart(std::string httpRequest);
-		void printFileData(); 
-		
+		void printFileData();
+	//	std::string findBoundary(const std::string& httpRequest);
+	//	void parsePart(const std::string& part);
+	//	void parseMultipart(const std::string& httpRequest);
+
 		std::string	_location;
 		HttpMethod	_method;
 		std::string _body;
@@ -59,7 +62,7 @@ class Request
 		std::string _host; //mandatory!
 		std::string _userAgent;
 		std::string _connection;
-		
+
 		std::vector<std::pair<std::string, std::string> > _fileData; // filename , file content
 };
 
