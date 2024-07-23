@@ -11,22 +11,28 @@ Request::Request(const Request &copy)
 {
 	this->_method = copy._method;
 	this->_host = copy._host;
-	this->_contentLenght = copy._contentLenght;
+	this->_contentLength = copy._contentLength;
 	this->_location = copy._location;
 	this->_userAgent = copy._userAgent;
 	this->_connection = copy._connection;
+	this->_fileData = copy._fileData;
+	this->_body = copy._body;
 }
 
 Request::~Request() {}
 
 Request & Request::operator=(const Request &assign)
 {
+	if (this == &assign)
+		return (*this);
 	this->_method = assign._method;
 	this->_host = assign._host;
-	this->_contentLenght = assign._contentLenght;
+	this->_contentLength = assign._contentLength;
 	this->_location = assign._location;
 	this->_userAgent = assign._userAgent;
 	this->_connection = assign._connection;
+	this->_fileData = assign._fileData;
+	this->_body = assign._body;
 	return (*this);
 }
 
@@ -54,11 +60,11 @@ void Request::parse(std::string httpRequest)
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
-	this->_contentLenght = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
+	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
     	this->_contentType = "application/octet-stream";
-	log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLenght << "\n body: " << this->_body;
+	log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLength << "\n body: " << this->_body;
 	printFileData();
 }
 
@@ -136,7 +142,7 @@ HttpMethod		Request::getMethod() {
 }
 
 int				Request::getContentLen() {
-	return this->_contentLenght;
+	return this->_contentLength;
 }
 
 std::string		Request::getBody() {

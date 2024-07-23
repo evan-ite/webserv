@@ -6,7 +6,7 @@
 /*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/22 17:28:00 by ubazzane         ###   ########.fr       */
+/*   Updated: 2024/07/23 10:47:25 by ubazzane         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ class Request
 		HttpMethod	_method;
 		std::string _body;
 		std::string _contentType;
-		int			_contentLenght;
+		int			_contentLength;
 		std::string _host; //mandatory!
 		std::string _userAgent;
 		std::string _connection;
