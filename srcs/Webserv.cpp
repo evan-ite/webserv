@@ -56,12 +56,13 @@ void Webserv::handleEpollEvents()
 		for (int i = 0; i < num_events; ++i)
 		{
 			int activeFD = events[i].data.fd;
-			if (this->findClient(activeFD) != NULL)
-				this->handleRequest(this->findClient(activeFD), activeFD);
+			ServerSettings* sett = this->findClient(activeFD);
+
+			if (sett)
+				this->handleRequest(sett, activeFD);
 			else if (this->findServer(activeFD))
 			{
 				std::string servKey = *this->findServer(activeFD);
-				log(logDEBUG) << "Finding val to key " << servKey;
 				Client *c = new Client(servKey, activeFD);
 				this->addClient(c);
 			}

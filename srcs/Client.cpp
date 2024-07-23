@@ -15,7 +15,6 @@ Client::Client(std::string key, int active_fd)
 {
 	socklen_t len = sizeof(this->_address);
 	int fd = accept(active_fd, (struct sockaddr*)&(this->_address), &len);
-	log(logDEBUG) << "new client accepting on fd " << fd;
 	if (fd < 0)
 		throw acceptError();
 	if (!makeNonBlocking(fd))

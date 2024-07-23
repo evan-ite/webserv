@@ -149,45 +149,30 @@ void	Response::deleteMethod() {}
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-// Location	Response::findLoc(std::string uri, ServerSettings* serverData)
-// {
-// 	size_t pos = uri.find('/');
-// 	if (pos == std::string::npos)
-// 		return (serverData->locations.at(0))
-
-// 	std::string shortURI = str.substr(0, pos);
-// 	std::vector::iterator it = serverData->locations.begin();
-// 	for (; it != serverData->locations.end(); ++it)
-// 	{
-// 		if (it->first == shortURI)
-// 			return (it->second)
-// 	}
-// 	this->findLoc(uri.substr(pos + 1), serverData);
-// }
-
 Location Response::findLoc(const std::string& uri, ServerSettings* serverData)
 {
-	log(logDEBUG) << uri;
-	if (uri.empty() || uri == "/")
-	{
-		return(serverData->locations["/"]);
-	}
-
-	size_t pos = uri.find('/');
-	std::string shortURI = (pos == std::string::npos) ? uri : uri.substr(0, pos);
-
 	std::map<std::string, Location>::iterator it = serverData->locations.begin();
-	for (; it != serverData->locations.end(); ++it) {
-		if (it->first == shortURI) {
-			return it->second;
+	for (; it != serverData->locations.end(); ++it)
+	{
+		if (it->first == uri)
+		{
+			Location loc  = it->second;
+			return (loc);
 		}
 	}
 
-	if (pos != std::string::npos)
-		return (findLoc(uri.substr(pos + 1), serverData));
+	size_t lastSlash = uri.find_last_of('/');
+	if (lastSlash == 0)
+		return (serverData->locations["/"]);
+	else if (lastSlash != std::string::npos)
+	{
+		std::string shortUri = uri.substr(0, lastSlash);
+		return (this->findLoc(shortUri, serverData));
+	}
 	else
-		return (serverData->locations.at(0));
+		return serverData->locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
+
 
 
 void	Response::setStatus(int status) {
