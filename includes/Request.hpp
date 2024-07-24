@@ -6,7 +6,7 @@
 /*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/24 16:44:27 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/24 16:52:55 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ class Request
 		HttpMethod	_method;
 		std::string _body;
 		std::string _contentType;
-		int			_contentLenght;
+		int			_contentLength;
 		std::string _host;
 		std::string _userAgent;
 		std::string _connection;

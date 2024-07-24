@@ -82,7 +82,7 @@ int make_socket_non_blocking(int sfd)
 }
 
 /* Returns date and time in astring formatted for the HTTP response */
-std::string getDateTimeStr()
+std::string getDateTime()
 {
 	std::time_t raw_time;
 	std::time(&raw_time);

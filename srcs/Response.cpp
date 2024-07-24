@@ -13,7 +13,7 @@ Response::Response(int	status,
 	this->_reason = reason;
 	this->_type = type;
 	this->_len = body.size();
-	this->_date = getDateTimeStr();
+	this->_date = getDateTime();
 	this->_connection = connection;
 	this->_body = body;
 }
@@ -55,7 +55,7 @@ Response::Response(const Response &copy) :
 	_reason(copy._reason),
 	_type(copy._type),
 	_len(copy._len),
-	_date(getDateTimeStr()),
+	_date(getDateTime()),
 	_connection(copy._connection),
 	_body(copy._body)
 {}
@@ -176,7 +176,7 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 	this->_reason = "ok";
 	this->_type = findType(file);
 	this->_connection = "keep-alive";
-	this->_date = getDateTimeStr();
+	this->_date = getDateTime();
 
 	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "") {
@@ -253,7 +253,7 @@ Location Response::findLoc(const std::string& uri, ServerSettings sett)
 
 void	Response::setStatus(int status) {
 	this->_status = status;
-	this->_date = getDateTimeStr();
+	this->_date = getDateTime();
 }
 
 void	Response::setReason(std::string reason) {

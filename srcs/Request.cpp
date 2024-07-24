@@ -80,7 +80,7 @@ void Request::parse(std::string httpRequest)
 					<< "useragent " << this->_userAgent << "\n" \
 					<< "host " << this->_host << "\n" \
 					<< "connection " << this->_connection << "\n" \
-					<< "contnetlen " << this->_contentLenght << "\n" \
+					<< "contnetlen " << this->_contentLength << "\n" \
 					<< "body " << this->_body;
 	printFileData();
 	*/
