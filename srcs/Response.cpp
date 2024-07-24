@@ -93,8 +93,7 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request &request)
-{
+void	Response::postMethod(Request &request) {
 	int status = 0;
 	createFiles(request, status);
 	switch (status) {
@@ -163,19 +162,6 @@ void Response::createFiles(Request &request, int &status) {
 		status = 201;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 void	Response::getMethod(Request request, Server serverData, std::string root, std::string index)
 {
 	(void) serverData;
@@ -204,7 +190,38 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 }
 
 
-void	Response::deleteMethod() {}
+void	Response::deleteMethod(Request &request) {
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Loops over all possible server locations and checks if they match the request location.
