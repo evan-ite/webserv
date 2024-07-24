@@ -7,7 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(std::string const &httpRequest, ServerSettings* confData);
+		Response(std::string const &httpRequest, ServerSettings confData);
 		Response(int	status,
 				std::string	reason,
 				std::string	type,
@@ -37,10 +37,10 @@ class Response
 		Response(const Response &copy);
 		Response();
 
-		void		postMethod(Request request, ServerSettings* serverData);
-		void		getMethod(Request request, ServerSettings* serverData, std::string root, std::string index);
+		void		postMethod(Request request, ServerSettings serverData);
+		void		getMethod(Request request, ServerSettings serverData, std::string root, std::string index);
 		void		deleteMethod();
-		Location	findLoc(const std::string& uri, ServerSettings* serverData);
+		Location	findLoc(const std::string& uri, ServerSettings serverData);
 
 		int	_status;
 		std::string	_reason;

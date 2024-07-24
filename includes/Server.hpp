@@ -14,20 +14,22 @@ class Server
 		Server & operator=(const Server &assign);
 		// Getters / Setters
 		int					getFd() const;
-		const std::string&	getKey() const;
-		int					getNumberActiveClients();
-		void				addClient(Client c);
-		void				setupServerSocket();
+		// int					getNumberActiveClients();
+		bool				clientHasFD(int fd);
+		int					addClient(int fd);
+		void				handleRequest(int fd);
 		class clientError : public std::exception {
 			virtual const char* what() const throw();
 		};
 		class socketError : public std::exception {
 			virtual const char* what() const throw();
 		};
-		ServerSettings			_settings;
 	private:
 		Server();
+		const std::string&		getKey() const;
+		void					setupServerSocket();
 		int						_fd;
+		ServerSettings			_settings;
 		struct sockaddr_in		_address;
 		std::string				_key;
 		std::vector <Client>	_activeClients;

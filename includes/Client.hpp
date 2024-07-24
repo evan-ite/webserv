@@ -6,7 +6,8 @@ class Client
 {
 	public:
 		Client();
-		Client(std::string key, int fd);
+		// Client(std::string key, int fd);
+		Client(int fd);
 		Client(const Client &copy);
 		Client & operator=(const Client &assign);
 		// Destructor

@@ -11,7 +11,7 @@ Client::Client(const Client &copy)
 	this->_lastSeen = copy.getLastSeen();
 }
 
-Client::Client(std::string key, int active_fd)
+Client::Client(int active_fd)
 {
 	socklen_t len = sizeof(this->_address);
 	int fd = accept(active_fd, (struct sockaddr*)&(this->_address), &len);
@@ -20,7 +20,6 @@ Client::Client(std::string key, int active_fd)
 	if (!makeNonBlocking(fd))
 		throw acceptError();
 	this->setFd(fd);
-	this->setKey(key);
 	this->setLastSeen(std::time(NULL));
 }
 

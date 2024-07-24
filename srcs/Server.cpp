@@ -75,17 +75,63 @@ void Server::setupServerSocket()
 		throw socketError();
 }
 
-void	Server::addClient(Client c)
+int	Server::addClient(int fd)
 {
+	Client c = Client(fd);
 	this->_activeClients.push_back(c);
+	return (c.getFd());
 }
 
-int	Server::getNumberActiveClients()
+// bool operator==(const Server& lhs, const Server& rhs)
+// {
+// 	return (lhs.getKey() == rhs.getKey()) && (lhs.getFd() == rhs.getFd());
+// }
+
+bool	Server::clientHasFD(int fd)
 {
-	return (this->_activeClients.size());
+	std::vector<Client>::iterator it = this->_activeClients.begin();
+	for (; it != this->_activeClients.end(); it++)
+	{
+		if (it->getFd() == fd)
+			return (1);
+	}
+	return (0);
+
 }
 
-bool operator==(const Server& lhs, const Server& rhs)
+void Server::handleRequest(int fd)
 {
-	return (lhs.getKey() == rhs.getKey()) && (lhs.getFd() == rhs.getFd());
+	char buffer[BUFFER_SIZE];
+	ssize_t count;
+	std::string httpRequest;
+	log(logINFO)	<< "Server " << this->_settings.host
+					<< ":" << this->_settings.port
+					<< "is reading from fd: " << fd;
+	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
+		httpRequest.append(buffer, count);
+	// if (count == -1)
+	// {
+	// 	close(fd); // Close on read error
+	// 	log(logERROR) << "Read error: " << strerror(errno);
+	// 	return ;
+	// }
+	if (!httpRequest.empty())
+	{
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		Response res(httpRequest, this->_settings);
+		std::string resString = res.makeResponse();
+		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		const char *resCStr = resString.data();
+		ssize_t sent = write(fd, resCStr, resString.size());
+		if (sent == -1)
+		{
+			close(fd); // Close on write error
+			log(logERROR) << "Error writing to socket, FD: " << fd;
+		}
+	}
+	else
+	{
+		close(fd); // Close on empty request
+		log(logERROR) << "Empty request or client disconnected, FD: " << fd;
+	}
 }

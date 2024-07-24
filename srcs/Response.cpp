@@ -18,14 +18,14 @@ Response::Response(int	status,
 	this->_body = body;
 }
 
-Response::Response(std::string const &httpRequest, ServerSettings* serverData)
+Response::Response(std::string const &httpRequest, ServerSettings serverData)
 {
 	Request request(httpRequest);
 	Location loc = findLoc(request.getLoc(), serverData);
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	Cgi cgi(&request, serverData);
+	Cgi cgi(&request, &serverData);
 
 	try {
 		if (cgi.isTrue())
@@ -92,7 +92,7 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request request, ServerSettings* serverData)
+void	Response::postMethod(Request request, ServerSettings serverData)
 {
 
 	(void) serverData;
@@ -116,7 +116,7 @@ void	Response::postMethod(Request request, ServerSettings* serverData)
 	this->_date = getDateTimeStr();
 }
 
-void	Response::getMethod(Request request, ServerSettings* serverData, std::string root, std::string index)
+void	Response::getMethod(Request request, ServerSettings serverData, std::string root, std::string index)
 {
 	(void) serverData;
 
@@ -149,11 +149,11 @@ void	Response::deleteMethod() {}
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location Response::findLoc(const std::string& uri, ServerSettings* sett)
+Location Response::findLoc(const std::string& uri, ServerSettings sett)
 {
 	log(logDEBUG) << "1 WE ARE HERE " << uri;
-	std::map<std::string, Location>::const_iterator it = (sett->locations).begin();
-	for (; it != sett->locations.end(); ++it)
+	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
+	for (; it != sett.locations.end(); ++it)
 	{
 		log(logDEBUG) << "2 WE ARE HERE " << uri;
 
@@ -168,14 +168,14 @@ Location Response::findLoc(const std::string& uri, ServerSettings* sett)
 
 	size_t lastSlash = uri.find_last_of('/');
 	if (lastSlash == 0)
-		return (sett->locations["/"]);
+		return (sett.locations["/"]);
 	else if (lastSlash != std::string::npos)
 	{
 		std::string shortUri = uri.substr(0, lastSlash);
 		return (this->findLoc(shortUri, sett));
 	}
 	else
-		return sett->locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
+		return sett.locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
 
 
