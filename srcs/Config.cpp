@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 Config::Config(void) {}
 
@@ -214,7 +214,7 @@ void Config::parseMultipleServers(std::string server)
 	loadServerStruct(server); // load user configuration
 	for (size_t i = 0; i < hosts.size(); ++i) {
 		for (size_t j = 0; j < ports.size(); ++j) {
-			Server newServer = this->_tempServer;
+			ServerSettings newServer = this->_tempServer;
 
 			newServer.host = hosts[i];
 			std::istringstream iss(ports[j]);
@@ -280,11 +280,11 @@ void Config::parseConfig(const std::string &filename) {
 	}
 }
 
-Server Config::getServer(std::string serverIP) const { //Throws an exception (std::out_of_range) if the key doesn't exist in the map.
+ServerSettings Config::getServer(std::string serverIP) const { //Throws an exception (std::out_of_range) if the key doesn't exist in the map.
 	return this->_Servers.at(serverIP);
 }
 
-std::map<std::string, Server> Config::getServersMap(void) const {
+std::map<std::string, ServerSettings> Config::getServersMap(void) const {
 	return this->_Servers;
 }
 
@@ -298,7 +298,7 @@ void Config::removeCharacter(std::string& str, char charToRemove) {
 }
 //################################################ Testing functions ################################################
 void Config::printServers(void) const {
-	for (std::map<std::string, Server>::const_iterator serverPair = _Servers.begin(); \
+	for (std::map<std::string, ServerSettings>::const_iterator serverPair = _Servers.begin(); \
 		serverPair != _Servers.end(); ++serverPair) {
 		std::cout << serverPair->second << std::endl;
 	}
@@ -325,7 +325,7 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 	return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Server& server) {
+std::ostream& operator<<(std::ostream& os, const ServerSettings& server) {
 	os << "================ Server ===================" << std::endl;
 	os << "Server Name: " << server.server_name << std::endl;
 	os << "Root: " << server.root << std::endl;

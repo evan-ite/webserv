@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 // Constructors
 Response::Response() {}
@@ -18,7 +18,7 @@ Response::Response(int	status,
 	this->_body = body;
 }
 
-Response::Response(std::string const &httpRequest, Server serverData)
+Response::Response(std::string const &httpRequest, ServerSettings serverData)
 {
 	Request request(httpRequest);
 	Location loc = findLoc(request, serverData);
@@ -162,7 +162,7 @@ void Response::createFiles(Request &request, int &status) {
 		status = 201;
 }
 
-void	Response::getMethod(Request request, Server serverData, std::string root, std::string index)
+void	Response::getMethod(Request request, ServerSettings serverData, std::string root, std::string index)
 {
 	(void) serverData;
 
@@ -225,7 +225,7 @@ void	Response::deleteMethod(Request &request) {
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location	Response::findLoc(Request request, Server serverData) {
+Location	Response::findLoc(Request request, ServerSettings serverData) {
 	Location	loc;
 	bool		match = false;
 

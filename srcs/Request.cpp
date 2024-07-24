@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 Request::Request(std::string httpRequest)
 {

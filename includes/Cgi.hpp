@@ -3,37 +3,37 @@
 
 # include <iostream>
 # include <string>
-# include "server.hpp"
+# include "settings.hpp"
 
 class Cgi
 {
 	public:
 		// Constructors
-		Cgi(Request *request, Server *serverData);
-		
+		Cgi(Request *request, ServerSettings *serverData);
+
 		// Destructor
 		~Cgi();
-		
+
 		// Operators
 		Cgi & operator=(const Cgi &assign);
-		
+
 		void	execute(Response &response);
 		bool	isTrue();
 
 		class CgiException : public std::exception {
 			public:
-				const char* what() const throw() 
+				const char* what() const throw()
 				{ return "Error executing CGI script"; }
 		};
-	
+
 	private:
 		Cgi();
 		Cgi(const Cgi &copy);
 
 		Request *_request;
-		Server	*_serverData;
+		ServerSettings	*_serverData;
 		bool	_isTrue;
-		
+
 		char ** createEnv(std::string const &cgiPath, std::string const &cgiFile);
 };
 

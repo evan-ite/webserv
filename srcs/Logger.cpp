@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 loglevel_e loglevel = LOGLEVEL;
 

@@ -1,13 +1,13 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include "server.hpp"
+# include "settings.hpp"
 
 class Response
 {
 	public:
 		// Constructors
-		Response(std::string const &httpRequest, Server confData);
+		Response(std::string const &httpRequest, ServerSettings confData);
 		Response(int	status,
 				std::string	reason,
 				std::string	type,
@@ -39,9 +39,9 @@ class Response
 
 		void		postMethod(Request &request);
 		void		createFiles(Request &request, int &status);
-		void		getMethod(Request request, Server serverData, std::string root, std::string index);
+		void		getMethod(Request request, ServerSettings serverData, std::string root, std::string index);
 		void		deleteMethod(Request &request);
-		Location	findLoc(Request request, Server serverData);
+		Location	findLoc(Request request, ServerSettings serverData);
 
 		int	_status;
 		std::string	_reason;

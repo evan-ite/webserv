@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 /* Iterates over the possible extensions in MIME.txt and
 checks if the argument extension is valid. If the extension

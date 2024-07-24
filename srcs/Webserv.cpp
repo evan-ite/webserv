@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 Webserv::Webserv() {}
 
@@ -137,7 +137,7 @@ void Webserv::handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers)
 	close(epoll_fd);
 }
 
-void Webserv::readRequest(Server serv, int client_fd)
+void Webserv::readRequest(ServerSettings serv, int client_fd)
 {
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
@@ -178,8 +178,8 @@ int	Webserv::run()
 {
 
 	std::vector<t_conn>							initServers;
-	std::map<std::string, Server> ::iterator	it;
-	std::map<std::string, Server>				map = this->_conf.getServersMap();
+	std::map<std::string, ServerSettings> ::iterator	it;
+	std::map<std::string, ServerSettings>				map = this->_conf.getServersMap();
 	int											epoll_fd = epoll_create1(0);
 	if (epoll_fd == -1)
 		throw epollError();

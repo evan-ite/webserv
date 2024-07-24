@@ -1,7 +1,7 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include "server.hpp"
+# include "settings.hpp"
 
 typedef struct s_connection
 {
@@ -41,7 +41,7 @@ class Webserv
 		int								setupServerSocket(int &server_fd, struct sockaddr_in &address);
 		int								setupEpoll(int server_fd, int &epoll_fd);
 		void							handleEpollEvents(int epoll_fd, std::vector<t_conn> initServers);
-		void							readRequest(Server serv, int client_fd);
+		void							readRequest(ServerSettings serv, int client_fd);
 		int								makeNonBlocking(int server_fd);
 };
 

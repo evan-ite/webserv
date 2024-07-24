@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/settings.hpp"
 
 /*
  file_str = "HTTP/1.1 200 OK
