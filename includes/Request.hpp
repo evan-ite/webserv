@@ -6,7 +6,7 @@
 /*   By: evan-ite <evan-ite@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/17 11:00:36 by evan-ite         ###   ########.fr       */
+/*   Updated: 2024/07/17 14:20:53 by evan-ite         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ class Request
 		std::string _userAgent;
 		std::string _connection;
 		
-		std::vector<std::pair<std::string, std::string> > _fileData;
+		std::vector<std::pair<std::string, std::string> > _fileData; // filename , file content
 };
 
 #endif

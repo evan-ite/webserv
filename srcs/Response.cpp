@@ -34,6 +34,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
 			postMethod(request, serverData);
 		else if (request.getMethod() == GET)
 			getMethod(request, serverData, root, index);
+		// else if delete
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {

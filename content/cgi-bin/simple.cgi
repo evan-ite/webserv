@@ -15,29 +15,22 @@ form = cgi.FieldStorage()
 print("<head>")
 print("<meta charset='UTF-8'>")
 print("<meta name='viewport' content='width=device-width, initial-scale=1.0'>")
-print("<link rel='stylesheet' href='../styles.css'>")
-print("<title>Simple CGI Script</title>")
+print("<link rel='stylesheet' href='../../styles.css'>")
+print("<title>Simple CGI</title>")
 print("</head>")
 print("<body>")
-print("<h2>Simple CGI Script</h2>")
+print("<h1>Simple CGI Script</h1>")
 
-# Handling GET request parameters
-if os.environ['REQUEST_METHOD'] == 'GET':
-    print("<p>GET Request Parameters:</p>")
-    if form:
-        for key in form.keys():
-            print(f"<p>{key}: {form.getvalue(key)}</p>")
-    else:
-        print("<p>No GET parameters received.</p>")
+if form:
+    for key in form.keys():
+        if key == "favorite":
+            print(f"<p>Absolute favorite: {form.getvalue(key)}</p>")
+        else:
+            print(f"<p>Worst food evaaah: {form.getvalue(key)}</p>")
+    print(f'<img class="student" src="cgi-bin/food.jpg" alt="Patrick enjoying his meal" width="400">')
 
-# Handling POST request data
-elif os.environ['REQUEST_METHOD'] == 'POST':
-    print("<p>POST Request Data:</p>")
-    if form:
-        for key in form.keys():
-            print(f"<p>{key}: {form.getvalue(key)}</p>")
-    else:
-        print("<p>No POST data received.</p>")
+else:
+    print("<p>No data received.</p>")
 
 print("</body>")
 print("</html>")
