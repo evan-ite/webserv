@@ -6,7 +6,7 @@
 /*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/24 16:37:08 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/24 16:44:27 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,12 +58,12 @@ class Request
 		HttpMethod	_method;
 		std::string _body;
 		std::string _contentType;
-		int			_contentLength;
-		std::string _host; //mandatory!
+		int			_contentLenght;
+		std::string _host;
 		std::string _userAgent;
 		std::string _connection;
 
-		std::vector<std::pair<std::string, std::string> > _fileData; // filename , file content
+		std::vector<std::pair<std::string, std::string> > _fileData;
 };
 
 #endif

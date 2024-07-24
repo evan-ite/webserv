@@ -74,8 +74,16 @@ void Request::parse(std::string httpRequest)
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
-	//log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLength << "\n body: " << this->_body;
-	//printFileData();
+/*	log(logDEBUG)	<< "Request object created:\n" \
+					<< "method " << this->_method << "\n" \
+					<< "location " << this->_location << "\n" \
+					<< "useragent " << this->_userAgent << "\n" \
+					<< "host " << this->_host << "\n" \
+					<< "connection " << this->_connection << "\n" \
+					<< "contnetlen " << this->_contentLenght << "\n" \
+					<< "body " << this->_body;
+	printFileData();
+	*/
 }
 
 

@@ -2,7 +2,7 @@
 # define CONFIG_HPP
 # include "settings.hpp"
 
-struct Location { //rename to Location?
+struct Location {
 	std::string path;
 	std::string root;
 	std::string index;

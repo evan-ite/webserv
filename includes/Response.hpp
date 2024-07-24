@@ -41,8 +41,7 @@ class Response
 		void		createFiles(Request &request, int &status);
 		void		getMethod(Request request, ServerSettings serverData, std::string root, std::string index);
 		void		deleteMethod(Request &request);
-		Location	findLoc(Request request, ServerSettings serverData);
-
+		Location	findLoc(const std::string& uri, ServerSettings serverData);
 		int	_status;
 		std::string	_reason;
 		std::string	_type;

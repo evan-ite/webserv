@@ -1,8 +1,5 @@
 #ifndef CGI_HPP
 # define CGI_HPP
-
-# include <iostream>
-# include <string>
 # include "settings.hpp"
 
 class Cgi

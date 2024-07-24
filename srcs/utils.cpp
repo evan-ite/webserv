@@ -82,7 +82,7 @@ int make_socket_non_blocking(int sfd)
 }
 
 /* Returns date and time in astring formatted for the HTTP response */
-std::string getDateTime()
+std::string getDateTimeStr()
 {
 	std::time_t raw_time;
 	std::time(&raw_time);
@@ -94,26 +94,59 @@ std::string getDateTime()
 
 /* Int to string */
 std::string toString(int value) {
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
+	std::ostringstream oss;
+	oss << value;
+	return oss.str();
 }
 
 // Function to convert std::vector<std::string> to char**
 char** vectorToCharStarStar(const std::vector<std::string>& vec) {
-    int numElements = vec.size();
+	int numElements = vec.size();
 
-    // Allocate memory for an array of char* pointers
-    char** charArray = new char*[numElements + 1];
+	// Allocate memory for an array of char* pointers
+	char** charArray = new char*[numElements + 1];
 
-    // Copy each string from the vector into the char* array
-    for (int i = 0; i < numElements; ++i) {
-        // Allocate memory for each string and copy it
-        charArray[i] = new char[vec[i].length() + 1];  // +1 for null terminator
-        std::strcpy(charArray[i], vec[i].c_str());
-    }
+	// Copy each string from the vector into the char* array
+	for (int i = 0; i < numElements; ++i) {
+		// Allocate memory for each string and copy it
+		charArray[i] = new char[vec[i].length() + 1];  // +1 for null terminator
+		std::strcpy(charArray[i], vec[i].c_str());
+	}
 
 	charArray[numElements] = NULL;
 
-    return charArray;
+	return charArray;
+}
+
+int	makeNonBlocking(int fd)
+{
+	int flags = fcntl(fd, F_GETFL, 0);
+	if (flags == -1)
+	{
+		log(logERROR) << "critical fcntl error";
+		return (0);
+	}
+	flags |= O_NONBLOCK;
+	if (fcntl(fd, F_SETFL, flags) == -1)
+	{
+		log(logERROR) << "critical fcntl error";
+		return (0);
+	}
+	return 1;
+}
+
+/* Takes a string, splits it on delim and returns a vector of std::string tokens */
+std::vector<std::string> split(const std::string& str, char del) // are we using this?
+{
+	std::vector<std::string> tokens;
+	size_t start = 0;
+	size_t end = str.find(del);
+
+	while (end != std::string::npos) {
+		tokens.push_back(str.substr(start, end - start));
+		start = end + 1;
+		end = str.find(del, start);
+	}
+	tokens.push_back(str.substr(start));
+	return (tokens);
 }

@@ -13,7 +13,7 @@ Response::Response(int	status,
 	this->_reason = reason;
 	this->_type = type;
 	this->_len = body.size();
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 	this->_connection = connection;
 	this->_body = body;
 }
@@ -21,7 +21,7 @@ Response::Response(int	status,
 Response::Response(std::string const &httpRequest, ServerSettings serverData)
 {
 	Request request(httpRequest);
-	Location loc = findLoc(request, serverData);
+	Location loc = findLoc(request.getLoc(), serverData);
 	std::string index = loc.index;
 	std::string root = loc.root;
 
@@ -55,7 +55,7 @@ Response::Response(const Response &copy) :
 	_reason(copy._reason),
 	_type(copy._type),
 	_len(copy._len),
-	_date(getDateTime()),
+	_date(getDateTimeStr()),
 	_connection(copy._connection),
 	_body(copy._body)
 {}
@@ -176,7 +176,7 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 	this->_reason = "ok";
 	this->_type = findType(file);
 	this->_connection = "keep-alive";
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 
 	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "") {
@@ -225,26 +225,35 @@ void	Response::deleteMethod(Request &request) {
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location	Response::findLoc(Request request, ServerSettings serverData) {
-	Location	loc;
-	bool		match = false;
-
-	std::map<std::string, Location>::iterator it;
-    for (it = serverData.locations.begin(); it != serverData.locations.end(); ++it) {
-		std::size_t i = request.getLoc().find(it->first);
-		if (i == 0) {
-			match = true;
-			loc = it->second;
+Location Response::findLoc(const std::string& uri, ServerSettings sett)
+{
+	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
+	for (; it != sett.locations.end(); ++it)
+	{
+		if (it->first == uri)
+		{
+			Location loc  = it->second;
+			return (loc);
 		}
 	}
-	if (!match)
-		loc = serverData.locations.begin()->second; // Possible problem cause map doesn't preserve order of initiaization
-	return loc;
+
+	size_t lastSlash = uri.find_last_of('/');
+	if (lastSlash == 0)
+		return (sett.locations["/"]);
+	else if (lastSlash != std::string::npos)
+	{
+		std::string shortUri = uri.substr(0, lastSlash);
+		return (this->findLoc(shortUri, sett));
+	}
+	else
+		return sett.locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
+
+
 
 void	Response::setStatus(int status) {
 	this->_status = status;
-	this->_date = getDateTime();
+	this->_date = getDateTimeStr();
 }
 
 void	Response::setReason(std::string reason) {
