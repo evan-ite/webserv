@@ -162,3 +162,7 @@ std::string		Request::getBody() {
 std::vector<std::pair<std::string, std::string> >	Request::getFileData() {
 	return this->_fileData;
 }
+
+std::string		Request::getConnection() {
+	return this->_connection;
+}

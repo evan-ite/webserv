@@ -6,7 +6,7 @@
 /*   By: ubazzane <ubazzane@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/23 10:47:25 by ubazzane         ###   ########.fr       */
+/*   Updated: 2024/07/24 13:45:32 by ubazzane         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Request
 		HttpMethod		getMethod();
 		int				getContentLen();
 		std::string		getBody();
+		std::string		getConnection();
 
 		std::vector<std::pair<std::string, std::string> >	getFileData();
 

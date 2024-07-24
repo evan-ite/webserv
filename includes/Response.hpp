@@ -38,7 +38,7 @@ class Response
 		Response();
 
 		void		postMethod(Request &request);
-		void		createFiles(Request &request);
+		void		createFiles(Request &request, int &status);
 		void		getMethod(Request request, Server serverData, std::string root, std::string index);
 		void		deleteMethod();
 		Location	findLoc(Request request, Server serverData);
