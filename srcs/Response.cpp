@@ -151,20 +151,15 @@ void	Response::deleteMethod() {}
 If no match was found, the first location in the map is used as default. */
 Location Response::findLoc(const std::string& uri, ServerSettings sett)
 {
-	log(logDEBUG) << "1 WE ARE HERE " << uri;
 	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
 	for (; it != sett.locations.end(); ++it)
 	{
-		log(logDEBUG) << "2 WE ARE HERE " << uri;
-
 		if (it->first == uri)
 		{
 			Location loc  = it->second;
 			return (loc);
 		}
 	}
-
-	log(logDEBUG) << "3 WE ARE HERE " << uri;
 
 	size_t lastSlash = uri.find_last_of('/');
 	if (lastSlash == 0)

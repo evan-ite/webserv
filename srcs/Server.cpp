@@ -19,8 +19,10 @@ Server::Server(std::string key, ServerSettings settings)
 	memset(&(this->_address), 0, sizeof(this->_address));
 	this->_address.sin_port = htons(this->_settings.port);
 	this->_address.sin_family = AF_INET;
-	// this->_address.sin_addr.s_addr = inet_addr(this->_settings.host.c_str());
-	this->_address.sin_addr.s_addr = INADDR_ANY;
+	if (this->_settings.host == "localhost")
+		this->_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	else
+		this->_address.sin_addr.s_addr = inet_addr(this->_settings.host.c_str());
 	this->setupServerSocket();
 }
 
@@ -82,11 +84,6 @@ int	Server::addClient(int fd)
 	return (c.getFd());
 }
 
-// bool operator==(const Server& lhs, const Server& rhs)
-// {
-// 	return (lhs.getKey() == rhs.getKey()) && (lhs.getFd() == rhs.getFd());
-// }
-
 bool	Server::clientHasFD(int fd)
 {
 	std::vector<Client>::iterator it = this->_activeClients.begin();
@@ -96,7 +93,6 @@ bool	Server::clientHasFD(int fd)
 			return (1);
 	}
 	return (0);
-
 }
 
 void Server::handleRequest(int fd)
@@ -109,18 +105,17 @@ void Server::handleRequest(int fd)
 					<< "is reading from fd: " << fd;
 	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
 		httpRequest.append(buffer, count);
-	// if (count == -1)
-	// {
-	// 	close(fd); // Close on read error
-	// 	log(logERROR) << "Read error: " << strerror(errno);
-	// 	return ;
-	// }
-	if (!httpRequest.empty())
+	if (count == 0)
 	{
-		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		close(fd); // Close on empty request
+		log(logERROR) << "Empty request or client disconnected, FD: " << fd;
+	}
+	else if (!httpRequest.empty())
+	{
+		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Response res(httpRequest, this->_settings);
 		std::string resString = res.makeResponse();
-		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
@@ -128,10 +123,5 @@ void Server::handleRequest(int fd)
 			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 		}
-	}
-	else
-	{
-		close(fd); // Close on empty request
-		log(logERROR) << "Empty request or client disconnected, FD: " << fd;
 	}
 }

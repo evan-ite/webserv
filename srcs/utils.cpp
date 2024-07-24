@@ -136,7 +136,7 @@ int	makeNonBlocking(int fd)
 }
 
 /* Takes a string, splits it on delim and returns a vector of std::string tokens */
-std::vector<std::string> split(const std::string& str, char del)
+std::vector<std::string> split(const std::string& str, char del) // are we using this?
 {
 	std::vector<std::string> tokens;
 	size_t start = 0;

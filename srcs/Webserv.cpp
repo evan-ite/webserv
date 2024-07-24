@@ -68,7 +68,6 @@ int	Webserv::getEpollFD()
 	return (this->_epoll_fd);
 }
 
-
 void Webserv::handleEpollEvents()
 {
 	struct epoll_event events[MAX_EVENTS];
@@ -95,7 +94,6 @@ void Webserv::handleEpollEvents()
 					break ; //old connection
 				}
 			}
-			throw epollError(); // active FD is neither server nor client
 		}
 	}
 }
@@ -112,115 +110,3 @@ const char * Webserv::epollError::what() const throw()
 {
 	return ("Epoll did something weird");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// void Webserv::handleRequest(ServerSettings* sett, int fd)
-// {
-// 	char buffer[BUFFER_SIZE];
-// 	ssize_t count;
-// 	std::string httpRequest;
-// 	log(logINFO) << "Reading from socket, FD: " << fd;
-// 	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
-// 		httpRequest.append(buffer, count);
-// 	// if (count == -1)
-// 	// {
-// 	// 	close(fd); // Close on read error
-// 	// 	log(logERROR) << "Read error: " << strerror(errno);
-// 	// 	return ;
-// 	// }
-// 	if (!httpRequest.empty())
-// 	{
-// 		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-// 		Response res(httpRequest, sett);
-// 		std::string resString = res.makeResponse();
-// 		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
-// 		const char *resCStr = resString.data();
-// 		ssize_t sent = write(fd, resCStr, resString.size());
-// 		if (sent == -1)
-// 		{
-// 			close(fd); // Close on write error
-// 			log(logERROR) << "Error writing to socket, FD: " << fd;
-// 		}
-// 	}
-// 	else
-// 	{
-// 		close(fd); // Close on empty request
-// 		log(logERROR) << "Empty request or client disconnected, FD: " << fd;
-// 	}
-// }
-
-// const std::string* Webserv::findServer(int fd)
-// {
-// 	for (std::vector<Server>::iterator it = this->_servers.begin(); it != this->_servers.end(); ++it)
-// 	{
-// 		if (it->getFd() == fd)
-// 			return &(it->getKey());
-// 	}
-// 	log(logERROR) << "Server not found for fd: " << fd;
-// 	return NULL;
-// }
-
-// ServerSettings* Webserv::findClient(int fd)
-// {
-// 	if (this->_clients[fd] != 0) // error here
-// 	{
-// 		ServerSettings *sett = new ServerSettings;
-// 		log(logDEBUG) << this->_clients[fd]->getKey();
-// 		log(logDEBUG) << (this->_conf.getServersMap().at(this->_clients[fd]->getKey())).host;
-// 		*sett = (this->_conf.getServersMap().at(this->_clients[fd]->getKey()));
-// 		return (sett);
-// 	}
-// 	else
-// 		return (NULL);
-// }
-
-
-
-
-// void	Webserv::removeServer(Server s)
-// {
-// 	close(s.getFd());
-// 	std::vector<Server>::iterator it = this->_servers.begin();
-// 	for (; it != this->_servers.end(); it++)
-// 	{
-// 		if (*it == s)
-// 		{
-// 			this->_servers.erase(it);
-// 			return ;
-// 		}
-// 	}
-// 	log(logERROR) << "Cannot remove server - not found";
-// 	throw internalError();
-// }
-

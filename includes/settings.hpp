@@ -28,10 +28,10 @@
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets
 # define CONNECTION_TIMEOUT 30 // in sec
-# define HTTPVERSION "HTTP/1.1"
+# define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
-# define DEFAULT_CONF "./conf/debug.conf"
+# define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
 // local header files
 # include "Config.hpp"
@@ -42,7 +42,6 @@
 # include "Response.hpp"
 # include "Webserv.hpp"
 # include "Cgi.hpp"
-
 
 extern int	g_signal;
 
@@ -55,6 +54,5 @@ std::string					getDateTimeStr();
 std::string					toString(int value);
 char**						vectorToCharStarStar(const std::vector<std::string>& vec);
 int							makeNonBlocking(int fd);
-std::vector<std::string>	split(const std::string& str, char del);
 
 #endif
