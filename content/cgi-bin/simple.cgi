@@ -15,11 +15,11 @@ form = cgi.FieldStorage()
 print("<head>")
 print("<meta charset='UTF-8'>")
 print("<meta name='viewport' content='width=device-width, initial-scale=1.0'>")
-print("<link rel='stylesheet' href='../styles.css'>")
+print("<link rel='stylesheet' href='../../styles.css'>")
 print("<title>Simple CGI Script</title>")
 print("</head>")
 print("<body>")
-print("<h2>Simple CGI Script</h2>")
+print("<h1>Simple CGI Script</h1>")
 
 # Handling GET request parameters
 if os.environ['REQUEST_METHOD'] == 'GET':
