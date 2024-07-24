@@ -149,11 +149,17 @@ void	Response::deleteMethod() {}
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location Response::findLoc(const std::string& uri, ServerSettings* serverData)
+Location Response::findLoc(const std::string& uri, ServerSettings* sett)
 {
-	std::map<std::string, Location>::iterator it = serverData->locations.begin();
-	for (; it != serverData->locations.end(); ++it)
+	log(logDEBUG) << "1 WE ARE HERE " << uri;
+	std::cout << *sett;
+	std::map<std::string, Location>::const_iterator it = (sett->locations).begin();
+	for (; it != sett->locations.end(); ++it)
 	{
+		log(logDEBUG) << "2 WE ARE HERE " << uri;
+		log(logDEBUG) << it->second;
+		log(logDEBUG) << "2 WE ARE HERE " << uri;
+
 		if (it->first == uri)
 		{
 			Location loc  = it->second;
@@ -161,16 +167,18 @@ Location Response::findLoc(const std::string& uri, ServerSettings* serverData)
 		}
 	}
 
+	log(logDEBUG) << "3 WE ARE HERE " << uri;
+
 	size_t lastSlash = uri.find_last_of('/');
 	if (lastSlash == 0)
-		return (serverData->locations["/"]);
+		return (sett->locations["/"]);
 	else if (lastSlash != std::string::npos)
 	{
 		std::string shortUri = uri.substr(0, lastSlash);
-		return (this->findLoc(shortUri, serverData));
+		return (this->findLoc(shortUri, sett));
 	}
 	else
-		return serverData->locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
+		return sett->locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
 
 

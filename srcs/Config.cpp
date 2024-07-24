@@ -339,10 +339,10 @@ std::ostream& operator<<(std::ostream& os, const ServerSettings& server) {
 	os << "CGI Extension: " << server.cgi_extension << std::endl;
 	os << "CGI Bin: " << server.cgi_bin << std::endl;
 
-	os << "Error Pages:" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
-		os << " " << it->first << ": " << it->second << std::endl;
-	}
+	// os << "Error Pages:" << std::endl;
+	// for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
+	// 	os << " " << it->first << ": " << it->second << std::endl;
+	// }
 
 	os << "Locations:" << std::endl;
 	for (std::map<std::string, Location>::const_iterator it = server.locations.begin(); it != server.locations.end(); ++it) {

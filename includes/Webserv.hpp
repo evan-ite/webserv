@@ -25,7 +25,6 @@ class Webserv
 		void				removeClient(Client c);
 		void				addServer(Server s);
 		void				removeServer(Server s);
-		// std::vector<int>	getActiveFDs();
 		int					getEpollFD();
 		void				epollAddFD(int fd);
 		int					getNumberServers();
@@ -37,8 +36,6 @@ class Webserv
 		Config							_conf;
 		int								_epoll_fd;
 		std::vector<Server>				_servers;
-		// std::vector<Client>				_clients;
-		// std::vector<int>				_activeFDs;
 		Client							*_clients[MAX_EVENTS];
 		void							setupEpoll();
 		void							handleEpollEvents();

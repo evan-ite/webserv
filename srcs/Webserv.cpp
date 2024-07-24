@@ -152,7 +152,9 @@ ServerSettings* Webserv::findClient(int fd)
 {
 	if (this->_clients[fd] != 0)
 	{
-		return &(this->_conf.getServersMap().at(this->_clients[fd]->getKey()));
+		ServerSettings* sett = new ServerSettings;
+		sett = &(this->_conf.getServersMap().at(this->_clients[fd]->getKey()));
+		return (sett);
 	}
 	else
 		return (NULL);
