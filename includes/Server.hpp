@@ -23,6 +23,7 @@ class Server
 		class socketError : public std::exception {
 			virtual const char* what() const throw();
 		};
+		void					timeoutLoop();
 	private:
 		Server();
 		const std::string&		getKey() const;
@@ -32,6 +33,7 @@ class Server
 		struct sockaddr_in		_address;
 		std::string				_key;
 		std::vector <Client>	_activeClients;
+		pthread_t				t;
 };
 
 bool operator==(const Server& lhs, const Server& rhs);

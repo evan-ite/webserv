@@ -24,10 +24,11 @@
 # include <algorithm>
 # include <cctype>
 # include <sys/wait.h>
+# include <pthread.h>
 // defines
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets
-# define CONNECTION_TIMEOUT 30 // in sec
+# define CONNECTION_TIMEOUT 1 // in sec
 # define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG

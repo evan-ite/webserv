@@ -1,5 +1,12 @@
 #include "../includes/settings.hpp"
 
+static void* timeoutLoopWrapper(void* serverInstance)
+{
+	Server* server = static_cast<Server*>(serverInstance);
+	server->timeoutLoop();
+	return (NULL);
+}
+
 // Constructors
 Server::Server() {}
 
@@ -24,6 +31,8 @@ Server::Server(std::string key, ServerSettings settings)
 	else
 		this->_address.sin_addr.s_addr = inet_addr(this->_settings.host.c_str());
 	this->setupServerSocket();
+	pthread_create(&this->t, NULL, &timeoutLoopWrapper, this);
+	pthread_detach(this->t);
 }
 
 // Destructor
@@ -122,6 +131,19 @@ void Server::handleRequest(int fd)
 		{
 			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
+		}
+	}
+}
+
+void	Server::timeoutLoop()
+{
+	while(g_signal)
+	{
+		std::vector<Client>::iterator it = this->_activeClients.begin();
+		for (; it != this->_activeClients.end() ; it++)
+		{
+			it->timeout();
+			sleep(1);
 		}
 	}
 }
