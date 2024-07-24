@@ -191,6 +191,7 @@ int	Webserv::run()
 		conn.address.sin_port = htons(it->second.port);
 		conn.address.sin_family = AF_INET;
 		conn.address.sin_addr.s_addr = INADDR_ANY;
+		//conn.address.sin_addr.s_addr = inet_addr(it->second.host.c_str());
 		this->setupServerSocket(conn.fd, conn.address);
 		this->setupEpoll(conn.fd, epoll_fd);
 		initServers.push_back(conn);

@@ -7,7 +7,7 @@ Response::Response(int	status,
 		std::string	reason,
 		std::string	type,
 		std::string	connection,
-		std::string	body) 
+		std::string	body)
 {
 	this->_status = status;
 	this->_reason = reason;
@@ -31,22 +31,22 @@ Response::Response(std::string const &httpRequest, Server serverData)
 		if (cgi.isTrue())
 			cgi.execute(*this);
 		else if (request.getMethod() == POST)
-			postMethod(request, serverData);
+			postMethod(request);
 		else if (request.getMethod() == GET)
 			getMethod(request, serverData, root, index);
 		// else if delete
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
-        // Handle other methods or send a 405 Method Not Allowed response
-        this->_status = 405;
-        this->_reason = "Method Not Allowed";
-        this->_type = "text/html";
-        this->_body = readFileToString("content/error/405.html");
-        this->_connection = "keep-alive";
-        this->_len = _body.length();
-        this->_date = getDateTime();
-    }
+		// Handle other methods or send a 405 Method Not Allowed response
+		this->_status = 405;
+		this->_reason = "Method Not Allowed";
+		this->_type = "text/html";
+		this->_body = readFileToString("content/error/405.html");
+		this->_connection = "keep-alive";
+		this->_len = _body.length();
+		this->_date = getDateTime();
+	}
 }
 
 /* Sets date and time to moment of copy */
@@ -93,28 +93,73 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request request, Server serverData)
-{
-
-	(void) serverData;
-	
-	// Create all files
-	for (size_t i = 0; i < request.getFileData().size(); ++i) {
-
-		std::string filename = request.getFileData()[i].first;
-		std::string content = request.getFileData()[i].second;
-
-		std::cout << "Filename: " << filename << "\nContent: " << content << "\n";
+void	Response::postMethod(Request &request) {
+	int status = 0;
+	createFiles(request, status);
+	switch (status) {
+		case 201:
+			this->_status = 201;
+			this->_reason = "Created";
+			this->_type = "text/html";
+			this->_connection = request.getConnection();
+			this->_date = getDateTime();
+			this->_body = readFileToString("content/upload_success.html");
+			this->_len = _body.length();
+			break;
+		case 500:
+			this->_status = 500;
+			this->_reason = "Internal Server Error";
+			this->_type = "text/html";
+			this->_connection = "close";
+			this->_date = getDateTime();
+			this->_body = readFileToString("content/error/500.html");
+			this->_len = _body.length();
+			break;
+		case 400:
+			this->_status = 400;
+			this->_reason = "Bad Request";
+			this->_type = "text/html";
+			this->_connection = request.getConnection();
+			this->_date = getDateTime();
+			this->_body = readFileToString("content/error/400.html");
+			this->_len = _body.length();
+			break;
 	}
+}
 
-	// Process the POST data (e.g., save it, respond with a success message, etc.)
-	this->_status = 200;
-	this->_body = "Received POST data: ";
-	this->_len = _body.length();
-	this->_reason = "ok";
-	this->_type = "text/plain";
-	this->_connection = "close"; // Generally, you close the connection after handling POST
-	this->_date = getDateTime();
+void Response::createFiles(Request &request, int &status) {
+	std::string path = UPLOAD_DIR;
+	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
+
+	if (fileData.empty()) {
+		log(logERROR) << "Bad request: no files to create";
+		status = 400;
+		return;
+	}
+	bool anyFailure = false;
+	for (size_t i = 0; i < fileData.size(); ++i) {
+		std::string filename = fileData[i].first;
+		std::string content = fileData[i].second;
+		std::string fullpath = path + filename;
+		std::ofstream file(fullpath.c_str(), std::ios::binary);
+
+		if (!file) {
+			log(logERROR) << "Failed to open file for writing: " << fullpath;
+			anyFailure = true;
+			continue;
+		}
+		file.write(content.data(), content.size());
+		if (!file.good()) {
+			log(logERROR) << "Failed to write to file: " << fullpath;
+			anyFailure = true;
+			continue;
+		}
+		file.close();
+	}
+	if (anyFailure)
+		status = 500;
+	else
+		status = 201;
 }
 
 void	Response::getMethod(Request request, Server serverData, std::string root, std::string index)
@@ -138,14 +183,45 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 		this->_status = 404;
 		this->_reason = "not found";
 		this->_type = "text/html";
-		this->_body = readFileToString("content/error/404.html");;
+		this->_body = readFileToString("content/error/404.html");
 		this->_connection = "keep-alive";
 		this->_len = this->_body.size();
 	}
 }
 
 
-void	Response::deleteMethod() {}
+void	Response::deleteMethod(Request &request) {
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Loops over all possible server locations and checks if they match the request location.

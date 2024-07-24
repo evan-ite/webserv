@@ -39,6 +39,7 @@
 # define LOGLEVEL logDEBUG
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
+# define UPLOAD_DIR "upload/"
 # define SAMPLE_RES "HTTP/1.1 200 OK \
 Date: Fri, 05 Jul 2024 12:00:00 GMT \
 Server: Apache/2.4.41 (Ubuntu) \
@@ -71,7 +72,7 @@ std::string	checkMime(const std::string &extension);
 std::string	findType(const std::string &filename);
 std::string getDateTime();
 std::string toString(int value);
-char**      vectorToCharStarStar(const std::vector<std::string>& vec); 
+char**      vectorToCharStarStar(const std::vector<std::string>& vec);
 
 
 #endif
