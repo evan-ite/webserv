@@ -38,6 +38,7 @@
 - [ ] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
+- [ ] Create Request object outside of Response object and parse request object to constructor of response
 
 
 ## CGI

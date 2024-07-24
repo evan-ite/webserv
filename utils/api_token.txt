@@ -1,8 +1,1 @@
-{
-    "access_token":"b1e16febec7f666a6c618823b5e6045e3b8c68fffdd2c7c234d697635f224d7e",
-    "token_type":"bearer",
-    "expires_in":7200,
-    "scope":"public",
-    "created_at":1721213890,
-    "secret_valid_until":1723632589
-}
+{"access_token":"caaa26dd9c0dae7bf8ece7b011f81a61f181a534274a23de877082402f21da4e","token_type":"bearer","expires_in":7200,"scope":"public","created_at":1721827334,"secret_valid_until":1723632589}
