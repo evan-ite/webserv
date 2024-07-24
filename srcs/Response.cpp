@@ -25,8 +25,6 @@ Response::Response(std::string const &httpRequest, ServerSettings serverData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
-	log(logDEBUG) << loc;
-
 	Cgi cgi(&request, &serverData);
 
 	try {
@@ -37,7 +35,7 @@ Response::Response(std::string const &httpRequest, ServerSettings serverData)
 		else if (request.getMethod() == GET)
 			getMethod(request, serverData, root, index);
 		else if (request.getMethod() == DELETE)
-			deleteMethod(request, root);
+			deleteMethod(request);
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
@@ -131,7 +129,7 @@ void	Response::postMethod(Request &request) {
 }
 
 void Response::createFiles(Request &request, int &status) {
-	std::string path = UPLOAD_DIR;
+	std::string file = UPLOAD_DIR;
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
 	if (fileData.empty()) {
@@ -143,7 +141,7 @@ void Response::createFiles(Request &request, int &status) {
 	for (size_t i = 0; i < fileData.size(); ++i) {
 		std::string filename = fileData[i].first;
 		std::string content = fileData[i].second;
-		std::string fullpath = path + filename;
+		std::string fullpath = file + filename;
 		std::ofstream file(fullpath.c_str(), std::ios::binary);
 
 		if (!file) {
@@ -193,15 +191,10 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 }
 
 
-void	Response::deleteMethod(Request &request, std::string root) {
-	log(logDEBUG) << "root: " << root;
-	std::string file = root + request.getLoc();
-	log(logDEBUG) << "Deleting file: " << file;
-	if (access(file.c_str(), F_OK) != 0) {
-		log(logERROR) << "File does not exist: " << file;
-	}
-	if (access(file.c_str(), W_OK) != 0) {
-		log(logERROR) << "No write permission for file: " << file;
+void	Response::deleteMethod(Request &request) {
+	std::string file = request.getLoc();
+	if (!file.empty() && file[0] == '/') {
+		file = file.substr(1);
 	}
 	if (remove(file.c_str()) != 0) {
 		this->_status = 404;
