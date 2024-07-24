@@ -191,8 +191,7 @@ void	Response::getMethod(Request request, Server serverData, std::string root, s
 
 
 void	Response::deleteMethod(Request &request) {
-
-
+	(void)request;
 }
 
 
