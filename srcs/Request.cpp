@@ -39,6 +39,7 @@ Request & Request::operator=(const Request &assign)
 void Request::parse(std::string httpRequest)
 {
 	std::string	method = splitReturnFirst(httpRequest, " ");
+	log(logDEBUG) << "Method: " << method;
 	if (method == "GET")
 	{
 		this->_method = GET;
@@ -46,6 +47,15 @@ void Request::parse(std::string httpRequest)
 	}
 	else if (method == "POST")
 	{
+		/* ---------------------------- For DEBUG ------------------------------- */
+/* 		std::ofstream debugFile("http_request_debug.txt", std::ios::app);
+		if (debugFile.is_open()){
+			debugFile << httpRequest << std::endl;
+			debugFile.close();
+		}
+		else
+			log(logERROR) << "Failed to open debug file for writing."; */
+		/* ------------------------------------------------------------------------ */
 		this->_method = POST;
 		this->_location = findKey(httpRequest, "POST ", ' ');
 		this->parseMultipart(httpRequest);
@@ -56,16 +66,16 @@ void Request::parse(std::string httpRequest)
 		this->_location = findKey(httpRequest, "DELETE ", ' ');
 	}
 	else
-		log(logERROR) << "Invalid http method" << httpRequest;
+		log(logERROR) << "Invalid http method";
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
 	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
-    	this->_contentType = "application/octet-stream";
-	log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLength << "\n body: " << this->_body;
-	printFileData();
+		this->_contentType = "application/octet-stream";
+	//log(logDEBUG) << "Request object created:\n" << this->_method << "\n" << this->_location << "\n" << this->_userAgent << "\n" << this->_host << "\n" << this->_connection << "\n" << this->_contentLength << "\n body: " << this->_body;
+	//printFileData();
 }
 
 
@@ -129,7 +139,7 @@ void Request::printFileData() {
 	}
 }
 
-std::string 	Request::getLoc() {
+std::string		Request::getLoc() {
 	return this->_location;
 }
 

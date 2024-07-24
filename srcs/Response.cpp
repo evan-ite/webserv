@@ -7,7 +7,7 @@ Response::Response(int	status,
 		std::string	reason,
 		std::string	type,
 		std::string	connection,
-		std::string	body) 
+		std::string	body)
 {
 	this->_status = status;
 	this->_reason = reason;
@@ -31,7 +31,7 @@ Response::Response(std::string const &httpRequest, Server serverData)
 		if (cgi.isTrue())
 			cgi.execute(*this);
 		else if (request.getMethod() == POST)
-			postMethod(request, serverData);
+			postMethod(request);
 		else if (request.getMethod() == GET)
 			getMethod(request, serverData, root, index);
 		// else if delete
@@ -93,29 +93,78 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request request, Server serverData)
-{
 
-	(void) serverData;
-	
-	// Create all files
-	for (size_t i = 0; i < request.getFileData().size(); ++i) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void	Response::postMethod(Request &request)
+{
+/* 	for (size_t i = 0; i < request.getFileData().size(); ++i) {
 
 		std::string filename = request.getFileData()[i].first;
 		std::string content = request.getFileData()[i].second;
 
 		std::cout << "Filename: " << filename << "\nContent: " << content << "\n";
-	}
+	} */
+	createFiles(request);
+
 
 	// Process the POST data (e.g., save it, respond with a success message, etc.)
-	this->_status = 200;
-	this->_body = "Received POST data: ";
+	// 201 Created, 200 OK, 204 No Content, 400 Bad Request, 404 Not Found, 405 Method Not Allowed, 500 Internal Server Error
+	this->_status = 200; // Set the status code
+	this->_body = "Received POST data: "; // Add the POST data to the response body
 	this->_len = _body.length();
-	this->_reason = "ok";
+	this->_reason = "ok"; // Set the reason phrase
 	this->_type = "text/plain";
 	this->_connection = "close"; // Generally, you close the connection after handling POST
 	this->_date = getDateTime();
 }
+
+
+
+void Response::createFiles(Request &request) {
+	std::string path = UPLOAD_DIR;
+	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
+	for (size_t i = 0; i < fileData.size(); ++i) {
+		std::string filename = fileData[i].first;
+		std::string content = fileData[i].second;
+		std::string fullpath = path + filename;
+		std::ofstream file(fullpath.c_str(), std::ios::binary);
+		if (!file) {
+			log(logERROR) << "Failed to open file for writing: " << fullpath;
+			continue;
+		}
+		file.write(content.data(), content.size());
+		if (!file.good()) {
+			log(logERROR) << "Failed to write to file: " << fullpath;
+		}
+		file.close();
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void	Response::getMethod(Request request, Server serverData, std::string root, std::string index)
 {
