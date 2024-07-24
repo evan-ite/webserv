@@ -57,6 +57,7 @@ void Webserv::handleEpollEvents()
 		{
 			int activeFD = events[i].data.fd;
 			ServerSettings* sett = this->findClient(activeFD);
+			log(logDEBUG) << "I LOVE THis\n" << *sett;
 
 			if (sett)
 				this->handleRequest(sett, activeFD);
@@ -150,15 +151,18 @@ const std::string* Webserv::findServer(int fd)
 
 ServerSettings* Webserv::findClient(int fd)
 {
-	if (this->_clients[fd] != 0)
+	if (this->_clients[fd] != 0) // error here
 	{
-		ServerSettings* sett = new ServerSettings;
-		sett = &(this->_conf.getServersMap().at(this->_clients[fd]->getKey()));
+		ServerSettings *sett = new ServerSettings;
+		log(logDEBUG) << this->_clients[fd]->getKey();
+		log(logDEBUG) << (this->_conf.getServersMap().at(this->_clients[fd]->getKey())).host;
+		*sett = (this->_conf.getServersMap().at(this->_clients[fd]->getKey()));
 		return (sett);
 	}
 	else
 		return (NULL);
 }
+
 
 void	Webserv::addClient(Client* c)
 {

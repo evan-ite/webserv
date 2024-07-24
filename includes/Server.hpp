@@ -24,12 +24,12 @@ class Server
 		class socketError : public std::exception {
 			virtual const char* what() const throw();
 		};
+		ServerSettings			_settings;
 	private:
 		Server();
 		int						_fd;
 		struct sockaddr_in		_address;
 		std::string				_key;
-		ServerSettings			_settings;
 		std::vector <Client>	_activeClients;
 };
 

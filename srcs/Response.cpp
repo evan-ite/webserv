@@ -152,12 +152,9 @@ If no match was found, the first location in the map is used as default. */
 Location Response::findLoc(const std::string& uri, ServerSettings* sett)
 {
 	log(logDEBUG) << "1 WE ARE HERE " << uri;
-	std::cout << *sett;
 	std::map<std::string, Location>::const_iterator it = (sett->locations).begin();
 	for (; it != sett->locations.end(); ++it)
 	{
-		log(logDEBUG) << "2 WE ARE HERE " << uri;
-		log(logDEBUG) << it->second;
 		log(logDEBUG) << "2 WE ARE HERE " << uri;
 
 		if (it->first == uri)
