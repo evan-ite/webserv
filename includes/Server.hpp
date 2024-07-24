@@ -14,7 +14,6 @@ class Server
 		Server & operator=(const Server &assign);
 		// Getters / Setters
 		int					getFd() const;
-		// int					getNumberActiveClients();
 		bool				clientHasFD(int fd);
 		int					addClient(int fd);
 		void				handleRequest(int fd);
