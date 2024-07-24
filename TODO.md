@@ -30,11 +30,11 @@
 
 
 ## Start server(s)
-- [ ] implement constructor that takes map
-- [ ] set up epoll instance
+- [x] implement constructor that takes map
+- [x] set up epoll instance
 
 ## Handle requests
-- [ ] Post requests
+- [x] Post requests
 - [ ] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
@@ -42,7 +42,7 @@
 
 
 ## CGI
-- [ ] fork CGI (needs item in conf class)
+- [x] fork CGI (needs item in conf class)
 
 
 ## Extra
@@ -53,4 +53,4 @@
 - [ ] Directory Listing (needs item in conf class)
 	- [ ] Template for auto indexing
 	- [ ] function to fill template
-
+- [ ] prune Elise's API KEY from the commit history :(
