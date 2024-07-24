@@ -25,6 +25,8 @@ Response::Response(std::string const &httpRequest, ServerSettings serverData)
 	std::string index = loc.index;
 	std::string root = loc.root;
 
+	log(logDEBUG) << loc;
+
 	Cgi cgi(&request, &serverData);
 
 	try {
@@ -34,7 +36,8 @@ Response::Response(std::string const &httpRequest, ServerSettings serverData)
 			postMethod(request);
 		else if (request.getMethod() == GET)
 			getMethod(request, serverData, root, index);
-		// else if delete
+		else if (request.getMethod() == DELETE)
+			deleteMethod(request, root);
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
@@ -190,8 +193,34 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 }
 
 
-void	Response::deleteMethod(Request &request) {
-	(void)request;
+void	Response::deleteMethod(Request &request, std::string root) {
+	log(logDEBUG) << "root: " << root;
+	std::string file = root + request.getLoc();
+	log(logDEBUG) << "Deleting file: " << file;
+	if (access(file.c_str(), F_OK) != 0) {
+		log(logERROR) << "File does not exist: " << file;
+	}
+	if (access(file.c_str(), W_OK) != 0) {
+		log(logERROR) << "No write permission for file: " << file;
+	}
+	if (remove(file.c_str()) != 0) {
+		this->_status = 404;
+		this->_reason = "Not Found";
+		this->_type = "text/html";
+		this->_connection = "keep-alive";
+		this->_date = getDateTime();
+		this->_body = readFileToString("content/error/404.html");
+		this->_len = _body.length();
+	}
+	else {
+		this->_status = 200;
+		this->_reason = "OK";
+		this->_type = "text/html";
+		this->_connection = "keep-alive";
+		this->_date = getDateTime();
+		this->_body = readFileToString("content/delete_success.html");
+		this->_len = _body.length();
+	}
 }
 
 
