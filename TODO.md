@@ -42,6 +42,7 @@
 - [x] Allow specific methods according to location
 - [ ] Base connection on request instead of hard code
 - [ ] Base error pages on config instead of hard code
+- [ ] Map / function to match error code to reason
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
