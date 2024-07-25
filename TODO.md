@@ -47,17 +47,20 @@
 ## CGI
 - [x] fork CGI (needs item in conf class)
 - [x] Second CGI connected to 42 API
-- [ ] prune Elise's API KEY from the commit history :(
 - [x] Revoked and renewed API creds
 - [x] create env file 
 
-
+## Create some structure
+- [ ] Divide long class cpp files in seperate files
+- [ ] Organize content directory
+- [ ] Good readme with structure explanation of code and explain api stuff
 
 ## Extra
 - [x] Implement time out limits set through header (or conf file?)
-- [ ] Create beautiful html <333
+- [x] Create beautiful html <333
 - [ ] http redirects
 - [ ] Check forbidden functions
+- [ ] Cookiesssss
 - [x] Directory Listing (needs item in conf class)
 	- [x] Template for auto indexing
 	- [x] function to fill template

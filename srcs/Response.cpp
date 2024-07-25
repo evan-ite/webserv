@@ -228,28 +228,6 @@ Location Response::findLoc(const std::string& uri, ServerSettings sett)
 }
 
 
-void	Response::setStatus(int status) {
-	this->_status = status;
-	this->_date = getDateTime();
-}
-
-void	Response::setReason(std::string reason) {
-	this->_reason = reason;
-}
-
-void	Response::setType(std::string type) {
-	this->_type = type;
-}
-
-void	Response::setBody(std::string body) {
-	this->_body = body;
-	this->_len = body.size();
-}
-
-void	Response::setConnection(std::string connection) {
-	this->_connection = connection;
-}
-
 // Check if the method is allowed in the location, argument should
 // be method in capital letters, return value is true if method is allowed
 bool	Response::checkMethod(std::string method) {
@@ -333,4 +311,27 @@ std::string Response::getStatusMessage(std::string statusCode) {
 		return _servSet->error_messages[statusCode];
 	else
 		return "Internal Server Error";
+}
+
+
+void	Response::setStatus(int status) {
+	this->_status = status;
+	this->_date = getDateTime();
+}
+
+void	Response::setReason(std::string reason) {
+	this->_reason = reason;
+}
+
+void	Response::setType(std::string type) {
+	this->_type = type;
+}
+
+void	Response::setBody(std::string body) {
+	this->_body = body;
+	this->_len = body.size();
+}
+
+void	Response::setConnection(std::string connection) {
+	this->_connection = connection;
 }
