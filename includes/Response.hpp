@@ -28,9 +28,14 @@ class Response
 		void		setConnection(std::string connection);
 
 		class ResponseException : public std::exception {
+			private:
+				std::string _erCode;
 			public:
+				ResponseException(const std::string& erCode) : _erCode(erCode) {}
+				~ResponseException() throw() {}
+				
 				const char* what() const throw()
-				{ return "Error creating response"; }
+				{ return _erCode.c_str();}
 		};
 
 	private:

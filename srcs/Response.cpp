@@ -38,15 +38,15 @@ Response::Response(Request &request, ServerSettings &serverData)
 		else if (request.getMethod() == DELETE && this->checkMethod("DELETE"))
 			deleteMethod(request);
 		else
-			throw std::exception();
+			throw ResponseException("405");
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
 		// Handle other methods or send a 405 Method Not Allowed response
-		this->_status = 405;
-		this->_reason = "Method Not Allowed";
+		this->_status = atoi(e.what());
+		this->_reason = "Error Reason ?!?!?!"; // function to get matchin reason for err code
 		this->_type = "text/html";
-		this->_body = readFileToString("content/error/405.html");
+		this->_body = readFileToString(findError(e.what()));
 		this->_connection = "keep-alive";
 		this->_len = _body.length();
 		this->_date = getDateTime();
@@ -80,6 +80,8 @@ Response & Response::operator=(const Response &assign)
 	this->_body = assign._body;
 	this->_len = assign._len;
 	this->_date = assign._date;
+	this->_loc = assign._loc;
+	this->_servSet = assign._servSet;
 	return (*this);
 }
 
@@ -114,23 +116,9 @@ void	Response::postMethod(Request &request) {
 			this->_len = _body.length();
 			break;
 		case 500:
-			this->_status = 500;
-			this->_reason = "Internal Server Error";
-			this->_type = "text/html";
-			this->_connection = "close";
-			this->_date = getDateTime();
-			this->_body = readFileToString("content/error/500.html");
-			this->_len = _body.length();
-			break;
+			throw ResponseException("500");
 		case 400:
-			this->_status = 400;
-			this->_reason = "Bad Request";
-			this->_type = "text/html";
-			this->_connection = request.getConnection();
-			this->_date = getDateTime();
-			this->_body = readFileToString("content/error/400.html");
-			this->_len = _body.length();
-			break;
+			throw ResponseException("400");
 	}
 }
 
@@ -171,16 +159,15 @@ void Response::createFiles(Request &request, int &status) {
 
 void	Response::getMethod(Request &request)
 {
-	log(logDEBUG) << this->_loc;
-	log(logDEBUG) << "Root: " << _loc->root << " index: " << _loc->index;
-
 	std::string file = _loc->root + request.getLoc();
-	if (request.getLoc() == "/")
+
+	if (request.getLoc() == "/") // If no path specified
 		file = _loc->root + "/" + _loc->index;
-	else if (_loc->autoindex) {
+	else if (_loc->autoindex) { // Directory listing
 		file = _loc->root + "/" + _loc->index;
 		this->createDirlisting(file, _loc->path);
 	}
+
 	this->_status = 200;
 	this->_body = readFileToString(file);
 	this->_len = _body.length();
@@ -191,30 +178,18 @@ void	Response::getMethod(Request &request)
 
 	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "") {
-		this->_status = 404;
-		this->_reason = "not found";
-		this->_type = "text/html";
-		this->_body = readFileToString("content/error/404.html");
-		this->_connection = "keep-alive";
-		this->_len = this->_body.size();
+		throw ResponseException("404");
 	}
 }
 
 
 void	Response::deleteMethod(Request &request) {
 	std::string file = request.getLoc();
-	if (!file.empty() && file[0] == '/') {
+	if (!file.empty() && file[0] == '/')
 		file = file.substr(1);
-	}
-	if (remove(file.c_str()) != 0) {
-		this->_status = 404;
-		this->_reason = "Not Found";
-		this->_type = "text/html";
-		this->_connection = "keep-alive";
-		this->_date = getDateTime();
-		this->_body = readFileToString(findError("404"));
-		this->_len = _body.length();
-	}
+
+	if (remove(file.c_str()) != 0)
+		throw ResponseException("404");
 	else {
 		this->_status = 200;
 		this->_reason = "OK";
@@ -281,20 +256,46 @@ void	Response::setConnection(std::string connection) {
 bool	Response::checkMethod(std::string method) {
 	Location loc = *this->_loc;
 	std::vector<std::string>::iterator it = std::find(loc.allow.begin(), loc.allow.end(), method);
-	// log(logDEBUG) << "Checking if method " << method << " is allowed in location " << loc;
+
 	if (it != loc.allow.end()) {
 		return true; }
 	return false;
 }
 
+// Creates an html page with name fileName that lists the content of dirPath
 void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 	std::ofstream htmlFile(fileName.c_str());
 	if (!htmlFile.is_open()) {
         log(logERROR) << "Error directory listing failed to open: " << fileName;
-        throw ResponseException();
+        throw ResponseException("500");
     }
-	(void) dirPath;
-	htmlFile << "<!DOCTYPE html>\n";
+
+	struct dirent	*entry;
+	DIR		*dir = opendir(dirPath.c_str());
+	if (dir == NULL) {
+		log(logERROR) << "Error opening directory: " << dirPath;
+		throw ResponseException("500");
+	}
+
+	htmlFile << "<!DOCTYPE html>";
+	htmlFile << "\n<html lang=\"en\">"; 
+	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
+    htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+    htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
+	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
+	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
+	while ((entry = readdir(dir)) != NULL) {
+        // Skip the "." and ".." entries
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            htmlFile << "\n<p>" << entry->d_name << "</p>";
+        }
+    }
+	htmlFile << "\n\t</body>\n</html>";
+
+	if (closedir(dir) != 0) {
+        log(logERROR) << "Error closing directory: " << dirPath;
+		throw ResponseException("500");
+    }
 }
 
 // Returns path to correct error page
