@@ -118,7 +118,10 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 		return (true);
 	}
 	if (line.find("location") != std::string::npos) {
-		*currentLocation = Location(value);
+		if (_tempServer.locations.find(value) != _tempServer.locations.end())
+			*currentLocation = _tempServer.locations[value];
+		else
+			*currentLocation = Location(value);
 		*parsingLocation = true;
 		return (true);
 	}
@@ -339,10 +342,10 @@ std::ostream& operator<<(std::ostream& os, const ServerSettings& server) {
 	os << "CGI Extension: " << server.cgi_extension << std::endl;
 	os << "CGI Bin: " << server.cgi_bin << std::endl;
 
-	// os << "Error Pages:" << std::endl;
-	// for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
-	// 	os << " " << it->first << ": " << it->second << std::endl;
-	// }
+	os << "Error Pages:" << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
+		os << " " << it->first << ": " << it->second << std::endl;
+	}
 
 	os << "Locations:" << std::endl;
 	for (std::map<std::string, Location>::const_iterator it = server.locations.begin(); it != server.locations.end(); ++it) {

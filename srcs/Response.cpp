@@ -216,35 +216,6 @@ void	Response::deleteMethod(Request &request) {
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
 Location Response::findLoc(const std::string& uri, ServerSettings sett)
