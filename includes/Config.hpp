@@ -6,7 +6,7 @@ struct Location {
 	std::string path;
 	std::string root;
 	std::string index;
-	std::string error_page;
+	std::map<std::string, std::string> loc_error_pages;
 	std::string rewrite;
 	bool autoindex;
 	std::vector<std::string> allow;
@@ -30,6 +30,7 @@ struct ServerSettings {
 	std::string cgi_bin;
 
 	std::map<std::string, std::string> error_pages;
+	std::map<std::string, std::string> error_messages;
 	std::map<std::string, Location> locations;
 };
 
@@ -67,6 +68,7 @@ class Config {
 		void loadFallback(const std::string &filename);
 		void parseConfig(const std::string &filename);
 		void removeCharacter(std::string& str, char charToRemove);
+		void makeStatusMessages(ServerSettings &server);
 };
 
 std::ostream& operator<<(std::ostream& os, const Location& location);

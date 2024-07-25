@@ -33,7 +33,7 @@ class Response
 			public:
 				ResponseException(const std::string& erCode) : _erCode(erCode) {}
 				~ResponseException() throw() {}
-				
+
 				const char* what() const throw()
 				{ return _erCode.c_str();}
 		};
@@ -51,6 +51,7 @@ class Response
 		void		createDirlisting(std::string fileName, std::string dirPath);
 		std::string	loopDir(std::string dirPath);
 		std::string findError(std::string errorCode);
+		std::string	getStatusMessage(std::string errorCode);
 
 		// To create response
 		int	_status;

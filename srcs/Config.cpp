@@ -25,8 +25,19 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->root = value;
 	else if (key == "index")
 		currentLocation->index = value;
-	else if (key == "error_page")
-		currentLocation->error_page = value;
+	else if (key == "error_page") {
+		std::istringstream iss(line);
+		std::string error_code;
+		std::string error_page;
+		iss >> error_code;
+		if (!(iss >> error_code))
+			throw std::runtime_error("Error: invalid error code");
+		if (!(iss >> error_page))
+			throw std::runtime_error("Error: invalid error page");
+		removeCharacter(error_page, ';');
+		removeCharacter(error_page, '"');
+		currentLocation->loc_error_pages[error_code] = error_page;
+	}
 	else if (key == "allow_uploads")
 		currentLocation->allow_uploads = (value == "on");
 	else if (key == "autoindex")
@@ -118,7 +129,10 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 		return (true);
 	}
 	if (line.find("location") != std::string::npos) {
-		*currentLocation = Location(value);
+		if (_tempServer.locations.find(value) != _tempServer.locations.end())
+			*currentLocation = _tempServer.locations[value];
+		else
+			*currentLocation = Location(value);
 		*parsingLocation = true;
 		return (true);
 	}
@@ -268,6 +282,7 @@ void Config::loadFallback(const std::string &filename) {
 		server.append(line + "\n");
 	loadServerStruct(server);
 	this->_fallBackServer = this->_tempServer;
+	makeStatusMessages(_fallBackServer);
 }
 
 void Config::parseConfig(const std::string &filename) {
@@ -296,6 +311,19 @@ void Config::removeCharacter(std::string& str, char charToRemove) {
 			++i;
 	}
 }
+
+void Config::makeStatusMessages(ServerSettings &server) {
+	server.error_messages["400"] = "Bad Request";
+	server.error_messages["403"] = "Forbidden";
+	server.error_messages["404"] = "Not Found";
+	server.error_messages["405"] = "Method Not Allowed";
+	server.error_messages["413"] = "Request Entity Too Large";
+	server.error_messages["415"] = "Unsupported Media Type";
+	server.error_messages["500"] = "Internal Server Error";
+	server.error_messages["200"] = "OK";
+	server.error_messages["201"] = "Created";
+	server.error_messages["204"] = "No Content";
+}
 //################################################ Testing functions ################################################
 void Config::printServers(void) const {
 	for (std::map<std::string, ServerSettings>::const_iterator serverPair = _Servers.begin(); \
@@ -312,16 +340,17 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 	os << " Path: " << location.path << std::endl;
 	os << " Root: " << location.root << std::endl;
 	os << " Index: " << location.index << std::endl;
-	os << " Error Page: " << location.error_page << std::endl;
 	os << " Rewrite: " << location.rewrite << std::endl;
 	os << " Autoindex: " << (location.autoindex ? "true" : "false") << std::endl;
-
 	os << " Allow:" << std::endl;
 	for (std::vector<std::string>::const_iterator it = location.allow.begin(); it != location.allow.end(); ++it) {
 		os << "  - " << *it << std::endl;
 	}
-
 	os << " Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
+	os << " Error Pages: " << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = location.loc_error_pages.begin(); it != location.loc_error_pages.end(); ++it) {
+		os << " " << it->first << ": " << it->second << std::endl;
+	}
 	return os;
 }
 
@@ -339,10 +368,10 @@ std::ostream& operator<<(std::ostream& os, const ServerSettings& server) {
 	os << "CGI Extension: " << server.cgi_extension << std::endl;
 	os << "CGI Bin: " << server.cgi_bin << std::endl;
 
-	// os << "Error Pages:" << std::endl;
-	// for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
-	// 	os << " " << it->first << ": " << it->second << std::endl;
-	// }
+	os << "Error Pages:" << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
+		os << " " << it->first << ": " << it->second << std::endl;
+	}
 
 	os << "Locations:" << std::endl;
 	for (std::map<std::string, Location>::const_iterator it = server.locations.begin(); it != server.locations.end(); ++it) {

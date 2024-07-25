@@ -29,7 +29,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 	Cgi cgi(&request, &serverData);
 
 	try {
-		if (cgi.isTrue()) 
+		if (cgi.isTrue())
 			cgi.execute(*this);
 		else if (request.getMethod() == POST && this->checkMethod("POST"))
 			postMethod(request);
@@ -44,7 +44,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 	catch (std::exception &e) {
 		// Handle other methods or send a 405 Method Not Allowed response
 		this->_status = atoi(e.what());
-		this->_reason = "Error Reason ?!?!?!"; // function to get matchin reason for err code
+		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_type = "text/html";
 		this->_body = readFileToString(findError(e.what()));
 		this->_connection = "keep-alive";
@@ -108,7 +108,7 @@ void	Response::postMethod(Request &request) {
 	switch (status) {
 		case 201:
 			this->_status = 201;
-			this->_reason = "Created";
+			this->_reason = getStatusMessage("201");
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
 			this->_date = getDateTime();
@@ -171,7 +171,7 @@ void	Response::getMethod(Request &request)
 	this->_status = 200;
 	this->_body = readFileToString(file);
 	this->_len = _body.length();
-	this->_reason = "ok";
+	this->_reason = getStatusMessage("200");
 	this->_type = findType(file);
 	this->_connection = "keep-alive";
 	this->_date = getDateTime();
@@ -192,7 +192,7 @@ void	Response::deleteMethod(Request &request) {
 		throw ResponseException("404");
 	else {
 		this->_status = 200;
-		this->_reason = "OK";
+		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
 		this->_connection = "keep-alive";
 		this->_date = getDateTime();
@@ -200,7 +200,6 @@ void	Response::deleteMethod(Request &request) {
 		this->_len = _body.length();
 	}
 }
-
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
@@ -251,7 +250,7 @@ void	Response::setConnection(std::string connection) {
 	this->_connection = connection;
 }
 
-// Check if the method is allowed in the location, argument should 
+// Check if the method is allowed in the location, argument should
 // be method in capital letters, return value is true if method is allowed
 bool	Response::checkMethod(std::string method) {
 	Location loc = *this->_loc;
@@ -321,9 +320,17 @@ std::string	Response::loopDir(std::string dirPath) {
 
 // Returns path to correct error page
 std::string Response::findError(std::string errorCode) {
-	(void) errorCode;
-	// checks if error page exists in location
-	// else take error page from servSet
-	//return string with path of error page
-	return "content/error/404.html";
+	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
+		return _loc->loc_error_pages[errorCode];
+	else if (_servSet->error_pages.find(errorCode) != _servSet->error_pages.end())
+		return _servSet->error_pages[errorCode];
+	else
+		return _servSet->error_pages["500"];
+}
+
+std::string Response::getStatusMessage(std::string statusCode) {
+	if (_servSet->error_messages.find(statusCode) != _servSet->error_messages.end())
+		return _servSet->error_messages[statusCode];
+	else
+		return "Internal Server Error";
 }
