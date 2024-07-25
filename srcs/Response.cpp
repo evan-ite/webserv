@@ -33,9 +33,10 @@ Response::Response(Request request, ServerSettings serverData)
 			postMethod(request);
 		else if (request.getMethod() == GET && this->checkMethod("GET", loc))
 			getMethod(request, serverData, root, index);
+		else if (request.getMethod() == DELETE && this->checkMethod("DELETE", loc))
+			deleteMethod(request);
 		else
 			throw std::exception();
-		// else if delete
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
@@ -129,7 +130,7 @@ void	Response::postMethod(Request &request) {
 }
 
 void Response::createFiles(Request &request, int &status) {
-	std::string path = UPLOAD_DIR;
+	std::string file = UPLOAD_DIR;
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
 	if (fileData.empty()) {
@@ -141,7 +142,7 @@ void Response::createFiles(Request &request, int &status) {
 	for (size_t i = 0; i < fileData.size(); ++i) {
 		std::string filename = fileData[i].first;
 		std::string content = fileData[i].second;
-		std::string fullpath = path + filename;
+		std::string fullpath = file + filename;
 		std::ofstream file(fullpath.c_str(), std::ios::binary);
 
 		if (!file) {
@@ -192,7 +193,28 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 
 
 void	Response::deleteMethod(Request &request) {
-	(void)request;
+	std::string file = request.getLoc();
+	if (!file.empty() && file[0] == '/') {
+		file = file.substr(1);
+	}
+	if (remove(file.c_str()) != 0) {
+		this->_status = 404;
+		this->_reason = "Not Found";
+		this->_type = "text/html";
+		this->_connection = "keep-alive";
+		this->_date = getDateTime();
+		this->_body = readFileToString("content/error/404.html");
+		this->_len = _body.length();
+	}
+	else {
+		this->_status = 200;
+		this->_reason = "OK";
+		this->_type = "text/html";
+		this->_connection = "keep-alive";
+		this->_date = getDateTime();
+		this->_body = readFileToString("content/delete_success.html");
+		this->_len = _body.length();
+	}
 }
 
 
