@@ -7,7 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(Request request, ServerSettings confData);
+		Response(Request &request, ServerSettings &confData);
 		Response(int	status,
 				std::string	reason,
 				std::string	type,
@@ -39,11 +39,14 @@ class Response
 
 		void		postMethod(Request &request);
 		void		createFiles(Request &request, int &status);
-		void		getMethod(Request request, ServerSettings serverData, std::string root, std::string index);
+		void		getMethod(Request &request);
 		void		deleteMethod(Request &request);
 		Location	findLoc(const std::string& uri, ServerSettings serverData);
-		bool		checkMethod(std::string method, Location loc);
+		bool		checkMethod(std::string method);
+		void		createDirlisting(std::string fileName, std::string dirPath);
+		std::string findError(std::string errorCode);
 
+		// To create response
 		int	_status;
 		std::string	_reason;
 		std::string	_type;
@@ -51,6 +54,10 @@ class Response
 		std::string	_date;
 		std::string	_connection;
 		std::string	_body;
+
+		// Utils
+		Location 		*_loc;
+		ServerSettings	*_servSet;
 };
 
 

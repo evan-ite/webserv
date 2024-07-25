@@ -4,3 +4,4 @@
 .DS_Store
 .env
 utils/api_token.txt
+upload/*

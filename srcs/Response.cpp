@@ -16,24 +16,26 @@ Response::Response(int	status,
 	this->_date = getDateTime();
 	this->_connection = connection;
 	this->_body = body;
+	this->_loc = NULL;
+	this->_servSet = NULL;
 }
 
-Response::Response(Request request, ServerSettings serverData)
+Response::Response(Request &request, ServerSettings &serverData)
 {
-	Location loc = findLoc(request.getLoc(), serverData);
-	std::string index = loc.index;
-	std::string root = loc.root;
+	this->_loc = new Location;
+	*this->_loc = findLoc(request.getLoc(), serverData);
+	this->_servSet = &serverData;
 
 	Cgi cgi(&request, &serverData);
 
 	try {
 		if (cgi.isTrue()) 
 			cgi.execute(*this);
-		else if (request.getMethod() == POST && this->checkMethod("POST", loc))
+		else if (request.getMethod() == POST && this->checkMethod("POST"))
 			postMethod(request);
-		else if (request.getMethod() == GET && this->checkMethod("GET", loc))
-			getMethod(request, serverData, root, index);
-		else if (request.getMethod() == DELETE && this->checkMethod("DELETE", loc))
+		else if (request.getMethod() == GET && this->checkMethod("GET"))
+			getMethod(request);
+		else if (request.getMethod() == DELETE && this->checkMethod("DELETE"))
 			deleteMethod(request);
 		else
 			throw std::exception();
@@ -63,7 +65,10 @@ Response::Response(const Response &copy) :
 {}
 
 // Destructor
-Response::~Response() {}
+Response::~Response() {
+	if (this->_loc)
+		delete _loc;
+}
 
 // Operators
 Response & Response::operator=(const Response &assign)
@@ -164,14 +169,18 @@ void Response::createFiles(Request &request, int &status) {
 		status = 201;
 }
 
-void	Response::getMethod(Request request, ServerSettings serverData, std::string root, std::string index)
+void	Response::getMethod(Request &request)
 {
-	(void) serverData;
+	log(logDEBUG) << this->_loc;
+	log(logDEBUG) << "Root: " << _loc->root << " index: " << _loc->index;
 
-	std::string file = root + request.getLoc();
-	log(logDEBUG) << " " << file;
+	std::string file = _loc->root + request.getLoc();
 	if (request.getLoc() == "/")
-		file = root + "/" + index;
+		file = _loc->root + "/" + _loc->index;
+	else if (_loc->autoindex) {
+		file = _loc->root + "/" + _loc->index;
+		this->createDirlisting(file, _loc->path);
+	}
 	this->_status = 200;
 	this->_body = readFileToString(file);
 	this->_len = _body.length();
@@ -203,7 +212,7 @@ void	Response::deleteMethod(Request &request) {
 		this->_type = "text/html";
 		this->_connection = "keep-alive";
 		this->_date = getDateTime();
-		this->_body = readFileToString("content/error/404.html");
+		this->_body = readFileToString(findError("404"));
 		this->_len = _body.length();
 	}
 	else {
@@ -216,7 +225,6 @@ void	Response::deleteMethod(Request &request) {
 		this->_len = _body.length();
 	}
 }
-
 
 
 /* Loops over all possible server locations and checks if they match the request location.
@@ -246,7 +254,6 @@ Location Response::findLoc(const std::string& uri, ServerSettings sett)
 }
 
 
-
 void	Response::setStatus(int status) {
 	this->_status = status;
 	this->_date = getDateTime();
@@ -271,10 +278,30 @@ void	Response::setConnection(std::string connection) {
 
 // Check if the method is allowed in the location, argument should 
 // be method in capital letters, return value is true if method is allowed
-bool	Response::checkMethod(std::string method, Location loc) {
+bool	Response::checkMethod(std::string method) {
+	Location loc = *this->_loc;
 	std::vector<std::string>::iterator it = std::find(loc.allow.begin(), loc.allow.end(), method);
-	log(logDEBUG) << "Checking if method " << method << " is allowed in location " << loc;
+	// log(logDEBUG) << "Checking if method " << method << " is allowed in location " << loc;
 	if (it != loc.allow.end()) {
 		return true; }
 	return false;
+}
+
+void	Response::createDirlisting(std::string fileName, std::string dirPath) {
+	std::ofstream htmlFile(fileName.c_str());
+	if (!htmlFile.is_open()) {
+        log(logERROR) << "Error directory listing failed to open: " << fileName;
+        throw ResponseException();
+    }
+	(void) dirPath;
+	htmlFile << "<!DOCTYPE html>\n";
+}
+
+// Returns path to correct error page
+std::string Response::findError(std::string errorCode) {
+	(void) errorCode;
+	// checks if error page exists in location
+	// else take error page from servSet
+	//return string with path of error page
+	return "content/error/404.html";
 }
