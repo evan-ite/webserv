@@ -49,6 +49,7 @@ class Response
 		Location	findLoc(const std::string& uri, ServerSettings serverData);
 		bool		checkMethod(std::string method);
 		void		createDirlisting(std::string fileName, std::string dirPath);
+		std::string	loopDir(std::string dirPath);
 		std::string findError(std::string errorCode);
 
 		// To create response

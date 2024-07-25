@@ -266,9 +266,30 @@ bool	Response::checkMethod(std::string method) {
 void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 	std::ofstream htmlFile(fileName.c_str());
 	if (!htmlFile.is_open()) {
-        log(logERROR) << "Error directory listing failed to open: " << fileName;
-        throw ResponseException("500");
-    }
+		log(logERROR) << "Error directory listing failed to open: " << fileName;
+		throw ResponseException("500");
+	}
+
+	htmlFile << "<!DOCTYPE html>";
+	htmlFile << "\n<html lang=\"en\">"; 
+	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
+	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
+	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
+	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
+	htmlFile << "\n\t\t<div class=\"formbox\">";
+	htmlFile << this->loopDir(dirPath);	
+	htmlFile << "\n\t\t</div>";
+	htmlFile << "\n\t</body>\n</html>";
+}
+
+// Function that loops through directory and subdirectories and 
+// creates html list of the content
+std::string	Response::loopDir(std::string dirPath) {
+	std::ostringstream html;
+
+	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
+		dirPath = dirPath.substr(1);
 
 	struct dirent	*entry;
 	DIR		*dir = opendir(dirPath.c_str());
@@ -277,25 +298,25 @@ void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 		throw ResponseException("500");
 	}
 
-	htmlFile << "<!DOCTYPE html>";
-	htmlFile << "\n<html lang=\"en\">"; 
-	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
-    htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-    htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
-	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
-	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
+	// Loop through directory and create a list in html
+	html << "\n\t\t<ul>";
 	while ((entry = readdir(dir)) != NULL) {
-        // Skip the "." and ".." entries
-        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-            htmlFile << "\n<p>" << entry->d_name << "</p>";
-        }
-    }
-	htmlFile << "\n\t</body>\n</html>";
+		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+			html << "\n\t\t\t<li> " << entry->d_name << "</li>";
+			if (entry->d_type == DT_DIR) {
+				std::string	subPath = dirPath + "/" + entry->d_name;
+				html << this->loopDir(subPath);
+			}
+		}
+	}
+	html << "\n\t\t</ul>";
 
 	if (closedir(dir) != 0) {
-        log(logERROR) << "Error closing directory: " << dirPath;
+		log(logERROR) << "Error closing directory: " << dirPath;
 		throw ResponseException("500");
-    }
+	}
+
+	return html.str();
 }
 
 // Returns path to correct error page
