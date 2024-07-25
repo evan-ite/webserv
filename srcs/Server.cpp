@@ -112,10 +112,11 @@ void Server::handleRequest(int fd)
 	}
 	else if (!httpRequest.empty())
 	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-		Response res(httpRequest, this->_settings);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		Request request(httpRequest);
+		Response res(request, this->_settings);
 		std::string resString = res.makeResponse();
-		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
