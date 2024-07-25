@@ -41,8 +41,8 @@
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
 - [ ] Base connection on request instead of hard code
-- [ ] Base error pages on config instead of hard code
-- [ ] Map / function to match error code to reason
+- [x] Base error pages on config instead of hard code
+- [x] Map / function to match error code to reason
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
@@ -54,11 +54,10 @@
 
 
 ## Extra
-- [ ] Implement time out limits set through header (or conf file?)
+- [x] Implement time out limits set through header (or conf file?)
 - [ ] Create beautiful html <333
 - [ ] http redirects
 - [ ] Check forbidden functions
-- [ ] Directory Listing (needs item in conf class)
-	- [ ] Button based on auto index in config file
-	- [ ] Template for auto indexing
-	- [ ] function to fill template
+- [x] Directory Listing (needs item in conf class)
+	- [x] Template for auto indexing
+	- [x] function to fill template

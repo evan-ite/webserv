@@ -321,7 +321,7 @@ std::string	Response::loopDir(std::string dirPath) {
 // Returns path to correct error page
 std::string Response::findError(std::string errorCode) {
 	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
-		return _loc->loc_error_pages[errorCode];
+		return _loc->root + "/" + _loc->loc_error_pages[errorCode];
 	else if (_servSet->error_pages.find(errorCode) != _servSet->error_pages.end())
 		return _servSet->error_pages[errorCode];
 	else
