@@ -289,18 +289,19 @@ bool	Response::checkMethod(std::string method) {
 void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 	std::ofstream htmlFile(fileName.c_str());
 	if (!htmlFile.is_open()) {
-        log(logERROR) << "Error directory listing failed to open: " << fileName;
-        throw ResponseException();
-    }
+		log(logERROR) << "Error directory listing failed to open: " << fileName;
+		throw ResponseException();
+	}
 	(void) dirPath;
 	htmlFile << "<!DOCTYPE html>\n";
 }
 
 // Returns path to correct error page
 std::string Response::findError(std::string errorCode) {
-	(void) errorCode;
-	// checks if error page exists in location
-	// else take error page from servSet
-	//return string with path of error page
-	return "content/error/404.html";
+	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
+		return _loc->loc_error_pages[errorCode];
+	else if (_servSet->error_pages.find(errorCode) != _servSet->error_pages.end())
+		return _servSet->error_pages[errorCode];
+	else
+		return _servSet->error_pages["500"];
 }

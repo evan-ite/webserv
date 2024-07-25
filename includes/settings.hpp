@@ -46,6 +46,18 @@
 # include "Cgi.hpp"
 
 extern int	g_signal;
+// status messages;
+# define ERR_400 "400 Bad Request"
+# define ERR_403 "403 Forbidden"
+# define ERR_404 "404 Not Found"
+# define ERR_405 "405 Method Not Allowed"
+# define ERR_413 "413 Request Entity Too Large"
+# define ERR_415 "415 Unsupported Media Type"
+# define ERR_500 "500 Internal Server Error"
+
+# define STATUS_200 "200 OK"
+# define STATUS_201 "201 Created"
+# define STATUS_204 "204 No Content"
 
 std::string					findKey(std::string file_str, std::string keyword, char separator);
 std::string					splitReturnFirst(const std::string& str, const std::string& delimiter);
