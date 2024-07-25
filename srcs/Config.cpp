@@ -282,6 +282,7 @@ void Config::loadFallback(const std::string &filename) {
 		server.append(line + "\n");
 	loadServerStruct(server);
 	this->_fallBackServer = this->_tempServer;
+	makeStatusMessages(_fallBackServer);
 }
 
 void Config::parseConfig(const std::string &filename) {
@@ -309,6 +310,19 @@ void Config::removeCharacter(std::string& str, char charToRemove) {
 		else
 			++i;
 	}
+}
+
+void Config::makeStatusMessages(ServerSettings &server) {
+	server.error_messages["400"] = "Bad Request";
+	server.error_messages["403"] = "Forbidden";
+	server.error_messages["404"] = "Not Found";
+	server.error_messages["405"] = "Method Not Allowed";
+	server.error_messages["413"] = "Request Entity Too Large";
+	server.error_messages["415"] = "Unsupported Media Type";
+	server.error_messages["500"] = "Internal Server Error";
+	server.error_messages["200"] = "OK";
+	server.error_messages["201"] = "Created";
+	server.error_messages["204"] = "No Content";
 }
 //################################################ Testing functions ################################################
 void Config::printServers(void) const {

@@ -44,7 +44,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 	catch (std::exception &e) {
 		// Handle other methods or send a 405 Method Not Allowed response
 		this->_status = atoi(e.what());
-		this->_reason = "Error Reason ?!?!?!"; // function to get matchin reason for err code
+		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_type = "text/html";
 		this->_body = readFileToString(findError(e.what()));
 		this->_connection = "keep-alive";
@@ -108,7 +108,7 @@ void	Response::postMethod(Request &request) {
 	switch (status) {
 		case 201:
 			this->_status = 201;
-			this->_reason = "Created";
+			this->_reason = getStatusMessage("201");
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
 			this->_date = getDateTime();
@@ -171,7 +171,7 @@ void	Response::getMethod(Request &request)
 	this->_status = 200;
 	this->_body = readFileToString(file);
 	this->_len = _body.length();
-	this->_reason = "ok";
+	this->_reason = getStatusMessage("200");
 	this->_type = findType(file);
 	this->_connection = "keep-alive";
 	this->_date = getDateTime();
@@ -192,7 +192,7 @@ void	Response::deleteMethod(Request &request) {
 		throw ResponseException("404");
 	else {
 		this->_status = 200;
-		this->_reason = "OK";
+		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
 		this->_connection = "keep-alive";
 		this->_date = getDateTime();
@@ -305,4 +305,11 @@ std::string Response::findError(std::string errorCode) {
 		return _servSet->error_pages[errorCode];
 	else
 		return _servSet->error_pages["500"];
+}
+
+std::string Response::getStatusMessage(std::string statusCode) {
+	if (_servSet->error_messages.find(statusCode) != _servSet->error_messages.end())
+		return _servSet->error_messages[statusCode];
+	else
+		return "Internal Server Error";
 }

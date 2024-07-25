@@ -30,6 +30,7 @@ struct ServerSettings {
 	std::string cgi_bin;
 
 	std::map<std::string, std::string> error_pages;
+	std::map<std::string, std::string> error_messages;
 	std::map<std::string, Location> locations;
 };
 
@@ -67,6 +68,7 @@ class Config {
 		void loadFallback(const std::string &filename);
 		void parseConfig(const std::string &filename);
 		void removeCharacter(std::string& str, char charToRemove);
+		void makeStatusMessages(ServerSettings &server);
 };
 
 std::ostream& operator<<(std::ostream& os, const Location& location);
