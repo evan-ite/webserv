@@ -35,14 +35,18 @@
 
 ## Handle requests
 - [x] Post requests
-- [ ] Delete requests
+- [x] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
 - [ ] Create Request object outside of Response object and parse request object to constructor of response
-
+- [ ] Allow specific methods according to location
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
+- [x] Second CGI connected to 42 API
+- [ ] prune Elise's API KEY from the commit history :(
+- [x] create env file 
+
 
 
 ## Extra
@@ -51,6 +55,6 @@
 - [ ] http redirects
 - [ ] Check forbidden functions
 - [ ] Directory Listing (needs item in conf class)
+	- [ ] Button based on auto index in config file
 	- [ ] Template for auto indexing
 	- [ ] function to fill template
-- [ ] prune Elise's API KEY from the commit history :(
