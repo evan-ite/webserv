@@ -6,7 +6,7 @@ struct Location {
 	std::string path;
 	std::string root;
 	std::string index;
-	std::string error_page;
+	std::map<std::string, std::string> loc_error_pages;
 	std::string rewrite;
 	bool autoindex;
 	std::vector<std::string> allow;

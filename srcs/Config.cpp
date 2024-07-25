@@ -25,8 +25,19 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->root = value;
 	else if (key == "index")
 		currentLocation->index = value;
-	else if (key == "error_page")
-		currentLocation->error_page = value;
+	else if (key == "error_page") {
+		std::istringstream iss(line);
+		std::string error_code;
+		std::string error_page;
+		iss >> error_code;
+		if (!(iss >> error_code))
+			throw std::runtime_error("Error: invalid error code");
+		if (!(iss >> error_page))
+			throw std::runtime_error("Error: invalid error page");
+		removeCharacter(error_page, ';');
+		removeCharacter(error_page, '"');
+		currentLocation->loc_error_pages[error_code] = error_page;
+	}
 	else if (key == "allow_uploads")
 		currentLocation->allow_uploads = (value == "on");
 	else if (key == "autoindex")
@@ -315,16 +326,17 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 	os << " Path: " << location.path << std::endl;
 	os << " Root: " << location.root << std::endl;
 	os << " Index: " << location.index << std::endl;
-	os << " Error Page: " << location.error_page << std::endl;
 	os << " Rewrite: " << location.rewrite << std::endl;
 	os << " Autoindex: " << (location.autoindex ? "true" : "false") << std::endl;
-
 	os << " Allow:" << std::endl;
 	for (std::vector<std::string>::const_iterator it = location.allow.begin(); it != location.allow.end(); ++it) {
 		os << "  - " << *it << std::endl;
 	}
-
 	os << " Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
+	os << " Error Pages: " << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = location.loc_error_pages.begin(); it != location.loc_error_pages.end(); ++it) {
+		os << " " << it->first << ": " << it->second << std::endl;
+	}
 	return os;
 }
 
