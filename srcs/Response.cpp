@@ -18,9 +18,8 @@ Response::Response(int	status,
 	this->_body = body;
 }
 
-Response::Response(std::string const &httpRequest, ServerSettings serverData)
+Response::Response(Request request, ServerSettings serverData)
 {
-	Request request(httpRequest);
 	Location loc = findLoc(request.getLoc(), serverData);
 	std::string index = loc.index;
 	std::string root = loc.root;
@@ -28,12 +27,14 @@ Response::Response(std::string const &httpRequest, ServerSettings serverData)
 	Cgi cgi(&request, &serverData);
 
 	try {
-		if (cgi.isTrue())
+		if (cgi.isTrue()) 
 			cgi.execute(*this);
-		else if (request.getMethod() == POST)
+		else if (request.getMethod() == POST && this->checkMethod("POST", loc))
 			postMethod(request);
-		else if (request.getMethod() == GET)
+		else if (request.getMethod() == GET && this->checkMethod("GET", loc))
 			getMethod(request, serverData, root, index);
+		else
+			throw std::exception();
 		// else if delete
 		log(logDEBUG) << "Response object succesfully created";
 	}
@@ -167,7 +168,7 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 	(void) serverData;
 
 	std::string file = root + request.getLoc();
-	// log(logDEBUG) << " " << file;
+	log(logDEBUG) << " " << file;
 	if (request.getLoc() == "/")
 		file = root + "/" + index;
 	this->_status = 200;
@@ -193,33 +194,6 @@ void	Response::getMethod(Request request, ServerSettings serverData, std::string
 void	Response::deleteMethod(Request &request) {
 	(void)request;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -271,4 +245,14 @@ void	Response::setBody(std::string body) {
 
 void	Response::setConnection(std::string connection) {
 	this->_connection = connection;
+}
+
+// Check if the method is allowed in the location, argument should 
+// be method in capital letters, return value is true if method is allowed
+bool	Response::checkMethod(std::string method, Location loc) {
+	std::vector<std::string>::iterator it = std::find(loc.allow.begin(), loc.allow.end(), method);
+	log(logDEBUG) << "Checking if method " << method << " is allowed in location " << loc;
+	if (it != loc.allow.end()) {
+		return true; }
+	return false;
 }

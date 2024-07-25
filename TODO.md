@@ -38,13 +38,14 @@
 - [x] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
-- [ ] Create Request object outside of Response object and parse request object to constructor of response
-- [ ] Allow specific methods according to location
+- [x] Create Request object outside of Response object and parse request object to constructor of response
+- [x] Allow specific methods according to location
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
 - [x] Second CGI connected to 42 API
 - [ ] prune Elise's API KEY from the commit history :(
+- [x] Revoked and renewed API creds
 - [x] create env file 
 
 
