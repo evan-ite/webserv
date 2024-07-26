@@ -108,7 +108,7 @@ std::string Response::makeResponse()
 	response << "\r\n";
 	std::string return_value = response.str();
 	if (this->_len)
-		return_value += this->_body + "\r\n";
+		return_value += this->_body + "\r\n\r\n";
 	return (return_value);
 }
 

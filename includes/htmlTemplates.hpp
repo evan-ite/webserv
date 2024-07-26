@@ -11,8 +11,8 @@
 <body> \
     <h1>Directory /upload</h1> \
     <div class=\"formbox\"> \
-			INSERT \
-	</div> \
+            INSERT \
+    </div> \
     <script> \
         async function deleteFile(filename) { \
             try { \
@@ -24,9 +24,10 @@
                     body: JSON.stringify({ filename }), \
                 }); \
                 if (response.ok) { \
-                    console.log('File ${filename} deleted successfully.'); \
+                    alert(\"File deleted\"); \
+                    location.reload(); \
                 } else { \
-                    console.error('Error deleting file ${filename}.'); \
+                    alert(\"Error: File not deleted\"); \
                 } \
             } catch (error) { \
                 console.error('An error occurred:', error); \

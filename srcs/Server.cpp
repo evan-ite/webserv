@@ -133,7 +133,9 @@ void Server::handleRequest(int fd)
 		std::string resString = res.makeResponse();
 		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
+		makeNonBlocking(fd);
 		ssize_t sent = write(fd, resCStr, resString.size());
+		log(logDEBUG) << "SENT " << sent;
 		if (sent == -1)
 		{
 			close(fd); // Close on write error
