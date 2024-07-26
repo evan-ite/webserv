@@ -29,15 +29,18 @@ Response::Response(Request &request, ServerSettings &serverData)
 	Cgi cgi(&request, &serverData);
 
 	try {
-		if (cgi.isTrue())
+		HttpMethod method = request.getMethod();
+		if (!isValidRequest(request))
+			throw ResponseException("400");
+		else if (cgi.isTrue())
 			cgi.execute(*this);
-		else if (request.getMethod() == POST && this->checkMethod("POST"))
+		else if (method == POST && this->checkMethod("POST"))
 			postMethod(request);
-		else if (request.getMethod() == GET && this->checkMethod("GET"))
+		else if (method == GET && this->checkMethod("GET"))
 			getMethod(request);
-		else if (request.getMethod() == DELETE && this->checkMethod("DELETE"))
+		else if (method == DELETE && this->checkMethod("DELETE"))
 			deleteMethod(request);
-		else
+		else if (method == INVALID && !checkMethod("INVALID"))
 			throw ResponseException("405");
 		log(logDEBUG) << "Response object succesfully created";
 	}
@@ -248,23 +251,22 @@ void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 	}
 
 	htmlFile << "<!DOCTYPE html>";
-	htmlFile << "\n<html lang=\"en\">"; 
+	htmlFile << "\n<html lang=\"en\">";
 	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
 	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
 	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
 	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
 	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
 	htmlFile << "\n\t\t<div class=\"formbox\">";
-	htmlFile << this->loopDir(dirPath);	
+	htmlFile << this->loopDir(dirPath);
 	htmlFile << "\n\t\t</div>";
 	htmlFile << "\n\t</body>\n</html>";
 }
 
-// Function that loops through directory and subdirectories and 
+// Function that loops through directory and subdirectories and
 // creates html list of the content
 std::string	Response::loopDir(std::string dirPath) {
 	std::ostringstream html;
-
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
 
@@ -334,4 +336,18 @@ void	Response::setBody(std::string body) {
 
 void	Response::setConnection(std::string connection) {
 	this->_connection = connection;
+}
+
+
+bool Response::isValidRequest(Request &request) {
+	if (request.getLoc().find("..") != std::string::npos) {
+		log(logERROR) << "Invalid request: path contains double dots.";
+		return false;
+	}
+	if (request.getConnection() != "keep-alive" && request.getConnection() != "close") {
+		log(logERROR) << "Invalid request: connection header is invalid:";
+		return false;
+	}
+	else
+		return true;
 }

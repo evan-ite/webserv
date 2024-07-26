@@ -55,12 +55,15 @@ void Request::parse(std::string httpRequest)
 		this->_method = DELETE;
 		this->_location = findKey(httpRequest, "DELETE ", ' ');
 	}
-	else
+	else {
+		this->_method = INVALID;
+		this->_location = "/";
 		log(logERROR) << "Invalid http method";
-	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
-	this->_host = findKey(httpRequest, "Host:", '\n');
-	this->_connection = findKey(httpRequest, "Connection:", '\n');
-	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
+	}
+	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
+	this->_host = findKey(httpRequest, "Host:", '\r');
+	this->_connection = findKey(httpRequest, "Connection: ", '\r');
+	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
