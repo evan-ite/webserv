@@ -32,11 +32,13 @@ class Cgi
 		Cgi();
 		Cgi(const Cgi &copy);
 
-		Request *_request;
+		Request 		*_request;
 		ServerSettings	*_serverData;
-		bool	_isTrue;
+		bool			_isTrue;
+		char			**_env;
 
-		char ** createEnv(std::string const &cgiPath, std::string const &cgiFile);
+		char	**createEnv(std::string const &cgiPath, std::string const &cgiFile);
+		void	cgiChild(int *pipefd, std::string cgiScriptPath);
 };
 
 #endif

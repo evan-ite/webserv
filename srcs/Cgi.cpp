@@ -54,82 +54,75 @@ void	Cgi::execute(Response &response) {
 
 	if (!this->_isTrue)
 		return ;
-	try
-	{
-		log(logINFO) << "Using CGI to fetch data";
-		// Determine the path to the CGI script based on the request and serverData
-		std::size_t					i = request->getLoc().rfind("/");
-		std::size_t					j = request->getLoc().rfind(serverData->cgi_extension);
-		std::string					cgiFile = request->getLoc().substr(i, j - i + serverData->cgi_extension.length());
-		std::string					cgiScriptPath = serverData->root + serverData->cgi_bin + cgiFile;
 
-		char **env = createEnv(cgiScriptPath, cgiFile);
+	log(logINFO) << "Using CGI to fetch data";
+	// Determine the path to the CGI script based on the request and serverData
+	std::size_t					i = request->getLoc().rfind("/");
+	std::size_t					j = request->getLoc().rfind(serverData->cgi_extension);
+	std::string					cgiFile = request->getLoc().substr(i, j - i + serverData->cgi_extension.length());
+	std::string					cgiScriptPath = serverData->root + serverData->cgi_bin + cgiFile;
 
-		// Prepare to capture the CGI script's output
-		int pipefd[2];
-		if (pipe(pipefd) == -1) {
-			log(logERROR) << "Error creating pipe";
-			throw CgiException("500");
-		}
+	this->_env = createEnv(cgiScriptPath, cgiFile);
 
-		pid_t pid = fork();
-		if (pid == -1) {
-			log(logERROR) << "Error forking";
-			throw CgiException("500");
-		}
-		else if (pid == 0) { // Child process: execute the CGI script
-
-			// If POST, write the data to the pipe
-			if (request->getMethod() == POST) {
-				write(pipefd[1], request->getBody().data(), request->getBody().size());
-			}
-
-			dup2(pipefd[0], STDIN_FILENO);	// Redirect stdin to the pipe
-			close(pipefd[0]);
-			dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
-			close(pipefd[1]);
-
-			// Prepare arguments for execve
-			char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
-
-			// Convert environment variables to char* array
-			execve(cgiScriptPath.c_str(), args, env);
-
-			log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
-			throw CgiException("500");
-		}
-		else
-		{
-			waitpid(pid, NULL, 0);
-			log(logDEBUG) << "Back in parent process";
-			// Parent process: read the CGI script's output
-			close(pipefd[1]);  // Close write end of the pipe
-
-			std::string cgiOutput;
-			char buffer[512];
-			ssize_t bytesRead;
-			while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-				cgiOutput.append(buffer, bytesRead);
-			close(pipefd[0]);
-
-			// Process the CGI output and create the HTTP response
-			if (!cgiOutput.empty()) {
-				response.setStatus(200);
-				response.setBody(cgiOutput);
-				response.setReason("OK");
-				response.setType("text/html");
-				response.setConnection("keep-alive");  // Close the connection after handling request
-			} else { throw CgiException("500"); }
-		}
-	} catch (CgiException &e) {
-		// Handle case where CGI script produces no output
-		log(logERROR) << "CGI output empty";
-		response.setStatus(500);
-		response.setBody(readFileToString("content/error/500.html"));
-		response.setReason("Internal Server Error");
-		response.setType("text/html");
-		response.setConnection("keep-alive");
+	// Prepare to capture the CGI script's output
+	int pipefd[2];
+	if (pipe(pipefd) == -1) {
+		log(logERROR) << "Error creating pipe";
+		throw CgiException("500");
 	}
+
+	pid_t pid = fork();
+	if (pid == -1) {
+		log(logERROR) << "Error forking";
+		throw CgiException("500");
+	}
+	else if (pid == 0) // Child process: execute the CGI script
+		this->cgiChild(pipefd, cgiScriptPath);
+	else
+	{
+		waitpid(pid, NULL, 0);
+		log(logDEBUG) << "Back in parent process";
+		// Parent process: read the CGI script's output
+		close(pipefd[1]);  // Close write end of the pipe
+
+		std::string cgiOutput;
+		char buffer[512];
+		ssize_t bytesRead;
+		while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+			cgiOutput.append(buffer, bytesRead);
+		close(pipefd[0]);
+
+		// Process the CGI output and create the HTTP response
+		if (!cgiOutput.empty()) {
+			response.setStatus(200);
+			response.setBody(cgiOutput);
+			response.setReason("OK");
+			response.setType("text/html");
+			response.setConnection(request->getConnection());  // Close the connection after handling request
+		} else { throw CgiException("500"); }
+	}
+}
+
+void	Cgi::cgiChild(int *pipefd, std::string cgiScriptPath) {
+	Request *request = this->_request;
+	// If POST, write the data to the pipe
+	if (request->getMethod() == POST) {
+		write(pipefd[1], request->getBody().data(), request->getBody().size());
+	}
+
+	dup2(pipefd[0], STDIN_FILENO);	// Redirect stdin to the pipe
+	close(pipefd[0]);
+	dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout to the pipe
+	close(pipefd[1]);
+
+	// Prepare arguments for execve
+	char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
+
+	// Convert environment variables to char* array
+	execve(cgiScriptPath.c_str(), args, this->_env);
+
+	log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
+	throw CgiException("500");
 }
 
 char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
@@ -163,3 +156,4 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 
 	return vectorToCharStarStar(envVec);
 }
+
