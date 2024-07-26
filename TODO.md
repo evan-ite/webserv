@@ -38,7 +38,6 @@
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
 - [ ] Limit client body size for post requests
-- [ ] Limit client body size for post requests
 - [ ] Remove double dots from url
 
 ## Response
@@ -52,7 +51,7 @@
 - [x] Second CGI connected to 42 API
 - [x] Revoked and renewed API creds
 - [x] create env file 
-- [ ] nice throw errors
+- [x] nice throw errors
 - [ ] change language simple cgi
 
 ## Create some structure

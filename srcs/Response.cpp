@@ -47,7 +47,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_type = "text/html";
 		this->_body = readFileToString(findError(e.what()));
-		this->_connection = "keep-alive";
+		this->_connection = request.getConnection();
 		this->_len = _body.length();
 		this->_date = getDateTime();
 	}
@@ -166,7 +166,7 @@ void	Response::getMethod(Request &request)
 	this->_len = _body.length();
 	this->_reason = getStatusMessage("200");
 	this->_type = findType(filePath);
-	this->_connection = "keep-alive";
+	this->_connection = request.getConnection();
 	this->_date = getDateTime();
 
 	// Check if body is empty or type was not found
@@ -187,7 +187,7 @@ void	Response::deleteMethod(Request &request) {
 		this->_status = 200;
 		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
-		this->_connection = "keep-alive";
+		this->_connection = request.getConnection();
 		this->_date = getDateTime();
 		this->_body = readFileToString("content/delete_success.html");
 		this->_len = _body.length();
