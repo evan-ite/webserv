@@ -112,7 +112,7 @@ void	Response::postMethod(Request &request) {
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
 			this->_date = getDateTime();
-			this->_body = readFileToString("content/upload_success.html");
+			this->_body = readFileToString("content/html/upload_success.html");
 			this->_len = _body.length();
 			break;
 		case 500:
@@ -189,7 +189,7 @@ void	Response::deleteMethod(Request &request) {
 		this->_type = "text/html";
 		this->_connection = request.getConnection();
 		this->_date = getDateTime();
-		this->_body = readFileToString("content/delete_success.html");
+		this->_body = readFileToString("content/html/delete_success.html");
 		this->_len = _body.length();
 	}
 }
@@ -237,7 +237,7 @@ void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 	// Read the file content
     std::ifstream inFile(TEMPLATE);
     if (!inFile.is_open()) {
-        log(logERROR) << "Error reading the file: " + fileName;
+        log(logERROR) << "Error reading the directory listing template";
         throw ResponseException("500");
     }
 

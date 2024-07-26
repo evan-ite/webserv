@@ -35,7 +35,7 @@
 # define UPLOAD_DIR "upload/"
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
-# define TEMPLATE   "./content/template.html"
+# define TEMPLATE   "./content/html/template.html"
 // local header files
 # include "Config.hpp"
 # include "Client.hpp"

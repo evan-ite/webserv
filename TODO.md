@@ -57,7 +57,7 @@
 
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
-- [ ] Organize content directory
+- [x] Organize content directory
 - [ ] Good readme with structure explanation of code and explain api stuff
 
 ## Directory listing
