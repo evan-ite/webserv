@@ -35,7 +35,7 @@
 # define UPLOAD_DIR "upload/"
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
-# define TEMPLATE   "./content/html/template.html"
+# define TEMPLATE   "./content/html/template2.html"
 # define TOOLARGE "413"
 // local header files
 # include "Config.hpp"
@@ -46,6 +46,7 @@
 # include "Response.hpp"
 # include "Webserv.hpp"
 # include "Cgi.hpp"
+# include "htmlTemplates.hpp"
 
 extern int	g_signal;
 

@@ -22,7 +22,8 @@ Response::Response(int	status,
 
 Response::Response(Request &request, ServerSettings &serverData)
 {
-	try {
+	try
+	{
 		if (request.getContentLen() == -1)
 		{
 			this->_loc = NULL;
@@ -31,10 +32,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 		this->_loc = new Location;
 		*this->_loc = findLoc(request.getLoc(), serverData);
 		this->_servSet = &serverData;
-
-	Cgi cgi(&request, &serverData);
-
-	try {
+		Cgi cgi(&request, &serverData);
 		HttpMethod method = request.getMethod();
 		if (!isValidRequest(request))
 			throw ResponseException("400");
@@ -50,7 +48,8 @@ Response::Response(Request &request, ServerSettings &serverData)
 			throw ResponseException("405");
 		log(logDEBUG) << "Response object succesfully created";
 	}
-	catch (std::exception &e) {
+	catch (std::exception &e)
+	{
 		// Handle other methods or send a 405 Method Not Allowed response
 		this->_status = atoi(e.what());
 		// this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
@@ -113,7 +112,8 @@ std::string Response::makeResponse()
 	return (return_value);
 }
 
-void	Response::postMethod(Request &request) {
+void	Response::postMethod(Request &request)
+{
 	int status = 0;
 	createFiles(request, status);
 	switch (status) {
@@ -133,7 +133,8 @@ void	Response::postMethod(Request &request) {
 	}
 }
 
-void Response::createFiles(Request &request, int &status) {
+void Response::createFiles(Request &request, int &status)
+{
 	std::string file = UPLOAD_DIR;
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
@@ -187,7 +188,8 @@ void	Response::getMethod(Request &request)
 }
 
 
-void	Response::deleteMethod(Request &request) {
+void	Response::deleteMethod(Request &request)
+{
 	std::string file = request.getLoc();
 	if (!file.empty() && file[0] == '/')
 		file = file.substr(1);
@@ -244,47 +246,27 @@ bool	Response::checkMethod(std::string method) {
 }
 
 // Creates an html page with name fileName that lists the content of dirPath
-void	Response::createDirlisting(std::string fileName, std::string dirPath) {
-	// Read the file content
-    std::ifstream inFile(TEMPLATE);
-    if (!inFile.is_open()) {
-        log(logERROR) << "Error reading the directory listing template";
-        throw ResponseException("500");
-    }
+void	Response::createDirlisting(std::string fileName, std::string dirPath)
+{
 
-    std::stringstream buffer;
-    buffer << inFile.rdbuf();
-    std::string fileContent = buffer.str();
-    inFile.close();
+	std::string htmlTemplate = DIRLIST;
 
-	std::size_t pos = fileContent.find("INSERT");
+	std::size_t pos = htmlTemplate.find("INSERT");
 	if (pos == std::string::npos) {
 		log(logERROR) << "Couldn't find insert keyword in template";
 		throw ResponseException("500");
 	}
 	std::string insertList = this->loopDir(dirPath);
-	fileContent.replace(pos, pos + 6, insertList);
+	htmlTemplate.replace(pos, 6, insertList);
+	// this->setBody(htmlTemplate);
 
 	std::ofstream outFile(fileName.c_str());
 	if (!outFile.is_open()) {
 		log(logERROR) << "Error directory listing failed to open: " << fileName;
 		throw ResponseException("500");
 	}
-
-	htmlFile << "<!DOCTYPE html>";
-	htmlFile << "\n<html lang=\"en\">";
-	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
-	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
-	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
-	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
-	htmlFile << "\n\t\t<div class=\"formbox\">";
-	htmlFile << this->loopDir(dirPath);
-	htmlFile << "\n\t\t</div>";
-	htmlFile << "\n\t</body>\n</html>";
-	outFile << fileContent;
+	outFile << htmlTemplate;
 	outFile.close();
-
 }
 
 // Function that loops through directory and subdirectories and
@@ -302,23 +284,30 @@ std::string	Response::loopDir(std::string dirPath) {
 	}
 
 	// Loop through directory and create a list in html
-	html << "\n\t\t<ul>";
+	// html << "\n\t\t<ul>";
+	html << "<ul>";
 	while ((entry = readdir(dir)) != NULL) {
 		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-			html << "\n\t\t\t<li> " << entry->d_name << "</li>";
+			// html << "\n\t\t\t<li> "
+			html << "<li> "
+			<< entry->d_name
+			<< "<button onclick=\"deleteFile('"
+			<< entry->d_name
+			<< "')\">Delete</button>"
+			<< "</li>";
 			if (entry->d_type == DT_DIR) {
 				std::string	subPath = dirPath + "/" + entry->d_name;
 				html << this->loopDir(subPath);
 			}
 		}
 	}
-	html << "\n\t\t</ul>";
+	// html << "\n\t\t</ul>";
+	html << "</ul>";
 
 	if (closedir(dir) != 0) {
 		log(logERROR) << "Error closing directory: " << dirPath;
 		throw ResponseException("500");
 	}
-
 	return html.str();
 }
 
