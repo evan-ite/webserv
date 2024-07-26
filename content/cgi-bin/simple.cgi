@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import cgi
 import cgitb
 
@@ -27,8 +26,9 @@ if form:
             print(f"<p>Absolute favorite: {form.getvalue(key)}</p>")
         else:
             print(f"<p>Worst food evaaah: {form.getvalue(key)}</p>")
-    print(f'<img class="student" src="cgi-bin/food.jpg" alt="Patrick enjoying his meal" width="400">')
-
+    print('<div class="memebox">')
+    print(f'<img class="student" src="food.jpg" alt="Patrick enjoying his meal" width="400">')
+    print("</div>")
 else:
     print("<p>No data received.</p>")
 

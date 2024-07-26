@@ -53,6 +53,8 @@ class Response
 		std::string	loopDir(std::string dirPath);
 		std::string findError(std::string errorCode);
 		std::string	getStatusMessage(std::string errorCode);
+		std::string extractFilePath(Request &request);
+		bool		isValidRequest(Request &request);
 
 		// To create response
 		int	_status;

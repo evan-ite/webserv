@@ -35,6 +35,7 @@
 # define UPLOAD_DIR "upload/"
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
+# define TEMPLATE   "./content/html/template.html"
 # define TOOLARGE "413"
 // local header files
 # include "Config.hpp"

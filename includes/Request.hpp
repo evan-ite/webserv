@@ -6,7 +6,7 @@
 /*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/26 15:19:33 by jstrozyk         ###   ########.fr       */
+/*   Updated: 2024/07/26 17:09:06 by jstrozyk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@
 enum HttpMethod {
 	GET,
 	POST,
-	DELETE
+	DELETE,
+	INVALID
 };
 
 class Request
