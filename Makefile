@@ -1,6 +1,6 @@
 NAME = webserv
 CXX = c++
-CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -g
 OBJDIR = obj
 OBJ = $(SRC:%.cpp=$(OBJDIR)/%.o)
 SRC = srcs/main.cpp srcs/Logger.cpp srcs/Request.cpp srcs/Response.cpp \

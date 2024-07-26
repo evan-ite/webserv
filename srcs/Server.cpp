@@ -111,14 +111,16 @@ void Server::handleRequest(int fd)
 	log(logINFO)	<< "Server " << this->_settings.host
 					<< ":" << this->_settings.port
 					<< " is reading from fd: " << fd;
-	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
+	// while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
+	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
-		if (!this->checkContentLength(httpRequest))
-		{
-			httpRequest = TOOLARGE;
-			break ;
-		}
+		// usleep(10);
+		// if (!this->checkContentLength(httpRequest))
+		// {
+		// 	httpRequest = TOOLARGE;
+		// 	break ;
+		// }
 	}
 	if (count == 0)
 	{
@@ -131,7 +133,7 @@ void Server::handleRequest(int fd)
 		Request request(httpRequest);
 		Response res(request, this->_settings);
 		std::string resString = res.makeResponse();
-		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		makeNonBlocking(fd);
 		ssize_t sent = write(fd, resCStr, resString.size());
@@ -141,7 +143,7 @@ void Server::handleRequest(int fd)
 			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 		}
-		if (res.getConnection() == "close")
-			close(fd);
+		// if (res.getConnection() == "close")
+		// 	close(fd);
 	}
 }

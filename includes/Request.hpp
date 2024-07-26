@@ -51,6 +51,7 @@ class Request
 		std::string _host;
 		std::string _userAgent;
 		std::string _connection;
+		std::string _transferEncoding;
 
 		std::vector<std::pair<std::string, std::string> > _fileData;
 };
