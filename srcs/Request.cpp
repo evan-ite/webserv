@@ -39,7 +39,6 @@ Request & Request::operator=(const Request &assign)
 void Request::parse(std::string httpRequest)
 {
 	std::string	method = splitReturnFirst(httpRequest, " ");
-	log(logDEBUG) << "Method: " << method;
 	if (method == "GET")
 	{
 		this->_method = GET;
@@ -47,15 +46,6 @@ void Request::parse(std::string httpRequest)
 	}
 	else if (method == "POST")
 	{
-		/* ---------------------------- For DEBUG ------------------------------- */
-/* 		std::ofstream debugFile("http_request_debug.txt", std::ios::app);
-		if (debugFile.is_open()){
-			debugFile << httpRequest << std::endl;
-			debugFile.close();
-		}
-		else
-			log(logERROR) << "Failed to open debug file for writing."; */
-		/* ------------------------------------------------------------------------ */
 		this->_method = POST;
 		this->_location = findKey(httpRequest, "POST ", ' ');
 		this->parseMultipart(httpRequest);

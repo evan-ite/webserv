@@ -16,36 +16,37 @@ Response::Response(int	status,
 	this->_date = getDateTime();
 	this->_connection = connection;
 	this->_body = body;
+	this->_loc = NULL;
+	this->_servSet = NULL;
 }
 
-Response::Response(std::string const &httpRequest, ServerSettings serverData)
+Response::Response(Request &request, ServerSettings &serverData)
 {
-	Request request(httpRequest);
-	Location loc = findLoc(request.getLoc(), serverData);
-	std::string index = loc.index;
-	std::string root = loc.root;
-
-	log(logDEBUG) << loc;
+	this->_loc = new Location;
+	*this->_loc = findLoc(request.getLoc(), serverData);
+	this->_servSet = &serverData;
 
 	Cgi cgi(&request, &serverData);
 
 	try {
 		if (cgi.isTrue())
 			cgi.execute(*this);
-		else if (request.getMethod() == POST)
+		else if (request.getMethod() == POST && this->checkMethod("POST"))
 			postMethod(request);
-		else if (request.getMethod() == GET)
-			getMethod(request, serverData, root, index);
-		else if (request.getMethod() == DELETE)
-			deleteMethod(request, root);
+		else if (request.getMethod() == GET && this->checkMethod("GET"))
+			getMethod(request);
+		else if (request.getMethod() == DELETE && this->checkMethod("DELETE"))
+			deleteMethod(request);
+		else
+			throw ResponseException("405");
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e) {
 		// Handle other methods or send a 405 Method Not Allowed response
-		this->_status = 405;
-		this->_reason = "Method Not Allowed";
+		this->_status = atoi(e.what());
+		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_type = "text/html";
-		this->_body = readFileToString("content/error/405.html");
+		this->_body = readFileToString(findError(e.what()));
 		this->_connection = "keep-alive";
 		this->_len = _body.length();
 		this->_date = getDateTime();
@@ -64,7 +65,10 @@ Response::Response(const Response &copy) :
 {}
 
 // Destructor
-Response::~Response() {}
+Response::~Response() {
+	if (this->_loc)
+		delete _loc;
+}
 
 // Operators
 Response & Response::operator=(const Response &assign)
@@ -76,6 +80,8 @@ Response & Response::operator=(const Response &assign)
 	this->_body = assign._body;
 	this->_len = assign._len;
 	this->_date = assign._date;
+	this->_loc = assign._loc;
+	this->_servSet = assign._servSet;
 	return (*this);
 }
 
@@ -102,7 +108,7 @@ void	Response::postMethod(Request &request) {
 	switch (status) {
 		case 201:
 			this->_status = 201;
-			this->_reason = "Created";
+			this->_reason = getStatusMessage("201");
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
 			this->_date = getDateTime();
@@ -110,28 +116,14 @@ void	Response::postMethod(Request &request) {
 			this->_len = _body.length();
 			break;
 		case 500:
-			this->_status = 500;
-			this->_reason = "Internal Server Error";
-			this->_type = "text/html";
-			this->_connection = "close";
-			this->_date = getDateTime();
-			this->_body = readFileToString("content/error/500.html");
-			this->_len = _body.length();
-			break;
+			throw ResponseException("500");
 		case 400:
-			this->_status = 400;
-			this->_reason = "Bad Request";
-			this->_type = "text/html";
-			this->_connection = request.getConnection();
-			this->_date = getDateTime();
-			this->_body = readFileToString("content/error/400.html");
-			this->_len = _body.length();
-			break;
+			throw ResponseException("400");
 	}
 }
 
 void Response::createFiles(Request &request, int &status) {
-	std::string path = UPLOAD_DIR;
+	std::string file = UPLOAD_DIR;
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
 	if (fileData.empty()) {
@@ -143,7 +135,7 @@ void Response::createFiles(Request &request, int &status) {
 	for (size_t i = 0; i < fileData.size(); ++i) {
 		std::string filename = fileData[i].first;
 		std::string content = fileData[i].second;
-		std::string fullpath = path + filename;
+		std::string fullpath = file + filename;
 		std::ofstream file(fullpath.c_str(), std::ios::binary);
 
 		if (!file) {
@@ -165,56 +157,42 @@ void Response::createFiles(Request &request, int &status) {
 		status = 201;
 }
 
-void	Response::getMethod(Request request, ServerSettings serverData, std::string root, std::string index)
+void	Response::getMethod(Request &request)
 {
-	(void) serverData;
+	std::string file = _loc->root + request.getLoc();
 
-	std::string file = root + request.getLoc();
-	// log(logDEBUG) << " " << file;
-	if (request.getLoc() == "/")
-		file = root + "/" + index;
+	if (request.getLoc() == "/") // If no path specified
+		file = _loc->root + "/" + _loc->index;
+	else if (_loc->autoindex) { // Directory listing
+		file = _loc->root + "/" + _loc->index;
+		this->createDirlisting(file, _loc->path);
+	}
+
 	this->_status = 200;
 	this->_body = readFileToString(file);
 	this->_len = _body.length();
-	this->_reason = "ok";
+	this->_reason = getStatusMessage("200");
 	this->_type = findType(file);
 	this->_connection = "keep-alive";
 	this->_date = getDateTime();
 
 	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "") {
-		this->_status = 404;
-		this->_reason = "not found";
-		this->_type = "text/html";
-		this->_body = readFileToString("content/error/404.html");
-		this->_connection = "keep-alive";
-		this->_len = this->_body.size();
+		throw ResponseException("404");
 	}
 }
 
 
-void	Response::deleteMethod(Request &request, std::string root) {
-	log(logDEBUG) << "root: " << root;
-	std::string file = root + request.getLoc();
-	log(logDEBUG) << "Deleting file: " << file;
-	if (access(file.c_str(), F_OK) != 0) {
-		log(logERROR) << "File does not exist: " << file;
-	}
-	if (access(file.c_str(), W_OK) != 0) {
-		log(logERROR) << "No write permission for file: " << file;
-	}
-	if (remove(file.c_str()) != 0) {
-		this->_status = 404;
-		this->_reason = "Not Found";
-		this->_type = "text/html";
-		this->_connection = "keep-alive";
-		this->_date = getDateTime();
-		this->_body = readFileToString("content/error/404.html");
-		this->_len = _body.length();
-	}
+void	Response::deleteMethod(Request &request) {
+	std::string file = request.getLoc();
+	if (!file.empty() && file[0] == '/')
+		file = file.substr(1);
+
+	if (remove(file.c_str()) != 0)
+		throw ResponseException("404");
 	else {
 		this->_status = 200;
-		this->_reason = "OK";
+		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
 		this->_connection = "keep-alive";
 		this->_date = getDateTime();
@@ -222,35 +200,6 @@ void	Response::deleteMethod(Request &request, std::string root) {
 		this->_len = _body.length();
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
@@ -278,6 +227,91 @@ Location Response::findLoc(const std::string& uri, ServerSettings sett)
 		return sett.locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
 
+
+// Check if the method is allowed in the location, argument should
+// be method in capital letters, return value is true if method is allowed
+bool	Response::checkMethod(std::string method) {
+	Location loc = *this->_loc;
+	std::vector<std::string>::iterator it = std::find(loc.allow.begin(), loc.allow.end(), method);
+
+	if (it != loc.allow.end()) {
+		return true; }
+	return false;
+}
+
+// Creates an html page with name fileName that lists the content of dirPath
+void	Response::createDirlisting(std::string fileName, std::string dirPath) {
+	std::ofstream htmlFile(fileName.c_str());
+	if (!htmlFile.is_open()) {
+		log(logERROR) << "Error directory listing failed to open: " << fileName;
+		throw ResponseException("500");
+	}
+
+	htmlFile << "<!DOCTYPE html>";
+	htmlFile << "\n<html lang=\"en\">"; 
+	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
+	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
+	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
+	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
+	htmlFile << "\n\t\t<div class=\"formbox\">";
+	htmlFile << this->loopDir(dirPath);	
+	htmlFile << "\n\t\t</div>";
+	htmlFile << "\n\t</body>\n</html>";
+}
+
+// Function that loops through directory and subdirectories and 
+// creates html list of the content
+std::string	Response::loopDir(std::string dirPath) {
+	std::ostringstream html;
+
+	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
+		dirPath = dirPath.substr(1);
+
+	struct dirent	*entry;
+	DIR		*dir = opendir(dirPath.c_str());
+	if (dir == NULL) {
+		log(logERROR) << "Error opening directory: " << dirPath;
+		throw ResponseException("500");
+	}
+
+	// Loop through directory and create a list in html
+	html << "\n\t\t<ul>";
+	while ((entry = readdir(dir)) != NULL) {
+		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+			html << "\n\t\t\t<li> " << entry->d_name << "</li>";
+			if (entry->d_type == DT_DIR) {
+				std::string	subPath = dirPath + "/" + entry->d_name;
+				html << this->loopDir(subPath);
+			}
+		}
+	}
+	html << "\n\t\t</ul>";
+
+	if (closedir(dir) != 0) {
+		log(logERROR) << "Error closing directory: " << dirPath;
+		throw ResponseException("500");
+	}
+
+	return html.str();
+}
+
+// Returns path to correct error page
+std::string Response::findError(std::string errorCode) {
+	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
+		return _loc->root + "/" + _loc->loc_error_pages[errorCode];
+	else if (_servSet->error_pages.find(errorCode) != _servSet->error_pages.end())
+		return _servSet->error_pages[errorCode];
+	else
+		return _servSet->error_pages["500"];
+}
+
+std::string Response::getStatusMessage(std::string statusCode) {
+	if (_servSet->error_messages.find(statusCode) != _servSet->error_messages.end())
+		return _servSet->error_messages[statusCode];
+	else
+		return "Internal Server Error";
+}
 
 
 void	Response::setStatus(int status) {

@@ -35,22 +35,32 @@
 
 ## Handle requests
 - [x] Post requests
-- [ ] Delete requests
+- [x] Delete requests
 - [ ] Limit client body size for post requests
 - [ ] Chunked requests, what do we do about them!?!
-- [ ] Create Request object outside of Response object and parse request object to constructor of response
-
+- [x] Create Request object outside of Response object and parse request object to constructor of response
+- [x] Allow specific methods according to location
+- [ ] Base connection on request instead of hard code
+- [x] Base error pages on config instead of hard code
+- [x] Map / function to match error code to reason
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
+- [x] Second CGI connected to 42 API
+- [x] Revoked and renewed API creds
+- [x] create env file 
 
+## Create some structure
+- [ ] Divide long class cpp files in seperate files
+- [ ] Organize content directory
+- [ ] Good readme with structure explanation of code and explain api stuff
 
 ## Extra
-- [ ] Implement time out limits set through header (or conf file?)
-- [ ] Create beautiful html <333
+- [x] Implement time out limits set through header (or conf file?)
+- [x] Create beautiful html <333
 - [ ] http redirects
 - [ ] Check forbidden functions
-- [ ] Directory Listing (needs item in conf class)
-	- [ ] Template for auto indexing
-	- [ ] function to fill template
-- [ ] prune Elise's API KEY from the commit history :(
+- [ ] Cookiesssss
+- [x] Directory Listing (needs item in conf class)
+	- [x] Template for auto indexing
+	- [x] function to fill template

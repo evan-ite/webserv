@@ -24,7 +24,7 @@
 # include <algorithm>
 # include <cctype>
 # include <sys/wait.h>
-# include <pthread.h>
+# include <dirent.h>
 // defines
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets

@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 
+import os
 import cgi
 import cgitb
 import requests
+from dotenv import load_dotenv
 
+# Load the .env file
+load_dotenv()
+api_key = os.getenv('API_KEY')
+
+if api_key is None:
+    raise ValueError("API_KEY not found in the environment variables")
+ 
 cgitb.enable()  # Enables CGI error reporting
 
 # Function to fetch campus data from API
 def fetch_user():
     campus_url = "https://api.intra.42.fr/v2/campus"  # API endpoint to fetch campus data
     headers = {
-        "Authorization": "Bearer caaa26dd9c0dae7bf8ece7b011f81a61f181a534274a23de877082402f21da4e",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     try:
