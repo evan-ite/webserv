@@ -69,13 +69,13 @@ void	Cgi::execute(Response &response) {
 		int pipefd[2];
 		if (pipe(pipefd) == -1) {
 			log(logERROR) << "Error creating pipe";
-			throw CgiException();
+			throw CgiException("500");
 		}
 
 		pid_t pid = fork();
 		if (pid == -1) {
 			log(logERROR) << "Error forking";
-			throw CgiException();
+			throw CgiException("500");
 		}
 		else if (pid == 0) { // Child process: execute the CGI script
 
@@ -96,7 +96,7 @@ void	Cgi::execute(Response &response) {
 			execve(cgiScriptPath.c_str(), args, env);
 
 			log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
-			throw CgiException();
+			throw CgiException("500");
 		}
 		else
 		{
@@ -117,9 +117,9 @@ void	Cgi::execute(Response &response) {
 				response.setStatus(200);
 				response.setBody(cgiOutput);
 				response.setReason("OK");
-				response.setType("text/html");  // Adjust based on CGI output
+				response.setType("text/html");
 				response.setConnection("keep-alive");  // Close the connection after handling request
-			} else { throw CgiException(); }
+			} else { throw CgiException("500"); }
 		}
 	} catch (CgiException &e) {
 		// Handle case where CGI script produces no output
@@ -130,7 +130,6 @@ void	Cgi::execute(Response &response) {
 		response.setType("text/html");
 		response.setConnection("keep-alive");
 	}
-
 }
 
 char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)

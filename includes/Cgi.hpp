@@ -18,9 +18,14 @@ class Cgi
 		bool	isTrue();
 
 		class CgiException : public std::exception {
+			private:
+				std::string _erCode;
 			public:
+				CgiException(const std::string& erCode) : _erCode(erCode) {}
+				~CgiException() throw() {}
+
 				const char* what() const throw()
-				{ return "Error executing CGI script"; }
+				{ return _erCode.c_str();}
 		};
 
 	private:
