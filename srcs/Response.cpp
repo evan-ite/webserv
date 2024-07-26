@@ -234,23 +234,35 @@ bool	Response::checkMethod(std::string method) {
 
 // Creates an html page with name fileName that lists the content of dirPath
 void	Response::createDirlisting(std::string fileName, std::string dirPath) {
-	std::ofstream htmlFile(fileName.c_str());
-	if (!htmlFile.is_open()) {
+	// Read the file content
+    std::ifstream inFile(TEMPLATE);
+    if (!inFile.is_open()) {
+        log(logERROR) << "Error reading the file: " + fileName;
+        throw ResponseException("500");
+    }
+
+    std::stringstream buffer;
+    buffer << inFile.rdbuf();
+    std::string fileContent = buffer.str();
+    inFile.close();
+
+	std::size_t pos = fileContent.find("INSERT");
+	if (pos == std::string::npos) {
+		log(logERROR) << "Couldn't find insert keyword in template";
+		throw ResponseException("500");
+	}
+	std::string insertList = this->loopDir(dirPath);	
+	fileContent.replace(pos, pos + 6, insertList);
+
+	std::ofstream outFile(fileName.c_str());
+	if (!outFile.is_open()) {
 		log(logERROR) << "Error directory listing failed to open: " << fileName;
 		throw ResponseException("500");
 	}
 
-	htmlFile << "<!DOCTYPE html>";
-	htmlFile << "\n<html lang=\"en\">"; 
-	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
-	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
-	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
-	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
-	htmlFile << "\n\t\t<div class=\"formbox\">";
-	htmlFile << this->loopDir(dirPath);	
-	htmlFile << "\n\t\t</div>";
-	htmlFile << "\n\t</body>\n</html>";
+	outFile << fileContent;
+	outFile.close();
+
 }
 
 // Function that loops through directory and subdirectories and 
