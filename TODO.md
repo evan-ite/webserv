@@ -38,26 +38,26 @@
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
 - [ ] Limit client body size for post requests
-- [ ] Limit client body size for post requests
 - [ ] Remove double dots from url
 
 ## Response
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Base error pages on config instead of hard code
 - [x] Map / function to match error code to reason
-- [ ] Base connection on request instead of hard code
+- [x] Base connection on request instead of hard code
+- [ ] Actually do something if connection is "close"
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
 - [x] Second CGI connected to 42 API
 - [x] Revoked and renewed API creds
 - [x] create env file 
-- [ ] nice throw errors
+- [x] nice throw errors
 - [ ] change language simple cgi
 
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
-- [ ] Organize content directory
+- [x] Organize content directory
 - [ ] Good readme with structure explanation of code and explain api stuff
 
 ## Directory listing

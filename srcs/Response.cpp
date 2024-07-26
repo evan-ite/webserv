@@ -50,7 +50,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_type = "text/html";
 		this->_body = readFileToString(findError(e.what()));
-		this->_connection = "keep-alive";
+		this->_connection = request.getConnection();
 		this->_len = _body.length();
 		this->_date = getDateTime();
 	}
@@ -115,7 +115,7 @@ void	Response::postMethod(Request &request) {
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
 			this->_date = getDateTime();
-			this->_body = readFileToString("content/upload_success.html");
+			this->_body = readFileToString("content/html/upload_success.html");
 			this->_len = _body.length();
 			break;
 		case 500:
@@ -162,21 +162,14 @@ void Response::createFiles(Request &request, int &status) {
 
 void	Response::getMethod(Request &request)
 {
-	std::string file = _loc->root + request.getLoc();
-
-	if (request.getLoc() == "/") // If no path specified
-		file = _loc->root + "/" + _loc->index;
-	else if (_loc->autoindex) { // Directory listing
-		file = _loc->root + "/" + _loc->index;
-		this->createDirlisting(file, _loc->path);
-	}
+	std::string filePath = this->extractFilePath(request);
 
 	this->_status = 200;
-	this->_body = readFileToString(file);
+	this->_body = readFileToString(filePath);
 	this->_len = _body.length();
 	this->_reason = getStatusMessage("200");
-	this->_type = findType(file);
-	this->_connection = "keep-alive";
+	this->_type = findType(filePath);
+	this->_connection = request.getConnection();
 	this->_date = getDateTime();
 
 	// Check if body is empty or type was not found
@@ -197,9 +190,9 @@ void	Response::deleteMethod(Request &request) {
 		this->_status = 200;
 		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
-		this->_connection = "keep-alive";
+		this->_connection = request.getConnection();
 		this->_date = getDateTime();
-		this->_body = readFileToString("content/delete_success.html");
+		this->_body = readFileToString("content/html/delete_success.html");
 		this->_len = _body.length();
 	}
 }
@@ -244,23 +237,35 @@ bool	Response::checkMethod(std::string method) {
 
 // Creates an html page with name fileName that lists the content of dirPath
 void	Response::createDirlisting(std::string fileName, std::string dirPath) {
-	std::ofstream htmlFile(fileName.c_str());
-	if (!htmlFile.is_open()) {
+	// Read the file content
+    std::ifstream inFile(TEMPLATE);
+    if (!inFile.is_open()) {
+        log(logERROR) << "Error reading the directory listing template";
+        throw ResponseException("500");
+    }
+
+    std::stringstream buffer;
+    buffer << inFile.rdbuf();
+    std::string fileContent = buffer.str();
+    inFile.close();
+
+	std::size_t pos = fileContent.find("INSERT");
+	if (pos == std::string::npos) {
+		log(logERROR) << "Couldn't find insert keyword in template";
+		throw ResponseException("500");
+	}
+	std::string insertList = this->loopDir(dirPath);
+	fileContent.replace(pos, pos + 6, insertList);
+
+	std::ofstream outFile(fileName.c_str());
+	if (!outFile.is_open()) {
 		log(logERROR) << "Error directory listing failed to open: " << fileName;
 		throw ResponseException("500");
 	}
 
-	htmlFile << "<!DOCTYPE html>";
-	htmlFile << "\n<html lang=\"en\">";
-	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
-	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
-	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
-	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
-	htmlFile << "\n\t\t<div class=\"formbox\">";
-	htmlFile << this->loopDir(dirPath);
-	htmlFile << "\n\t\t</div>";
-	htmlFile << "\n\t</body>\n</html>";
+	outFile << fileContent;
+	outFile.close();
+
 }
 
 // Function that loops through directory and subdirectories and
@@ -315,6 +320,39 @@ std::string Response::getStatusMessage(std::string statusCode) {
 		return "Internal Server Error";
 }
 
+// Function that returns the correct file path, based on the URI
+// and the root and index from the config file
+std::string Response::extractFilePath(Request &request) {
+	// Find end of the location path in the URI
+	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
+	std::string	file;
+
+	if (i < request.getLoc().length())
+		// If URI contains a filename extract it
+		file = request.getLoc().substr(i);
+	else
+		// Else use index file
+		file = _loc->index;
+
+	std::string filePath;
+	if (this->_loc->path == "/")
+	{ 	// add root to path if needed
+		if (file.find(this->_loc->root) != std::string::npos)
+			filePath = file;
+		else
+			filePath = this->_loc->root + "/" + file;
+	}
+	else if (_loc->autoindex)
+	{ 	// directory listing
+		filePath = _loc->root + "/" + _loc->index;
+		this->createDirlisting(filePath, _loc->path);
+	}
+	else
+		// use path from URI
+		filePath = this->_loc->path + "/" + file;
+
+	return filePath;
+}
 
 void	Response::setStatus(int status) {
 	this->_status = status;

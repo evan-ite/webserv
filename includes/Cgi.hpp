@@ -18,20 +18,27 @@ class Cgi
 		bool	isTrue();
 
 		class CgiException : public std::exception {
+			private:
+				std::string _erCode;
 			public:
+				CgiException(const std::string& erCode) : _erCode(erCode) {}
+				~CgiException() throw() {}
+
 				const char* what() const throw()
-				{ return "Error executing CGI script"; }
+				{ return _erCode.c_str();}
 		};
 
 	private:
 		Cgi();
 		Cgi(const Cgi &copy);
 
-		Request *_request;
+		Request 		*_request;
 		ServerSettings	*_serverData;
-		bool	_isTrue;
+		bool			_isTrue;
+		char			**_env;
 
-		char ** createEnv(std::string const &cgiPath, std::string const &cgiFile);
+		char	**createEnv(std::string const &cgiPath, std::string const &cgiFile);
+		void	cgiChild(int *pipefd, std::string cgiScriptPath);
 };
 
 #endif
