@@ -155,21 +155,12 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 
 	envVec.push_back("SCRIPT_NAME=" + cgiPath);
 	envVec.push_back("SCRIPT_FILENAME=" + cgiFile);
-	// envVec.push_back("PATH_INFO=");
 
 	envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	envVec.push_back("SERVER_SOFTWARE=Webserv/1.0");
 	envVec.push_back("SERVER_PORT=" + toString(serverData->port));
 	envVec.push_back("SERVER_NAME=" + serverData->server_name);
 	envVec.push_back("SERVER_ADDR=" + serverData->host);
-
-	// envVec.push_back("REMOTE_ADDR=");
-	// envVec.push_back("REMOTE_IDENT=");
-	// envVec.push_back("REMOTE_USER=");
-
-	// for (size_t i = 0; i < envVec.size(); ++i) {
-	// 	std::cout << envVec[i] << std::endl;
-	// }
 
 	return vectorToCharStarStar(envVec);
 }

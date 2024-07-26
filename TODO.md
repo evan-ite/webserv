@@ -37,7 +37,6 @@
 - [x] Post requests
 - [x] Delete requests
 - [ ] Limit client body size for post requests
-- [ ] Chunked requests, what do we do about them!?!
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
 - [ ] Base connection on request instead of hard code
@@ -58,6 +57,7 @@
 ## Extra
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
+- [ ] Chunked requests, what do we do about them!?! --> nothing?
 - [ ] http redirects
 - [ ] Check forbidden functions
 - [ ] Cookiesssss
