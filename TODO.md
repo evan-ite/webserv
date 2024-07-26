@@ -28,39 +28,47 @@
 	- [x] store servers in map (string 127.0.0.1:8080 - ptr to config object) (on Jans branch in main)
 	- [x] Directory Listing on/off (needs item in conf class)
 
-
 ## Start server(s)
 - [x] implement constructor that takes map
 - [x] set up epoll instance
 
-## Handle requests
+## Requests
 - [x] Post requests
 - [x] Delete requests
-- [ ] Limit client body size for post requests
-- [ ] Chunked requests, what do we do about them!?!
-- [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
-- [ ] Base connection on request instead of hard code
+- [ ] Chunked requests, what do we do about them!?!
+- [ ] Limit client body size for post requests
+- [ ] Remove double dots from url
+
+## Response
+- [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Base error pages on config instead of hard code
 - [x] Map / function to match error code to reason
+- [ ] Base connection on request instead of hard code
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
 - [x] Second CGI connected to 42 API
 - [x] Revoked and renewed API creds
 - [x] create env file 
+- [ ] nice throw errors
+- [ ] change language simple cgi
 
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
 - [ ] Organize content directory
 - [ ] Good readme with structure explanation of code and explain api stuff
 
-## Extra
-- [x] Implement time out limits set through header (or conf file?)
-- [x] Create beautiful html <333
-- [ ] http redirects
-- [ ] Check forbidden functions
-- [ ] Cookiesssss
+## Directory listing
 - [x] Directory Listing (needs item in conf class)
 	- [x] Template for auto indexing
 	- [x] function to fill template
+- [ ] delete button next to files in dir listing
+
+
+## Extra
+- [x] Implement time out limits set through header (or conf file?)
+- [x] Create beautiful html <333
+- [ ] Cookiesssss
+- [ ] http redirects
+- [ ] Check forbidden functions
