@@ -44,7 +44,8 @@
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Base error pages on config instead of hard code
 - [x] Map / function to match error code to reason
-- [ ] Base connection on request instead of hard code
+- [x] Base connection on request instead of hard code
+- [ ] Actually do something if connection is "close"
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
