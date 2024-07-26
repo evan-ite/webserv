@@ -159,20 +159,13 @@ void Response::createFiles(Request &request, int &status) {
 
 void	Response::getMethod(Request &request)
 {
-	std::string file = _loc->root + request.getLoc();
-
-	if (request.getLoc() == "/") // If no path specified
-		file = _loc->root + "/" + _loc->index;
-	else if (_loc->autoindex) { // Directory listing
-		file = _loc->root + "/" + _loc->index;
-		this->createDirlisting(file, _loc->path);
-	}
+	std::string filePath = this->extractFilePath(request);
 
 	this->_status = 200;
-	this->_body = readFileToString(file);
+	this->_body = readFileToString(filePath);
 	this->_len = _body.length();
 	this->_reason = getStatusMessage("200");
-	this->_type = findType(file);
+	this->_type = findType(filePath);
 	this->_connection = "keep-alive";
 	this->_date = getDateTime();
 
@@ -313,6 +306,39 @@ std::string Response::getStatusMessage(std::string statusCode) {
 		return "Internal Server Error";
 }
 
+// Function that returns the correct file path, based on the URI
+// and the root and index from the config file
+std::string Response::extractFilePath(Request &request) {
+	// Find end of the location path in the URI
+	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
+	std::string	file;
+
+	if (i < request.getLoc().length()) 
+		// If URI contains a filename extract it
+		file = request.getLoc().substr(i);
+	else 
+		// Else use index file
+		file = _loc->index;
+
+	std::string filePath;
+	if (this->_loc->path == "/") 
+	{ 	// add root to path if needed
+		if (file.find(this->_loc->root) != std::string::npos)
+			filePath = file;
+		else
+			filePath = this->_loc->root + "/" + file;
+	}
+	else if (_loc->autoindex) 
+	{ 	// directory listing
+		filePath = _loc->root + "/" + _loc->index;
+		this->createDirlisting(filePath, _loc->path);
+	} 
+	else 
+		// use path from URI
+		filePath = this->_loc->path + "/" + file;
+
+	return filePath;
+}
 
 void	Response::setStatus(int status) {
 	this->_status = status;
