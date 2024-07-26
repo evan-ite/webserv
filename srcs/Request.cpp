@@ -2,7 +2,10 @@
 
 Request::Request(std::string httpRequest)
 {
-	this->parse(httpRequest);
+	if (httpRequest == TOOLARGE)
+		this->_contentLength = -1;
+	else
+		this->parse(httpRequest);
 }
 
 Request::Request() {}
@@ -48,7 +51,8 @@ void Request::parse(std::string httpRequest)
 	{
 		this->_method = POST;
 		this->_location = findKey(httpRequest, "POST ", ' ');
-		this->parseMultipart(httpRequest);
+		if (this->_contentLength != -1)
+			this->parseMultipart(httpRequest);
 	}
 	else if (method == "DELETE")
 	{
@@ -60,7 +64,8 @@ void Request::parse(std::string httpRequest)
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
 	this->_host = findKey(httpRequest, "Host:", '\n');
 	this->_connection = findKey(httpRequest, "Connection:", '\n');
-	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
+	if (this->_contentLength != -1)
+		this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";

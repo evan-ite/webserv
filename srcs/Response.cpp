@@ -22,13 +22,17 @@ Response::Response(int	status,
 
 Response::Response(Request &request, ServerSettings &serverData)
 {
-	this->_loc = new Location;
-	*this->_loc = findLoc(request.getLoc(), serverData);
-	this->_servSet = &serverData;
-
-	Cgi cgi(&request, &serverData);
-
 	try {
+		if (request.getContentLen() == -1)
+		{
+			this->_loc = NULL;
+			throw ResponseException(TOOLARGE);
+		}
+		this->_loc = new Location;
+		*this->_loc = findLoc(request.getLoc(), serverData);
+		this->_servSet = &serverData;
+
+		Cgi cgi(&request, &serverData);
 		if (cgi.isTrue())
 			cgi.execute(*this);
 		else if (request.getMethod() == POST && this->checkMethod("POST"))
@@ -44,10 +48,12 @@ Response::Response(Request &request, ServerSettings &serverData)
 	catch (std::exception &e) {
 		// Handle other methods or send a 405 Method Not Allowed response
 		this->_status = atoi(e.what());
-		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
+		// this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
+		this->_reason = "Request Entity Too Large"; // function to get matchin reason for err code
 		this->_type = "text/html";
-		this->_body = readFileToString(findError(e.what()));
-		this->_connection = "keep-alive";
+		// this->_body = readFileToString(findError(e.what()));
+		this->_body = readFileToString("/home/jstrozyk/projects/working_folder/webserv/content/error/413.html");
+		this->_connection = "close";
 		this->_len = _body.length();
 		this->_date = getDateTime();
 	}
@@ -65,7 +71,8 @@ Response::Response(const Response &copy) :
 {}
 
 // Destructor
-Response::~Response() {
+Response::~Response()
+{
 	if (this->_loc)
 		delete _loc;
 }
@@ -248,19 +255,19 @@ void	Response::createDirlisting(std::string fileName, std::string dirPath) {
 	}
 
 	htmlFile << "<!DOCTYPE html>";
-	htmlFile << "\n<html lang=\"en\">"; 
+	htmlFile << "\n<html lang=\"en\">";
 	htmlFile << "\n\t<head>\n\t\t<meta charset=\"UTF-8\">";
 	htmlFile << "\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
 	htmlFile << "\n\t\t<link rel=\"stylesheet\" href=\"../styles.css\">";
 	htmlFile << "\n\t\t<title>Directory " << dirPath << "</title>\n\t</head>";
 	htmlFile << "\n\t<body>\n\t\t<h1>Directory " << dirPath << "</h1>";
 	htmlFile << "\n\t\t<div class=\"formbox\">";
-	htmlFile << this->loopDir(dirPath);	
+	htmlFile << this->loopDir(dirPath);
 	htmlFile << "\n\t\t</div>";
 	htmlFile << "\n\t</body>\n</html>";
 }
 
-// Function that loops through directory and subdirectories and 
+// Function that loops through directory and subdirectories and
 // creates html list of the content
 std::string	Response::loopDir(std::string dirPath) {
 	std::ostringstream html;
@@ -334,4 +341,8 @@ void	Response::setBody(std::string body) {
 
 void	Response::setConnection(std::string connection) {
 	this->_connection = connection;
+}
+
+std::string	Response::getConnection() {
+	return this->_connection;
 }

@@ -89,6 +89,20 @@ bool	Server::clientHasFD(int fd)
 	return (0);
 }
 
+bool Server::checkContentLength(std::string httpRequest)
+{
+	log(logDEBUG) << httpRequest;
+	if (httpRequest.find("\r\n\r\n") == std::string::npos)
+		return (1);
+	if (httpRequest.find("Content-Length") == std::string::npos)
+		return (1);
+	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
+	log(logDEBUG) << "cLen " << cLen << " this->_settings.client_max_body_size " << this->_settings.client_max_body_size;
+	if (cLen > this->_settings.client_max_body_size)
+		return (0);
+	return (1);
+}
+
 void Server::handleRequest(int fd)
 {
 	char buffer[BUFFER_SIZE];
@@ -96,9 +110,16 @@ void Server::handleRequest(int fd)
 	std::string httpRequest;
 	log(logINFO)	<< "Server " << this->_settings.host
 					<< ":" << this->_settings.port
-					<< "is reading from fd: " << fd;
+					<< " is reading from fd: " << fd;
 	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
+	{
 		httpRequest.append(buffer, count);
+		if (!this->checkContentLength(httpRequest))
+		{
+			httpRequest = TOOLARGE;
+			break ;
+		}
+	}
 	if (count == 0)
 	{
 		close(fd); // Close on empty request
@@ -106,11 +127,11 @@ void Server::handleRequest(int fd)
 	}
 	else if (!httpRequest.empty())
 	{
-		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		Response res(request, this->_settings);
 		std::string resString = res.makeResponse();
-		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
@@ -118,5 +139,7 @@ void Server::handleRequest(int fd)
 			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 		}
+		if (res.getConnection() == "close")
+			close(fd);
 	}
 }

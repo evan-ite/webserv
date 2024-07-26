@@ -26,6 +26,7 @@ class Response
 		void		setType(std::string type);
 		void		setBody(std::string body);
 		void		setConnection(std::string connection);
+		std::string	getConnection();
 
 		class ResponseException : public std::exception {
 			private:

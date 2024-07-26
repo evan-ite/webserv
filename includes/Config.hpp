@@ -16,6 +16,8 @@ struct Location {
 	Location() : path("") {};
 };
 
+
+
 struct ServerSettings {
 	std::string server_name;
 	std::string root;

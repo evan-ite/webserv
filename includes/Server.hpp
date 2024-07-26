@@ -31,6 +31,7 @@ class Server
 		struct sockaddr_in		_address;
 		std::string				_key;
 		std::vector <Client>	_activeClients;
+		bool					checkContentLength(std::string httpRequest);
 };
 
 bool operator==(const Server& lhs, const Server& rhs);
