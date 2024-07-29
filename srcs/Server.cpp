@@ -119,26 +119,25 @@ void Server::requestTooLarge(int fd)
 	}
 }
 
-void Server::checkSession(Request req)
+void Server::checkSession(Request &req)
 {
 	std::string sessionId = req.getsessionId();
 	if (sessionId.empty())
 		return;
-
-	log(logDEBUG) << "Checking session: " << req.getsessionId();
 	std::vector<Cookie>::iterator it = this->_activeCookies.begin();
 	for (; it != this->_activeCookies.end(); it++)
 	{
-		log(logDEBUG) << "Session found, id: " << it->getSessionId();
 		if (sessionId == it->getSessionId())
 		{
-			if (!(it->getTimeOut()))
-				log(logDEBUG) << "Session renewed";
+			if (it->getTimeOut())
+				log(logINFO) << "Session renewed";
 			else
 			{
 				req.resetSessionId();
-				this->_activeCookies.erase(it);
+				it = this->_activeCookies.erase(it);
+				log(logINFO) << "Session reset";
 			}
+			break;
 		}
 	}
 

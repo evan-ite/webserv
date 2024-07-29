@@ -36,7 +36,7 @@
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
 # define TEMPLATE   "./content/html/template2.html"
-# define COOKIE_LIFETIME 600 // in seconds
+# define COOKIE_LIFETIME 300 // in seconds
 // local header files
 # include "Config.hpp"
 # include "Cookie.hpp"

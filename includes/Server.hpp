@@ -34,7 +34,7 @@ class Server
 		std::vector <Cookie>	_activeCookies;
 		bool					checkContentLength(std::string httpRequest, int fd);
 		void					requestTooLarge(int fd);
-		void 					checkSession(Request req);
+		void 					checkSession(Request &req);
 		void 					addSession(std::string sessionId);
 };
 
