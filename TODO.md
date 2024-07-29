@@ -54,6 +54,7 @@
 - [x] create env file 
 - [x] nice throw errors
 - [ ] change language simple cgi
+- [ ] put install dotenv lib in readme
 
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
