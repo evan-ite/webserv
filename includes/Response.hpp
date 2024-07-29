@@ -27,6 +27,7 @@ class Response
 		void		setBody(std::string body);
 		void		setConnection(std::string connection);
 		std::string	getConnection();
+		std::string	getSessionId();
 
 		class ResponseException : public std::exception {
 			private:
@@ -63,6 +64,7 @@ class Response
 		std::size_t	_len;
 		std::string	_date;
 		std::string	_connection;
+		std::string	_sessionId;
 		std::string	_body;
 
 		// Utils

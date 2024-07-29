@@ -5,7 +5,7 @@ OBJDIR = obj
 OBJ = $(SRC:%.cpp=$(OBJDIR)/%.o)
 SRC = srcs/main.cpp srcs/Logger.cpp srcs/Request.cpp srcs/Response.cpp \
 	srcs/utils.cpp srcs/Config.cpp srcs/Webserv.cpp srcs/createResponse.cpp \
-	srcs/Cgi.cpp srcs/Client.cpp srcs/Server.cpp
+	srcs/Cgi.cpp srcs/Client.cpp srcs/Server.cpp srcs/Cookie.cpp
 
 all: $(NAME)
 

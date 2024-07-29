@@ -150,3 +150,16 @@ std::vector<std::string> split(const std::string& str, char del) // are we using
 	tokens.push_back(str.substr(start));
 	return (tokens);
 }
+
+/*Generates a pseudorandom alphanumeric string of 'length' characters*/
+std::string generateRandomString(int length)
+{
+	const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+	std::string result;
+	result.reserve(length);
+
+	for (int i = 0; i < length; ++i)
+		result += charset[rand() % (sizeof(charset) - 1)];
+
+	return (result);
+}

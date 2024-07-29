@@ -11,6 +11,7 @@ void signalhandler(int sig)
 
 int main(int argc, char **argv)
 {
+	srand(time(NULL));
 	signal(SIGINT, signalhandler);
 	if (argc > 2)
 	{

@@ -31,6 +31,8 @@ class Request
 		int				getContentLen();
 		std::string		getBody();
 		std::string		getConnection();
+		std::string		getsessionId();
+		void			resetSessionId();
 
 		std::vector<std::pair<std::string, std::string> >	getFileData();
 
@@ -52,6 +54,7 @@ class Request
 		std::string _userAgent;
 		std::string _connection;
 		std::string _transferEncoding;
+		std::string _sessionId;
 
 		std::vector<std::pair<std::string, std::string> > _fileData;
 };

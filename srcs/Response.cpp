@@ -24,14 +24,13 @@ Response::Response(Request &request, ServerSettings &serverData)
 {
 	try
 	{
-		if (request.getContentLen() == -1)
-		{
-			this->_loc = NULL;
-			throw ResponseException(TOOLARGE);
-		}
 		this->_loc = new Location;
 		*this->_loc = findLoc(request.getLoc(), serverData);
 		this->_servSet = &serverData;
+		if (request.getsessionId().empty())
+			this->_sessionId = generateRandomString(12);
+		else
+			this->_sessionId = "";
 		Cgi cgi(&request, &serverData);
 		HttpMethod method = request.getMethod();
 		if (!isValidRequest(request))
@@ -105,6 +104,8 @@ std::string Response::makeResponse()
 	if (this->_type != "")
 		response << "Content-Type: " << this->_type << "\r\n";
 	response << "Connection: " << this->_connection << "\r\n";
+	if (!this->_sessionId.empty())
+		response << "Set-Cookie: session_id=" << this->_sessionId << "\r\n";
 	response << "\r\n";
 	std::string return_value = response.str();
 	if (this->_len)
@@ -385,6 +386,11 @@ void	Response::setConnection(std::string connection) {
 
 std::string	Response::getConnection() {
 	return this->_connection;
+}
+
+std::string	Response::getSessionId()
+{
+	return (this->_sessionId);
 }
 
 
