@@ -49,7 +49,7 @@ class Response
 		void		deleteMethod(Request &request);
 		Location	findLoc(const std::string& uri, ServerSettings serverData);
 		bool		checkMethod(std::string method);
-		void		createDirlisting(std::string fileName, std::string dirPath);
+		void		createDirlisting(std::string dirPath);
 		std::string	loopDir(std::string dirPath);
 		std::string findError(std::string errorCode);
 		std::string	getStatusMessage(std::string errorCode);

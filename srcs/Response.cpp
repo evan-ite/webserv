@@ -174,10 +174,16 @@ void	Response::getMethod(Request &request)
 	std::string filePath = this->extractFilePath(request);
 
 	this->_status = 200;
-	this->_body = readFileToString(filePath);
+	if (!filePath.empty())
+	{
+		this->_body = readFileToString(filePath);
+		this->_type = findType(filePath);
+	}
+	else
+		this->_type = "text/html";
 	this->_len = _body.length();
 	this->_reason = getStatusMessage("200");
-	this->_type = findType(filePath);
+
 	this->_connection = request.getConnection();
 	this->_date = getDateTime();
 
@@ -246,7 +252,7 @@ bool	Response::checkMethod(std::string method) {
 }
 
 // Creates an html page with name fileName that lists the content of dirPath
-void	Response::createDirlisting(std::string fileName, std::string dirPath)
+void	Response::createDirlisting(std::string dirPath)
 {
 
 	std::string htmlTemplate = DIRLIST;
@@ -258,15 +264,8 @@ void	Response::createDirlisting(std::string fileName, std::string dirPath)
 	}
 	std::string insertList = this->loopDir(dirPath);
 	htmlTemplate.replace(pos, 6, insertList);
-	// this->setBody(htmlTemplate);
+	this->setBody(htmlTemplate);
 
-	std::ofstream outFile(fileName.c_str());
-	if (!outFile.is_open()) {
-		log(logERROR) << "Error directory listing failed to open: " << fileName;
-		throw ResponseException("500");
-	}
-	outFile << htmlTemplate;
-	outFile.close();
 }
 
 // Function that loops through directory and subdirectories and
@@ -329,7 +328,8 @@ std::string Response::getStatusMessage(std::string statusCode) {
 }
 
 // Function that returns the correct file path, based on the URI
-// and the root and index from the config file
+// and the root and index from the config file. Returnd empty string
+// in the case of directory listing
 std::string Response::extractFilePath(Request &request) {
 	// Find end of the location path in the URI
 	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
@@ -352,8 +352,8 @@ std::string Response::extractFilePath(Request &request) {
 	}
 	else if (_loc->autoindex)
 	{ 	// directory listing
-		filePath = _loc->root + "/" + _loc->index;
-		this->createDirlisting(filePath, _loc->path);
+		filePath = "";
+		this->createDirlisting(_loc->path);
 	}
 	else
 		// use path from URI
