@@ -32,7 +32,7 @@
 # define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
-# define UPLOAD_DIR "upload/"
+# define UPLOAD_DIR "content/upload/"
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
 # define TEMPLATE   "./content/html/template2.html"
