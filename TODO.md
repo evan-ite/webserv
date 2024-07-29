@@ -39,7 +39,8 @@
 - [x] Allow specific methods according to location
 - [ ] Limit client body size for post requests
 - [X] Remove double dots from url
-- [ ] Remove hardcode upload directory name
+- [X] Remove hardcode upload directory name
+- [ ] Remove the hardcoded file path in htmltemplate fot the delete.
 
 ## Response
 - [x] Create Request object outside of Response object and parse request object to constructor of response
@@ -52,7 +53,7 @@
 - [x] fork CGI (needs item in conf class)
 - [x] Second CGI connected to 42 API
 - [x] Revoked and renewed API creds
-- [x] create env file 
+- [x] create env file
 - [x] nice throw errors
 - [ ] change language simple cgi
 
