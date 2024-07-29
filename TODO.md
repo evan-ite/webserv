@@ -72,6 +72,6 @@
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
 - [ ] Chunked requests, what do we do about them!?! --> nothing?
-- [ ] http redirects
+- [x] http redirects
 - [ ] Check forbidden functions
 - [ ] Cookiesssss

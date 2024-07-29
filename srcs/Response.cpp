@@ -274,6 +274,7 @@ std::string	Response::loopDir(std::string dirPath) {
 	std::ostringstream html;
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
+	dirPath = this->_servSet->root + "/" + dirPath;
 
 	struct dirent	*entry;
 	DIR		*dir = opendir(dirPath.c_str());
