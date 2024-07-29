@@ -150,3 +150,17 @@ std::vector<std::string> split(const std::string& str, char del) // are we using
 	tokens.push_back(str.substr(start));
 	return (tokens);
 }
+
+// Function that removes substr from str and returns the new string.
+std::string removeSubstr(const std::string& str, const std::string& substr) 
+{
+	std::string	result = str;
+    std::string::size_type pos = str.find(substr);
+
+    while (pos != std::string::npos) {
+        result.erase(pos, substr.length());
+        pos = result.find(substr);
+    }
+
+	return result;
+}

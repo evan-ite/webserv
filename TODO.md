@@ -38,7 +38,7 @@
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
 - [ ] Limit client body size for post requests
-- [ ] Remove double dots from url
+- [X] Remove double dots from url
 - [ ] Remove hardcode upload directory name
 
 ## Response
@@ -65,13 +65,13 @@
 - [x] Directory Listing (needs item in conf class)
 	- [x] Template for auto indexing
 	- [x] function to fill template
-- [ ] delete button next to files in dir listing
+- [x] delete button next to files in dir listing
 
 
 ## Extra
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
 - [ ] Chunked requests, what do we do about them!?! --> nothing?
-- [ ] http redirects
+- [x] http redirects
 - [ ] Check forbidden functions
 - [ ] Cookiesssss

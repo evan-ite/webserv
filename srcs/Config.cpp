@@ -42,16 +42,16 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->allow_uploads = (value == "on");
 	else if (key == "autoindex")
 		currentLocation->autoindex = (value == "on");
-	else if (key == "rewrite") {
+	else if (key == "return") {
 		std::istringstream iss(line);
-		std::string rewrite;
-		iss >> rewrite;
-		iss >> rewrite;
-		if (!(iss >> rewrite))
-			throw std::runtime_error("Error: invalid rewrite value");
-		removeCharacter(rewrite, ';');
-		removeCharacter(rewrite, '"');
-		currentLocation->rewrite = rewrite;
+		std::string redir;
+		iss >> redir;
+		iss >> redir;
+		if (!(iss >> redir))
+			throw std::runtime_error("Error: invalid redirection value");
+		removeCharacter(redir, ';');
+		removeCharacter(redir, '"');
+		currentLocation->redir = redir;
 	}
 	else if (key == "allow") {
 		std::istringstream iss(line);
@@ -340,7 +340,7 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 	os << " Path: " << location.path << std::endl;
 	os << " Root: " << location.root << std::endl;
 	os << " Index: " << location.index << std::endl;
-	os << " Rewrite: " << location.rewrite << std::endl;
+	os << " Redirection: " << location.redir << std::endl;
 	os << " Autoindex: " << (location.autoindex ? "true" : "false") << std::endl;
 	os << " Allow:" << std::endl;
 	for (std::vector<std::string>::const_iterator it = location.allow.begin(); it != location.allow.end(); ++it) {

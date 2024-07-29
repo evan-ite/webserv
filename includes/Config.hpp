@@ -7,7 +7,7 @@ struct Location {
 	std::string root;
 	std::string index;
 	std::map<std::string, std::string> loc_error_pages;
-	std::string rewrite;
+	std::string redir;
 	bool autoindex;
 	std::vector<std::string> allow;
 	bool allow_uploads;

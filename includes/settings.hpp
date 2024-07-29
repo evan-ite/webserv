@@ -57,6 +57,7 @@ std::string					checkMime(const std::string &extension);
 std::string					findType(const std::string &filename);
 std::string					getDateTime();
 std::string					toString(int value);
+std::string                 removeSubstr(const std::string& str, const std::string& substr);
 char**						vectorToCharStarStar(const std::vector<std::string>& vec);
 int							makeNonBlocking(int fd);
 

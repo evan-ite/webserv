@@ -13,7 +13,6 @@ Response::Response(int	status,
 	this->_reason = reason;
 	this->_type = type;
 	this->_len = body.size();
-	this->_date = getDateTime();
 	this->_connection = connection;
 	this->_body = body;
 	this->_loc = NULL;
@@ -24,16 +23,21 @@ Response::Response(Request &request, ServerSettings &serverData)
 {
 	try
 	{
-		if (request.getContentLen() == -1)
-		{
-			this->_loc = NULL;
-			throw ResponseException(TOOLARGE);
-		}
 		this->_loc = new Location;
 		*this->_loc = findLoc(request.getLoc(), serverData);
+		if (!this->_loc->redir.empty()) 
+		{
+			// Handle external and internal redirection
+			if (this->checkExternal())
+				return ;
+			std::string newLoc = removeSubstr(request.getLoc(), this->_loc->path);
+			request.setLoc(newLoc);
+			*this->_loc = findLoc(this->_loc->redir, serverData);
+		}
 		this->_servSet = &serverData;
 		Cgi cgi(&request, &serverData);
 		HttpMethod method = request.getMethod();
+
 		if (!isValidRequest(request))
 			throw ResponseException("400");
 		else if (cgi.isTrue())
@@ -46,6 +50,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 			deleteMethod(request);
 		else
 			throw ResponseException("405");
+
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e)
@@ -58,7 +63,6 @@ Response::Response(Request &request, ServerSettings &serverData)
 		this->_body = readFileToString(findError(e.what()));
 		this->_connection = "close";
 		this->_len = _body.length();
-		this->_date = getDateTime();
 	}
 }
 
@@ -68,7 +72,6 @@ Response::Response(const Response &copy) :
 	_reason(copy._reason),
 	_type(copy._type),
 	_len(copy._len),
-	_date(getDateTime()),
 	_connection(copy._connection),
 	_body(copy._body)
 {}
@@ -89,7 +92,6 @@ Response & Response::operator=(const Response &assign)
 	this->_connection = assign._connection;
 	this->_body = assign._body;
 	this->_len = assign._len;
-	this->_date = assign._date;
 	this->_loc = assign._loc;
 	this->_servSet = assign._servSet;
 	return (*this);
@@ -100,11 +102,13 @@ std::string Response::makeResponse()
 	std::ostringstream response;
 
 	response << HTTPVERSION << " " << this->_status << " " << this->_reason << "\r\n";
-	response << "Date: " << this->_date << "\r\n";
+	response << "Date: " << getDateTime() << "\r\n";
 	response << "Content-Length: " << this->_len << "\r\n";
 	if (this->_type != "")
 		response << "Content-Type: " << this->_type << "\r\n";
 	response << "Connection: " << this->_connection << "\r\n";
+	if (!this->_redir.empty())
+		response << "Location: " << this->_redir << "\r\n";
 	response << "\r\n";
 	std::string return_value = response.str();
 	if (this->_len)
@@ -122,7 +126,6 @@ void	Response::postMethod(Request &request)
 			this->_reason = getStatusMessage("201");
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
-			this->_date = getDateTime();
 			this->_body = readFileToString("content/html/upload_success.html");
 			this->_len = _body.length();
 			break;
@@ -185,7 +188,6 @@ void	Response::getMethod(Request &request)
 	this->_reason = getStatusMessage("200");
 
 	this->_connection = request.getConnection();
-	this->_date = getDateTime();
 
 	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "") {
@@ -207,7 +209,6 @@ void	Response::deleteMethod(Request &request)
 		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
 		this->_connection = request.getConnection();
-		this->_date = getDateTime();
 		this->_body = readFileToString("content/html/delete_success.html");
 		this->_len = _body.length();
 	}
@@ -215,14 +216,14 @@ void	Response::deleteMethod(Request &request)
 
 /* Loops over all possible server locations and checks if they match the request location.
 If no match was found, the first location in the map is used as default. */
-Location Response::findLoc(const std::string& uri, ServerSettings sett)
+Location Response::findLoc(const std::string& uri, ServerSettings &sett)
 {
 	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
 	for (; it != sett.locations.end(); ++it)
 	{
 		if (it->first == uri)
 		{
-			Location loc  = it->second;
+			Location loc = it->second;
 			return (loc);
 		}
 	}
@@ -236,7 +237,7 @@ Location Response::findLoc(const std::string& uri, ServerSettings sett)
 		return (this->findLoc(shortUri, sett));
 	}
 	else
-		return sett.locations.at(0); // Handle the case when no match is found - we need a smarter way of just returning item 0?
+		return sett.locations.at("/"); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
 
 
@@ -273,6 +274,7 @@ std::string	Response::loopDir(std::string dirPath) {
 	std::ostringstream html;
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
+	dirPath = this->_servSet->root + "/" + dirPath;
 
 	dirPath = this->_servSet->root + "/" + dirPath;
 	struct dirent	*entry;
@@ -362,9 +364,27 @@ std::string Response::extractFilePath(Request &request) {
 	return filePath;
 }
 
+// check if redir contains URL scheme, if so redirect to
+// this URL
+bool		Response::checkExternal() 
+{
+	if (this->_loc->redir.find("http") == 0 || this->_loc->redir.find("https") == 0)
+	{
+		this->_status = 302;
+		this->_reason = "Found";
+		this->_connection = "close";
+		this->_redir = this->_loc->redir;
+		this->_len = 0;
+
+		return true;
+	}
+
+	return false;
+}
+
+
 void	Response::setStatus(int status) {
 	this->_status = status;
-	this->_date = getDateTime();
 }
 
 void	Response::setReason(std::string reason) {

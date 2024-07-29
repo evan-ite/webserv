@@ -9,9 +9,10 @@
 <body>
     <h1>Hi Queen!!!</h1>
     <div class="formbox">
-        <form action="/upload" method="POST" enctype="multipart/form-data">
+        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
             <input type="file" name="file"><br><br>
             <input class="btn" type="submit" value="Upload">
+            <button class="btn" onclick="window.location.href='/upload'">Show Files</button>
         </form>
     </div>
     <div class="formbox">
@@ -42,5 +43,34 @@
             <input class="btn" type="submit" value="Submit">
         </form>
     </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var form = event.target;
+            var formData = new FormData(form);
+
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            }).then(response => {
+                if (!response.ok) {
+                    if (response.status === 413) {
+                        alert('File too large. Please try again with a smaller file.');
+                    } else {
+                        alert('Upload failed. Please try again.');
+                    }
+                    location.reload();
+                } else {
+                    alert('Upload successful!');
+                    location.reload();
+                }
+            }).catch(error => {
+                alert('An error occurred. Please try again.');
+                location.reload();
+            });
+        });
+    </script>
 </body>
 </html>
