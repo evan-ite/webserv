@@ -16,9 +16,10 @@
         </form>
     </div>
     <div class="formbox">
-        <form action="/test" method="POST" enctype="multipart/form-data">
+        <form id="uploadForm" action="/test" method="POST" enctype="multipart/form-data">
             <input type="file" name="file"><br><br>
-            <input class="btn" type="submit" value="Upload2">
+            <input class="btn" type="submit" value="Upload">
+            <button class="btn" onclick="window.location.href='/test'">Show Files</button>
         </form>
     </div>
     <div class="memebox">

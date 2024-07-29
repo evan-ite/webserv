@@ -25,7 +25,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 	{
 		this->_loc = new Location;
 		*this->_loc = findLoc(request.getLoc(), serverData);
-		if (!this->_loc->redir.empty()) 
+		if (!this->_loc->redir.empty())
 		{
 			// Handle external and internal redirection
 			if (this->checkExternal())
@@ -276,7 +276,6 @@ std::string	Response::loopDir(std::string dirPath) {
 		dirPath = dirPath.substr(1);
 	dirPath = this->_servSet->root + "/" + dirPath;
 
-	dirPath = this->_servSet->root + "/" + dirPath;
 	struct dirent	*entry;
 	DIR		*dir = opendir(dirPath.c_str());
 	if (dir == NULL) {
@@ -366,7 +365,7 @@ std::string Response::extractFilePath(Request &request) {
 
 // check if redir contains URL scheme, if so redirect to
 // this URL
-bool		Response::checkExternal() 
+bool		Response::checkExternal()
 {
 	if (this->_loc->redir.find("http") == 0 || this->_loc->redir.find("https") == 0)
 	{
