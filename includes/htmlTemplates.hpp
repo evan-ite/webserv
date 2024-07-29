@@ -16,7 +16,7 @@
     <script> \
         async function deleteFile(filename) { \
             try { \
-                const response = await fetch(`/upload/${filename}`, {\
+                const response = await fetch(`${window.location.pathname}/${filename}`, {\
                     method: 'DELETE', \
                     headers: { \
                         'Content-Type': 'application/json', \
