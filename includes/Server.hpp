@@ -25,13 +25,14 @@ class Server
 		};
 	private:
 		Server();
-		const std::string&		getKey() const;
 		void					setupServerSocket();
 		int						_fd;
 		ServerSettings			_settings;
 		struct sockaddr_in		_address;
 		std::string				_key;
 		std::vector <Client>	_activeClients;
+		bool					checkContentLength(std::string httpRequest, int fd);
+		void					requestTooLarge(int fd);
 };
 
 bool operator==(const Server& lhs, const Server& rhs);

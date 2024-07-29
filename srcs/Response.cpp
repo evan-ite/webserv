@@ -22,32 +22,41 @@ Response::Response(int	status,
 
 Response::Response(Request &request, ServerSettings &serverData)
 {
-	this->_loc = new Location;
-	*this->_loc = findLoc(request.getLoc(), serverData);
-	this->_servSet = &serverData;
-
-	Cgi cgi(&request, &serverData);
-
-	try {
-		if (cgi.isTrue())
+	try
+	{
+		if (request.getContentLen() == -1)
+		{
+			this->_loc = NULL;
+			throw ResponseException(TOOLARGE);
+		}
+		this->_loc = new Location;
+		*this->_loc = findLoc(request.getLoc(), serverData);
+		this->_servSet = &serverData;
+		Cgi cgi(&request, &serverData);
+		HttpMethod method = request.getMethod();
+		if (!isValidRequest(request))
+			throw ResponseException("400");
+		else if (cgi.isTrue())
 			cgi.execute(*this);
-		else if (request.getMethod() == POST && this->checkMethod("POST"))
+		else if (method == POST && this->checkMethod("POST"))
 			postMethod(request);
-		else if (request.getMethod() == GET && this->checkMethod("GET"))
+		else if (method == GET && this->checkMethod("GET"))
 			getMethod(request);
-		else if (request.getMethod() == DELETE && this->checkMethod("DELETE"))
+		else if (method == DELETE && this->checkMethod("DELETE"))
 			deleteMethod(request);
-		else
+		else if (method == INVALID && !checkMethod("INVALID"))
 			throw ResponseException("405");
 		log(logDEBUG) << "Response object succesfully created";
 	}
-	catch (std::exception &e) {
+	catch (std::exception &e)
+	{
 		// Handle other methods or send a 405 Method Not Allowed response
 		this->_status = atoi(e.what());
+		// this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
 		this->_type = "text/html";
 		this->_body = readFileToString(findError(e.what()));
-		this->_connection = request.getConnection();
+		this->_connection = "close";
 		this->_len = _body.length();
 		this->_date = getDateTime();
 	}
@@ -65,7 +74,8 @@ Response::Response(const Response &copy) :
 {}
 
 // Destructor
-Response::~Response() {
+Response::~Response()
+{
 	if (this->_loc)
 		delete _loc;
 }
@@ -98,11 +108,12 @@ std::string Response::makeResponse()
 	response << "\r\n";
 	std::string return_value = response.str();
 	if (this->_len)
-		return_value += this->_body + "\r\n";
+		return_value += this->_body + "\r\n\r\n";
 	return (return_value);
 }
 
-void	Response::postMethod(Request &request) {
+void	Response::postMethod(Request &request)
+{
 	int status = 0;
 	createFiles(request, status);
 	switch (status) {
@@ -122,7 +133,8 @@ void	Response::postMethod(Request &request) {
 	}
 }
 
-void Response::createFiles(Request &request, int &status) {
+void Response::createFiles(Request &request, int &status)
+{
 	std::string file = UPLOAD_DIR;
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
@@ -162,10 +174,16 @@ void	Response::getMethod(Request &request)
 	std::string filePath = this->extractFilePath(request);
 
 	this->_status = 200;
-	this->_body = readFileToString(filePath);
+	if (!filePath.empty())
+	{
+		this->_body = readFileToString(filePath);
+		this->_type = findType(filePath);
+	}
+	else
+		this->_type = "text/html";
 	this->_len = _body.length();
 	this->_reason = getStatusMessage("200");
-	this->_type = findType(filePath);
+
 	this->_connection = request.getConnection();
 	this->_date = getDateTime();
 
@@ -176,7 +194,8 @@ void	Response::getMethod(Request &request)
 }
 
 
-void	Response::deleteMethod(Request &request) {
+void	Response::deleteMethod(Request &request)
+{
 	std::string file = request.getLoc();
 	if (!file.empty() && file[0] == '/')
 		file = file.substr(1);
@@ -233,43 +252,25 @@ bool	Response::checkMethod(std::string method) {
 }
 
 // Creates an html page with name fileName that lists the content of dirPath
-void	Response::createDirlisting(std::string fileName, std::string dirPath) {
-	// Read the file content
-    std::ifstream inFile(TEMPLATE);
-    if (!inFile.is_open()) {
-        log(logERROR) << "Error reading the directory listing template";
-        throw ResponseException("500");
-    }
+void	Response::createDirlisting(std::string dirPath)
+{
+	std::string htmlTemplate = DIRLIST;
 
-    std::stringstream buffer;
-    buffer << inFile.rdbuf();
-    std::string fileContent = buffer.str();
-    inFile.close();
+	std::size_t pos = htmlTemplate.find("INSERT");
+	std::string insertList = this->loopDir(dirPath);
+	htmlTemplate.replace(pos, 6, insertList);
 
-	std::size_t pos = fileContent.find("INSERT");
-	if (pos == std::string::npos) {
-		log(logERROR) << "Couldn't find insert keyword in template";
-		throw ResponseException("500");
-	}
-	std::string insertList = this->loopDir(dirPath);	
-	fileContent.replace(pos, pos + 6, insertList);
+	while((pos = htmlTemplate.find("PATH")) != std::string::npos)
+		htmlTemplate.replace(pos, 4, this->_loc->path);
 
-	std::ofstream outFile(fileName.c_str());
-	if (!outFile.is_open()) {
-		log(logERROR) << "Error directory listing failed to open: " << fileName;
-		throw ResponseException("500");
-	}
-
-	outFile << fileContent;
-	outFile.close();
+	this->setBody(htmlTemplate);
 
 }
 
-// Function that loops through directory and subdirectories and 
+// Function that loops through directory and subdirectories and
 // creates html list of the content
 std::string	Response::loopDir(std::string dirPath) {
 	std::ostringstream html;
-
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
 
@@ -281,23 +282,30 @@ std::string	Response::loopDir(std::string dirPath) {
 	}
 
 	// Loop through directory and create a list in html
-	html << "\n\t\t<ul>";
+	// html << "\n\t\t<ul>";
+	html << "<ul>";
 	while ((entry = readdir(dir)) != NULL) {
 		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-			html << "\n\t\t\t<li> " << entry->d_name << "</li>";
+			// html << "\n\t\t\t<li> "
+			html << "<li> "
+			<< entry->d_name
+			<< "<button onclick=\"deleteFile('"
+			<< entry->d_name
+			<< "')\">Delete</button>"
+			<< "</li>";
 			if (entry->d_type == DT_DIR) {
 				std::string	subPath = dirPath + "/" + entry->d_name;
 				html << this->loopDir(subPath);
 			}
 		}
 	}
-	html << "\n\t\t</ul>";
+	// html << "\n\t\t</ul>";
+	html << "</ul>";
 
 	if (closedir(dir) != 0) {
 		log(logERROR) << "Error closing directory: " << dirPath;
 		throw ResponseException("500");
 	}
-
 	return html.str();
 }
 
@@ -319,33 +327,34 @@ std::string Response::getStatusMessage(std::string statusCode) {
 }
 
 // Function that returns the correct file path, based on the URI
-// and the root and index from the config file
+// and the root and index from the config file. Returnd empty string
+// in the case of directory listing
 std::string Response::extractFilePath(Request &request) {
 	// Find end of the location path in the URI
 	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
 	std::string	file;
 
-	if (i < request.getLoc().length()) 
+	if (i < request.getLoc().length())
 		// If URI contains a filename extract it
 		file = request.getLoc().substr(i);
-	else 
+	else
 		// Else use index file
 		file = _loc->index;
 
 	std::string filePath;
-	if (this->_loc->path == "/") 
+	if (this->_loc->path == "/")
 	{ 	// add root to path if needed
 		if (file.find(this->_loc->root) != std::string::npos)
 			filePath = file;
 		else
 			filePath = this->_loc->root + "/" + file;
 	}
-	else if (_loc->autoindex) 
+	else if (_loc->autoindex)
 	{ 	// directory listing
-		filePath = _loc->root + "/" + _loc->index;
-		this->createDirlisting(filePath, _loc->path);
-	} 
-	else 
+		filePath = "";
+		this->createDirlisting(_loc->path);
+	}
+	else
 		// use path from URI
 		filePath = this->_loc->path + "/" + file;
 
@@ -372,4 +381,23 @@ void	Response::setBody(std::string body) {
 
 void	Response::setConnection(std::string connection) {
 	this->_connection = connection;
+}
+
+std::string	Response::getConnection() {
+	return this->_connection;
+}
+
+
+
+bool Response::isValidRequest(Request &request) {
+	if (request.getLoc().find("..") != std::string::npos) {
+		log(logERROR) << "Invalid request: path contains double dots.";
+		return false;
+	}
+	if (request.getConnection() != "keep-alive" && request.getConnection() != "close") {
+		log(logERROR) << "Invalid request: connection header is invalid:";
+		return false;
+	}
+	else
+		return true;
 }

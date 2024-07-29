@@ -1,5 +1,4 @@
 #include "../includes/settings.hpp"
-
 // Constructors
 Server::Server() {}
 
@@ -47,11 +46,6 @@ int Server::getFd() const
 	return (this->_fd);
 }
 
-const std::string& Server::getKey() const
-{
-	return (this->_key);
-}
-
 const char * Server::clientError::what() const throw()
 {
 	return "Client did something weird";
@@ -95,6 +89,33 @@ bool	Server::clientHasFD(int fd)
 	return (0);
 }
 
+
+bool Server::checkContentLength(std::string httpRequest, int fd)
+{
+	if (httpRequest.find("\r\n\r\n") == std::string::npos)
+		return (1);
+	if (httpRequest.find("Content-Length") == std::string::npos)
+		return (1);
+	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
+	if (cLen > this->_settings.client_max_body_size)
+	{
+		log(logDEBUG) << "cLen " << cLen << " this->_settings.client_max_body_size " << this->_settings.client_max_body_size;
+		this->requestTooLarge(fd);
+		return (0);
+	}
+	return (1);
+}
+
+void Server::requestTooLarge(int fd)
+{
+	std::string body = readFileToString("content/error/413.html");
+	Response res(413, "Request object too large", "basic", "close", body);
+	std::string response = res.makeResponse();
+	const char* resCString = response.c_str();
+	ssize_t result = send(fd, resCString, strlen(resCString), 0);
+}
+
+
 void Server::handleRequest(int fd)
 {
 	char buffer[BUFFER_SIZE];
@@ -102,9 +123,18 @@ void Server::handleRequest(int fd)
 	std::string httpRequest;
 	log(logINFO)	<< "Server " << this->_settings.host
 					<< ":" << this->_settings.port
-					<< "is reading from fd: " << fd;
-	while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
+					<< " is reading from fd: " << fd;
+	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
+	{
 		httpRequest.append(buffer, count);
+		if (!this->checkContentLength(httpRequest, fd))
+		{
+			httpRequest.clear();
+			log(logDEBUG) << "Shutting downd fd: " << fd;
+			close(fd);
+			break ;
+		}
+	}
 	if (count == 0)
 	{
 		close(fd); // Close on empty request
@@ -124,5 +154,7 @@ void Server::handleRequest(int fd)
 			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 		}
+		// if (res.getConnection() == "close")
+		// 	close(fd);
 	}
 }

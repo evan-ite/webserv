@@ -28,14 +28,15 @@
 // defines
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets
-# define CONNECTION_TIMEOUT 30 // in sec
+# define CONNECTION_TIMEOUT 1 // in sec
 # define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
 # define UPLOAD_DIR "upload/"
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
-# define TEMPLATE   "./content/html/template.html"
+# define TEMPLATE   "./content/html/template2.html"
+# define TOOLARGE "413"
 // local header files
 # include "Config.hpp"
 # include "Client.hpp"
@@ -45,6 +46,7 @@
 # include "Response.hpp"
 # include "Webserv.hpp"
 # include "Cgi.hpp"
+# include "htmlTemplates.hpp"
 
 extern int	g_signal;
 

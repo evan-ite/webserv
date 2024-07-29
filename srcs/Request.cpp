@@ -2,7 +2,10 @@
 
 Request::Request(std::string httpRequest)
 {
-	this->parse(httpRequest);
+	if (httpRequest == TOOLARGE)
+		this->_contentLength = -1;
+	else
+		this->parse(httpRequest);
 }
 
 Request::Request() {}
@@ -48,32 +51,28 @@ void Request::parse(std::string httpRequest)
 	{
 		this->_method = POST;
 		this->_location = findKey(httpRequest, "POST ", ' ');
-		this->parseMultipart(httpRequest);
+		if (this->_contentLength != -1)
+			this->parseMultipart(httpRequest);
 	}
 	else if (method == "DELETE")
 	{
 		this->_method = DELETE;
 		this->_location = findKey(httpRequest, "DELETE ", ' ');
 	}
-	else
+	else {
+		this->_method = INVALID;
+		this->_location = "/";
 		log(logERROR) << "Invalid http method";
-	this->_userAgent = findKey(httpRequest, "User-Agent:", '\n');
-	this->_host = findKey(httpRequest, "Host:", '\n');
-	this->_connection = findKey(httpRequest, "Connection:", '\n');
-	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\n').c_str());
+	}
+	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
+	this->_host = findKey(httpRequest, "Host:", '\r');
+	this->_connection = findKey(httpRequest, "Connection: ", '\r');
+	this->_transferEncoding = findKey(httpRequest, "Transfer-Encoding: ", '\r');
+	if (this->_contentLength != -1)
+		this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
-/*	log(logDEBUG)	<< "Request object created:\n" \
-					<< "method " << this->_method << "\n" \
-					<< "location " << this->_location << "\n" \
-					<< "useragent " << this->_userAgent << "\n" \
-					<< "host " << this->_host << "\n" \
-					<< "connection " << this->_connection << "\n" \
-					<< "contnetlen " << this->_contentLength << "\n" \
-					<< "body " << this->_body;
-	printFileData();
-	*/
 }
 
 
@@ -87,7 +86,6 @@ std::string Request::findBoundary(const std::string& httpRequest) {
 
 void Request::parsePart(const std::string& part) {
 	std::string::size_type headerEndPos = part.find("\r\n\r\n");
-	//log(logDEBUG) << "HEADER END POS: " << headerEndPos;
 	if (headerEndPos == std::string::npos) return;
 
 	std::string headers = part.substr(0, headerEndPos);
@@ -104,27 +102,28 @@ void Request::parsePart(const std::string& part) {
 
 void Request::parseMultipart(const std::string& httpRequest) {
 	std::string boundary = findBoundary(httpRequest);
-	//log(logDEBUG) << "BOUNDARY: " << boundary;
 	if (boundary.empty()) {
 		_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
 		return;
 	}
-
 	std::istringstream stream(httpRequest);
 	std::string line;
 	bool inPart = false;
 	std::string part;
 
-	while (std::getline(stream, line)) {
-		if (line.find(boundary) != std::string::npos) {
-			if (inPart) {
+	while (std::getline(stream, line))
+	{
+		if (line.find(boundary) != std::string::npos)
+		{
+			if (inPart)
+			{
 				parsePart(part);
 				part.clear();
 			}
 			inPart = !inPart;
-		} else if (inPart) {
-			part += line + "\n";
 		}
+		else if (inPart)
+			part += line + "\n";
 	}
 }
 
