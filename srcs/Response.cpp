@@ -126,7 +126,7 @@ void	Response::postMethod(Request &request)
 			this->_reason = getStatusMessage("201");
 			this->_type = "text/html";
 			this->_connection = request.getConnection();
-			this->_body = readFileToString("content/html/upload_success.html");
+			this->_body = "";
 			this->_len = _body.length();
 			break;
 		case 500:
@@ -209,7 +209,7 @@ void	Response::deleteMethod(Request &request)
 		this->_reason = getStatusMessage("200");
 		this->_type = "text/html";
 		this->_connection = request.getConnection();
-		this->_body = readFileToString("content/html/delete_success.html");
+		this->_body = "";
 		this->_len = _body.length();
 	}
 }
