@@ -7,7 +7,7 @@
     <title>Webserv</title>
 </head>
 <body>
-    <h1>Hi Queen!!!</h1>
+    <h1 id="greeting">Hi Queen!!!</h1>
     <div class="formbox">
         <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
             <input type="file" name="file"><br><br>
@@ -46,32 +46,50 @@
     </div>
 
     <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
 
-            var form = event.target;
-            var formData = new FormData(form);
+        function checkSession() {
+            const sessionCookie = getCookie('session_id');
+            if (sessionCookie) {
+                document.getElementById('greeting').innerText = `Hi Queen!! Your session ID is: ${sessionCookie}`;
+            }
+        }
 
-            fetch(form.action, {
-                method: form.method,
-                body: formData
-            }).then(response => {
-                if (!response.ok) {
-                    if (response.status === 413) {
-                        alert('File too large. Please try again with a smaller file.');
+        window.onload = function() {
+            checkSession();
+
+            document.getElementById('uploadForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                var form = event.target;
+                var formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: form.method,
+                    body: formData
+                }).then(response => {
+                    if (!response.ok) {
+                        if (response.status === 413) {
+                            alert('File too large. Please try again with a smaller file.');
+                        } else {
+                            alert('Upload failed. Please try again.');
+                        }
+                        location.reload();
                     } else {
-                        alert('Upload failed. Please try again.');
+                        alert('Upload successful!');
+                        location.reload();
                     }
+                }).catch(error => {
+                    alert('An error occurred. Please try again.');
                     location.reload();
-                } else {
-                    alert('Upload successful!');
-                    location.reload();
-                }
-            }).catch(error => {
-                alert('An error occurred. Please try again.');
-                location.reload();
+                });
             });
-        });
+        };
     </script>
 </body>
 </html>

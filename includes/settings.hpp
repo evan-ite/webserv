@@ -36,13 +36,14 @@
 # define DEFAULT_CONF "./conf/default.conf"
 # define FALLBACK_CONF "./conf/fallback.conf"
 # define TEMPLATE   "./content/html/template2.html"
-# define TOOLARGE "413"
+# define COOKIE_LIFETIME 300 // in seconds
 // local header files
 # include "Config.hpp"
+# include "Cookie.hpp"
 # include "Client.hpp"
+# include "Request.hpp"
 # include "Server.hpp"
 # include "Logger.hpp"
-# include "Request.hpp"
 # include "Response.hpp"
 # include "Webserv.hpp"
 # include "Cgi.hpp"
@@ -60,5 +61,6 @@ std::string					toString(int value);
 std::string                 removeSubstr(const std::string& str, const std::string& substr);
 char**						vectorToCharStarStar(const std::vector<std::string>& vec);
 int							makeNonBlocking(int fd);
+std::string					generateRandomString(int length);
 
 #endif

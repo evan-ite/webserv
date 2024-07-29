@@ -151,8 +151,34 @@ std::vector<std::string> split(const std::string& str, char del) // are we using
 	return (tokens);
 }
 
+/*Generates a pseudorandom alphanumeric string of 'length' characters*/
+std::string generateRandomString(int length)
+{
+	const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+	std::string result;
+	result.reserve(length);
+
+	for (int i = 0; i < length; ++i)
+		result += charset[rand() % (sizeof(charset) - 1)];
+
+	return (result);
+}
+
+/*Generates a pseudorandom alphanumeric string of 'length' characters*/
+std::string generateRandomString(int length)
+{
+	const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+	std::string result;
+	result.reserve(length);
+
+	for (int i = 0; i < length; ++i)
+		result += charset[rand() % (sizeof(charset) - 1)];
+
+	return (result);
+}
+
 // Function that removes substr from str and returns the new string.
-std::string removeSubstr(const std::string& str, const std::string& substr) 
+std::string removeSubstr(const std::string& str, const std::string& substr)
 {
 	std::string	result = str;
     std::string::size_type pos = str.find(substr);

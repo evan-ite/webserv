@@ -2,10 +2,7 @@
 
 Request::Request(std::string httpRequest)
 {
-	if (httpRequest == TOOLARGE)
-		this->_contentLength = -1;
-	else
-		this->parse(httpRequest);
+	this->parse(httpRequest);
 }
 
 Request::Request() {}
@@ -68,9 +65,15 @@ void Request::parse(std::string httpRequest)
 	this->_host = findKey(httpRequest, "Host:", '\r');
 	this->_connection = findKey(httpRequest, "Connection: ", '\r');
 	this->_transferEncoding = findKey(httpRequest, "Transfer-Encoding: ", '\r');
-	if (this->_contentLength != -1)
-		this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
+	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
+	this->_sessionId = findKey(httpRequest,"Cookie: ", '\r');
+	if (!(this->_sessionId.empty()))
+	{
+		ssize_t pos = this->_sessionId.find('=');
+		this->_sessionId = this->_sessionId.substr(1 + pos);
+	}
+	log(logDEBUG) << "session_id: " << this->_sessionId;
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
 }
@@ -169,3 +172,10 @@ std::string		Request::getConnection() {
 	return this->_connection;
 }
 
+std::string		Request::getsessionId() {
+	return this->_sessionId;
+}
+
+void			Request::resetSessionId() {
+	this->_sessionId = "";
+}

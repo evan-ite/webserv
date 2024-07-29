@@ -119,6 +119,37 @@ void Server::requestTooLarge(int fd)
 	}
 }
 
+void Server::checkSession(Request &req)
+{
+	std::string sessionId = req.getsessionId();
+	if (sessionId.empty())
+		return;
+	std::vector<Cookie>::iterator it = this->_activeCookies.begin();
+	for (; it != this->_activeCookies.end(); it++)
+	{
+		if (sessionId == it->getSessionId())
+		{
+			if (it->getTimeOut())
+				log(logINFO) << "Session renewed";
+			else
+			{
+				req.resetSessionId();
+				it = this->_activeCookies.erase(it);
+				log(logINFO) << "Session reset";
+			}
+			break;
+		}
+	}
+
+}
+
+void Server::addSession(std::string sessionId)
+{
+	if (sessionId.empty())
+		return;
+	Cookie sesh(sessionId);
+	this->_activeCookies.push_back(sesh);
+}
 
 void Server::handleRequest(int fd)
 {
@@ -148,8 +179,10 @@ void Server::handleRequest(int fd)
 	{
 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
+		this->checkSession(request);
 		Response res(request, this->_settings);
 		std::string resString = res.makeResponse();
+		this->addSession(res.getSessionId());
 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
@@ -158,7 +191,7 @@ void Server::handleRequest(int fd)
 			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 		}
-		// if (res.getConnection() == "close")
-		// 	close(fd);
+		if (res.getConnection() == "close")
+			close(fd);
 	}
 }
