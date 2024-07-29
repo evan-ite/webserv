@@ -113,6 +113,10 @@ void Server::requestTooLarge(int fd)
 	std::string response = res.makeResponse();
 	const char* resCString = response.c_str();
 	ssize_t result = send(fd, resCString, strlen(resCString), 0);
+	if (result == -1)
+	{
+		log(logERROR) << "send error";
+	}
 }
 
 
