@@ -89,19 +89,45 @@ bool	Server::clientHasFD(int fd)
 	return (0);
 }
 
-bool Server::checkContentLength(std::string httpRequest)
+
+bool Server::checkContentLength(std::string httpRequest, int fd)
 {
-	log(logDEBUG) << httpRequest;
 	if (httpRequest.find("\r\n\r\n") == std::string::npos)
 		return (1);
 	if (httpRequest.find("Content-Length") == std::string::npos)
 		return (1);
 	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
-	log(logDEBUG) << "cLen " << cLen << " this->_settings.client_max_body_size " << this->_settings.client_max_body_size;
 	if (cLen > this->_settings.client_max_body_size)
+	{
+		log(logDEBUG) << "cLen " << cLen << " this->_settings.client_max_body_size " << this->_settings.client_max_body_size;
+		this->requestTooLarge(fd);
 		return (0);
+	}
 	return (1);
 }
+
+void Server::requestTooLarge(int fd)
+{
+	std::string body = readFileToString("content/error/413.html");
+	Response res(413, "Request object too large", "basic", "close", body);
+	std::string response = res.makeResponse();
+	const char* resCString = response.c_str();
+	ssize_t sentBytes = 0;
+	ssize_t totalBytes = strlen(resCString);
+
+	while (sentBytes < totalBytes)
+	{
+		ssize_t result = send(fd, resCString + sentBytes, totalBytes - sentBytes, 0);
+		if (result < 0)
+		{
+			log(logERROR) << "send failed";
+			break;
+		}
+		sentBytes += result;
+	}
+	// close(fd);
+}
+
 
 void Server::handleRequest(int fd)
 {
