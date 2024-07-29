@@ -112,20 +112,7 @@ void Server::requestTooLarge(int fd)
 	Response res(413, "Request object too large", "basic", "close", body);
 	std::string response = res.makeResponse();
 	const char* resCString = response.c_str();
-	ssize_t sentBytes = 0;
-	ssize_t totalBytes = strlen(resCString);
-
-	while (sentBytes < totalBytes)
-	{
-		ssize_t result = send(fd, resCString + sentBytes, totalBytes - sentBytes, 0);
-		if (result < 0)
-		{
-			log(logERROR) << "send failed";
-			break;
-		}
-		sentBytes += result;
-	}
-	// close(fd);
+	ssize_t result = send(fd, resCString, strlen(resCString), 0);
 }
 
 
@@ -137,16 +124,16 @@ void Server::handleRequest(int fd)
 	log(logINFO)	<< "Server " << this->_settings.host
 					<< ":" << this->_settings.port
 					<< " is reading from fd: " << fd;
-	// while ((count = read(fd, buffer, BUFFER_SIZE)) > 0)
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
-		// usleep(10);
-		// if (!this->checkContentLength(httpRequest))
-		// {
-		// 	httpRequest = TOOLARGE;
-		// 	break ;
-		// }
+		if (!this->checkContentLength(httpRequest, fd))
+		{
+			httpRequest.clear();
+			log(logDEBUG) << "Shutting downd fd: " << fd;
+			close(fd);
+			break ;
+		}
 	}
 	if (count == 0)
 	{
@@ -161,9 +148,7 @@ void Server::handleRequest(int fd)
 		std::string resString = res.makeResponse();
 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
-		makeNonBlocking(fd);
 		ssize_t sent = write(fd, resCStr, resString.size());
-		log(logDEBUG) << "SENT " << sent;
 		if (sent == -1)
 		{
 			close(fd); // Close on write error
