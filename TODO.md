@@ -39,6 +39,7 @@
 - [x] Allow specific methods according to location
 - [ ] Limit client body size for post requests
 - [ ] Remove double dots from url
+- [ ] Remove hardcode upload directory name
 
 ## Response
 - [x] Create Request object outside of Response object and parse request object to constructor of response

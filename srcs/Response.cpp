@@ -254,16 +254,15 @@ bool	Response::checkMethod(std::string method) {
 // Creates an html page with name fileName that lists the content of dirPath
 void	Response::createDirlisting(std::string dirPath)
 {
-
 	std::string htmlTemplate = DIRLIST;
 
 	std::size_t pos = htmlTemplate.find("INSERT");
-	if (pos == std::string::npos) {
-		log(logERROR) << "Couldn't find insert keyword in template";
-		throw ResponseException("500");
-	}
 	std::string insertList = this->loopDir(dirPath);
 	htmlTemplate.replace(pos, 6, insertList);
+
+	while((pos = htmlTemplate.find("PATH")) != std::string::npos)
+		htmlTemplate.replace(pos, 4, this->_loc->path);
+
 	this->setBody(htmlTemplate);
 
 }
