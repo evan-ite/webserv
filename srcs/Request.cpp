@@ -140,6 +140,11 @@ std::string		Request::getLoc() {
 	return this->_location;
 }
 
+void 	Request::setLoc(std::string &location) {
+	this->_location = location;
+}
+
+
 std::string		Request::getContentType() {
 	return this->_contentType;
 }
@@ -163,3 +168,4 @@ std::vector<std::pair<std::string, std::string> >	Request::getFileData() {
 std::string		Request::getConnection() {
 	return this->_connection;
 }
+
