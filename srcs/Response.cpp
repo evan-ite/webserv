@@ -44,7 +44,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 			getMethod(request);
 		else if (method == DELETE && this->checkMethod("DELETE"))
 			deleteMethod(request);
-		else if (method == INVALID && !checkMethod("INVALID"))
+		else
 			throw ResponseException("405");
 		log(logDEBUG) << "Response object succesfully created";
 	}
@@ -135,7 +135,7 @@ void	Response::postMethod(Request &request)
 
 void Response::createFiles(Request &request, int &status)
 {
-	std::string file = UPLOAD_DIR;
+	std::string file = _servSet->root + "/" + _loc->path + "/";
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
 	if (fileData.empty()) {
@@ -196,12 +196,12 @@ void	Response::getMethod(Request &request)
 
 void	Response::deleteMethod(Request &request)
 {
-	std::string file = request.getLoc();
-	if (!file.empty() && file[0] == '/')
-		file = file.substr(1);
+	std::string file = _servSet->root + request.getLoc();
 
-	if (remove(file.c_str()) != 0)
+	if (remove(file.c_str()) != 0) {
+		log(logERROR) << "Failed to delete file: " << file;
 		throw ResponseException("404");
+	}
 	else {
 		this->_status = 200;
 		this->_reason = getStatusMessage("200");
@@ -274,6 +274,7 @@ std::string	Response::loopDir(std::string dirPath) {
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
 
+	dirPath = this->_servSet->root + "/" + dirPath;
 	struct dirent	*entry;
 	DIR		*dir = opendir(dirPath.c_str());
 	if (dir == NULL) {
