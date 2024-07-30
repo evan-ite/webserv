@@ -60,7 +60,9 @@
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
 - [x] Organize content directory
-- [ ] Good readme with structure explanation of code and explain api stuff
+- [x] Good readme with structure explanation of code and explain api stuff
+- [ ] What is default and what should be in content dir?
+- [ ] Fallback and defaulr confusing names
 
 ## Directory listing
 - [x] Directory Listing (needs item in conf class)
