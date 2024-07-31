@@ -60,7 +60,7 @@
 - [ ] cookies in cgi
 
 ## Create some structure
-- [ ] Divide long class cpp files in seperate files
+- [x] Divide long class cpp files in seperate files
 - [x] Organize content directory
 - [x] Good readme with structure explanation of code and explain api stuff
 - [x] What is default and what should be in content dir?
@@ -80,4 +80,4 @@
 - [x] http redirects
 - [ ] Check forbidden functions
 - [x] Cookiesssss
-- [ ] Create python script to automate API key
+- [x] Create python script to automate API key
