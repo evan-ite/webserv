@@ -20,7 +20,7 @@ run:
 	./$(NAME) content/conf/basic.conf
 
 clean:
-	@rm -rf $(OBJDIR)
+	@rm -rf $(OBJDIR) *.db
 
 fclean: clean
 	@-rm $(NAME)

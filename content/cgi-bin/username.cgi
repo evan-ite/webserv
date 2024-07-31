@@ -65,7 +65,6 @@ db_username = get_username_by_session(session_id)
 input_username = form.getvalue("username")
 
 # Construct html
-print("Content-Type: text/html\n")  # Send HTTP header
 print("<!DOCTYPE html>")
 print("<html lang='en'>")
 print()
