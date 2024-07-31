@@ -63,7 +63,7 @@
 - [ ] Divide long class cpp files in seperate files
 - [x] Organize content directory
 - [x] Good readme with structure explanation of code and explain api stuff
-- [ ] What is default and what should be in content dir?
+- [x] What is default and what should be in content dir?
 - [x] Fallback and defaulr confusing names
 
 ## Directory listing
