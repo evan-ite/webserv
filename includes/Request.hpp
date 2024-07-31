@@ -26,6 +26,7 @@ class Request
 		};
 
 		std::string 	getLoc();
+		void		 	setLoc(std::string &location);
 		std::string		getContentType();
 		HttpMethod		getMethod();
 		int				getContentLen();

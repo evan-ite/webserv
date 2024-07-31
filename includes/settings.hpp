@@ -32,9 +32,8 @@
 # define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
-# define UPLOAD_DIR "upload/"
-# define DEFAULT_CONF "./conf/default.conf"
-# define FALLBACK_CONF "./conf/fallback.conf"
+# define UPLOAD_DIR "content/upload/"
+# define DEFAULT_CONF "./default/conf/default.conf"
 # define TEMPLATE   "./content/html/template2.html"
 # define COOKIE_LIFETIME 300 // in seconds
 // local header files
@@ -58,6 +57,7 @@ std::string					checkMime(const std::string &extension);
 std::string					findType(const std::string &filename);
 std::string					getDateTime();
 std::string					toString(int value);
+std::string                 removeSubstr(const std::string& str, const std::string& substr);
 char**						vectorToCharStarStar(const std::vector<std::string>& vec);
 int							makeNonBlocking(int fd);
 std::string					generateRandomString(int length);

@@ -143,6 +143,11 @@ std::string		Request::getLoc() {
 	return this->_location;
 }
 
+void 	Request::setLoc(std::string &location) {
+	this->_location = location;
+}
+
+
 std::string		Request::getContentType() {
 	return this->_contentType;
 }

@@ -1,0 +1,7 @@
+# Your client id and key from the 42 API
+CLIENT_ID=
+CLIENT_SECRET=
+
+# Get the API key by running ./utils/getApiToken.sh in the root of the project
+# Copy the key from utils/api_token.txt and paste it here
+API_KEY=
