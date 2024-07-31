@@ -1,0 +1,69 @@
+body {
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #f0f0f0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #bc6cff;
+    text-align: center;
+}
+
+button {
+    margin: 10px;
+}
+
+form {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 5%;
+}
+
+p {
+    text-align: center;
+    margin: 5%;
+}
+
+.btn {
+    background-color: #bc6cff;
+    color: #f0f0f0;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 200;
+    width: 25%;
+    height: 30%;
+    border-style: hidden;
+    margin: 1%;
+    padding: 1%;
+}
+
+.cgi-input {
+    margin: 1%;
+}
+
+.formbox {
+    display: flex;
+    margin: 1% 10% 1% 10%;
+    border-color: #bc6cff;
+    background-color: #c2a5d9;
+    border-width: 3px;
+    border-style: solid;
+    align-items: center;
+    justify-content: center;
+}
+
+.memebox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.meme {
+    max-width: 50%;
+}
+
+.student {
+    max-width: 100%;
+}
