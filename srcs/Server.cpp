@@ -204,19 +204,17 @@ void Server::addSession(std::string sessionId)
 // 		}
 // 	}
 // }
-
 void* Server::handleRequestWrapper(void* arg)
 {
-	int fd = *reinterpret_cast<int*>(arg);
-	delete reinterpret_cast<int*>(arg); // Free the allocated memory
-
-	// Assuming 'this' is passed as part of the argument
-	Server* server = reinterpret_cast<Server*>(arg);
+	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
+	Server* server = args->first;
+	int fd = args->second;
 
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
 	log(logINFO) << "Server is reading from fd: " << fd;
+
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
@@ -228,37 +226,52 @@ void* Server::handleRequestWrapper(void* arg)
 			return NULL;
 		}
 	}
-	if (count == 0 && httpRequest.empty())
+
+	if (count == 0)
 	{
-		close(fd);
-		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+		// Client closed the connection
+		if (httpRequest.empty())
+		{
+			close(fd);
+			log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+		}
 	}
-	else if (count == -1)
-	{
-		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
-	}
+	// else if (count == -1)
+	// {
+	// 	if (errno != EINTR)
+	// 	{
+	// 		log(logERROR) << "Error receiving data on fd: " << fd;
+	// 		close(fd);
+	// 		return NULL;
+	// 	}
+	// 	// Handle other errors or interrupts appropriately
+	// }
+
 	if (!httpRequest.empty())
 	{
 		Request request(httpRequest);
 		server->checkSession(request);
 		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
+		log(logDEBUG) << resString;
 		server->addSession(res.getSessionId());
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
 		{
-			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
+			close(fd);
+			return NULL;
 		}
+
 		if (res.getConnection() == "close")
 		{
 			close(fd);
-			log(logINFO) << "connection on fd " << fd << " closed on client request";
+			log(logINFO) << "Connection on fd " << fd << " closed on client request";
 		}
 		else
 		{
-			log(logINFO) << "connection on fd " << fd << " kept alive";
+			log(logINFO) << "Connection on fd " << fd << " kept alive";
 		}
 	}
 	return NULL;
@@ -267,8 +280,9 @@ void* Server::handleRequestWrapper(void* arg)
 void Server::handleRequest(int fd)
 {
 	pthread_t thread;
+	std::pair<Server*, int>* args = new std::pair<Server*, int>(this, fd);
 	int* fdPtr = new int(fd); // Allocate memory to pass the file descriptor
-	if (pthread_create(&thread, NULL, Server::handleRequestWrapper, fdPtr) != 0)
+	if (pthread_create(&thread, NULL, this->handleRequestWrapper, args) != 0)
 	{
 		log(logERROR) << "Failed to create thread for fd: " << fd;
 		delete fdPtr; // Free the allocated memory on failure

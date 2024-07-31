@@ -53,7 +53,7 @@ void	Cgi::execute(Response &response)
 	if (!this->_isTrue)
 		return ;
 
-	log(logDEBUG) << "Using CGI to fetch data";
+	log(logINFO) << "Creating html dynamically with CGI";
 
 	std::string cgiFile;
 	std::string cgiScriptPath;
@@ -77,7 +77,10 @@ void	Cgi::execute(Response &response)
 		this->executeCgiChild(pipefd, cgiScriptPath);
 	else
 	{
-		waitpid(pid, NULL, 0);
+		int status;
+		waitpid(pid, &status, 0);
+		if (!WIFEXITED(status) && WEXITSTATUS(status))
+			throw CgiException("500");
 		log(logDEBUG) << "Back in parent process";
 		close(pipefd[1]);
 		// read the CGI script's output
@@ -107,7 +110,6 @@ void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
 	char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
 	execve(cgiScriptPath.c_str(), args, this->_env);
 
-	log(logDEBUG) << "file path: " << cgiScriptPath;
 	log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
 	throw CgiException("500");
 }
@@ -168,6 +170,7 @@ std::string Cgi::readCgiOutput(int *pipefd)
 	ssize_t bytesRead;
 	while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		cgiOutput.append(buffer, bytesRead);
+	
 	return cgiOutput;
 }
 

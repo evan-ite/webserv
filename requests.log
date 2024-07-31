@@ -1,0 +1,72 @@
+Received GET request for /
+Headers:
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+
+Response code: 200
+----------------------------------------
+Received GET request for /
+Headers:
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+
+Response code: 200
+----------------------------------------
+Received POST request for /
+Headers:
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Transfer-Encoding: chunked
+Content-Type: test/file
+Accept-Encoding: gzip
+
+
+Response code: 200
+----------------------------------------
+Received POST request for /
+Headers:
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Transfer-Encoding: chunked
+Content-Type: test/file
+Accept-Encoding: gzip
+
+
+Response code: 200
+----------------------------------------
+GET / HTTP/1.1
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+
+----------------------------------------
+GET / HTTP/1.1
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Accept-Encoding: gzip
+
+
+----------------------------------------
+POST / HTTP/1.1
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Transfer-Encoding: chunked
+Content-Type: test/file
+Accept-Encoding: gzip
+
+
+----------------------------------------
+POST / HTTP/1.1
+Host: localhost:8081
+User-Agent: Go-http-client/1.1
+Transfer-Encoding: chunked
+Content-Type: test/file
+Accept-Encoding: gzip
+
+
+----------------------------------------

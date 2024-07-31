@@ -6,8 +6,16 @@ bool Response::isValidRequest(Request &request) {
 		return false;
 	}
 	if (request.getConnection() != "keep-alive" && request.getConnection() != "close") {
-		log(logERROR) << "Invalid request: connection header is invalid:";
-		return false;
+		if (request.getConnection().empty())
+		{	
+			request.setConnection("keep-alive");
+			return true;
+		}
+		else 
+		{
+			log(logERROR) << "Invalid request: connection header is invalid:";
+			return false;
+		}
 	}
 	else
 		return true;
@@ -39,29 +47,31 @@ std::string Response::extractFilePath(Request &request) {
 	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
 	std::string	file;
 
-	if (i < request.getLoc().length())
-		// If URI contains a filename extract it
+	if (i < request.getLoc().length()) 
+	{ // If URI contains a filename extract it
 		file = request.getLoc().substr(i);
-	else
-		// Else use index file
+		if (file.find('.') == std::string::npos)
+			file += "/" + _loc->index;
+	}
+	else // Else use index file
 		file = _loc->index;
 
+	if (file[0] && file[0] == '/')
+		file = file.substr(1);
+		
 	std::string filePath;
-	if (this->_loc->path == "/")
-	{ 	// add root to path if needed
+	if (_loc->autoindex)
+	{ // directory listing
+		filePath = "";
+		this->createDirlisting(_loc->path);
+	}
+	else 
+	{
 		if (file.find(this->_loc->root) != std::string::npos)
 			filePath = file;
 		else
 			filePath = this->_loc->root + "/" + file;
 	}
-	else if (_loc->autoindex)
-	{ 	// directory listing
-		filePath = "";
-		this->createDirlisting(_loc->path);
-	}
-	else
-		// use path from URI
-		filePath = this->_loc->path + "/" + file;
 
 	return filePath;
 }
@@ -162,7 +172,7 @@ void Response::createFiles(Request &request, int &status)
 /* Iterates over the possible extensions in MIME.txt and
 checks if the argument extension is valid. If the extension
 is found the corresponding content type is returned as
-"type/subtype". If no match is found an empty string wil be returned. */
+"type/subtype". If no match is found 'text/plain' will be returned. */
 std::string checkMime(const std::string &extension)
 {
     std::ifstream mime(MIMEFILE);
@@ -181,7 +191,7 @@ std::string checkMime(const std::string &extension)
         }
     }
     mime.close();
-    return "";
+    return "text/plain";
 }
 
 /* Takes a filename as argument and checks if the extension

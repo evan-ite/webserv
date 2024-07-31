@@ -32,6 +32,7 @@ class Request
 		int				getContentLen();
 		std::string		getBody();
 		std::string		getConnection();
+		void			setConnection(std::string connection);
 		std::string		getsessionId();
 		void			resetSessionId();
 
