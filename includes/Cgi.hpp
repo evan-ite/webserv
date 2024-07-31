@@ -41,7 +41,7 @@ class Cgi
 		void		executeCgiChild(int *pipefd, std::string cgiScriptPath);
 		void		extractCgi(std::string &cgiFile, std::string &cgiScriptPath);
 		void		createResponse(Response &response, std::string &cgiOutput);
-		std::string	readCgiOutput(int *pipefd);
+		std::string readCgiOutput(int *pipefd);
 
 };
 

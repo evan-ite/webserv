@@ -5,3 +5,4 @@
 .env
 utils/api_token.txt
 upload/*
+obj/

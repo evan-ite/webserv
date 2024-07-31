@@ -33,8 +33,7 @@ Cgi::Cgi(const Cgi &copy)
 
 // Destructor
 Cgi::~Cgi()
-{
-}
+{}
 
 
 // Operators
@@ -44,15 +43,17 @@ Cgi & Cgi::operator=(const Cgi &assign)
 	return *this;
 }
 
-bool	Cgi::isTrue() {
+bool	Cgi::isTrue() 
+{
 	return this->_isTrue;
 }
 
-void	Cgi::execute(Response &response) {
+void	Cgi::execute(Response &response) 
+{
 	if (!this->_isTrue)
 		return ;
 
-	log(logINFO) << "Using CGI to fetch data";
+	log(logDEBUG) << "Using CGI to fetch data";
 
 	std::string cgiFile;
 	std::string cgiScriptPath;
@@ -104,6 +105,7 @@ void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
 	char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
 	execve(cgiScriptPath.c_str(), args, this->_env);
 
+	log(logDEBUG) << "file path: " << cgiScriptPath;
 	log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
 	throw CgiException("500");
 }
@@ -173,4 +175,6 @@ void	Cgi::createResponse(Response &response, std::string &cgiOutput)
 	response.setReason("OK");
 	response.setType("text/html");
 	response.setConnection(this->_request->getConnection());
+
+	log(logDEBUG) << "Created CGI response succesfully";
 }

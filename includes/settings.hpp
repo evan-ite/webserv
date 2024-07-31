@@ -33,8 +33,7 @@
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
 # define UPLOAD_DIR "content/upload/"
-# define BASIC_CONF "./conf/basic.conf"
-# define DEFAULT_CONF "./conf/default.conf"
+# define DEFAULT_CONF "./default/conf/default.conf"
 # define TEMPLATE   "./content/html/template2.html"
 # define COOKIE_LIFETIME 300 // in seconds
 // local header files
