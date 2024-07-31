@@ -43,12 +43,12 @@ Cgi & Cgi::operator=(const Cgi &assign)
 	return *this;
 }
 
-bool	Cgi::isTrue() 
+bool	Cgi::isTrue()
 {
 	return this->_isTrue;
 }
 
-void	Cgi::execute(Response &response) 
+void	Cgi::execute(Response &response)
 {
 	if (!this->_isTrue)
 		return ;
@@ -130,6 +130,7 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	envVec.push_back("REDIRECT_STATUS=200");
 	envVec.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	envVec.push_back("REQUEST_URI=" + request->getLoc());
+	envVec.push_back("HTTP_COOKIE=" + request->getsessionId());
 
 	envVec.push_back("SCRIPT_NAME=" + cgiPath);
 	envVec.push_back("SCRIPT_FILENAME=" + cgiFile);

@@ -5,9 +5,7 @@ import cgi
 import cgitb
 import requests
 import sqlite3
-from http.cookies import SimpleCookie
 from dotenv import load_dotenv
-import uuid
 
 # Load the .env file
 load_dotenv()
@@ -54,18 +52,10 @@ def get_username_by_session(session_id):
 
 # get vars
 form = cgi.FieldStorage()
-cookie = SimpleCookie(os.environ.get('HTTP_COOKIE'))
-session_id = cookie.get('session_id')
-
-if session_id:
-	session_id = session_id.value
-else:
-	session_id = ""
+session_id = os.environ.get('HTTP_COOKIE')
 db_username = get_username_by_session(session_id)
 input_username = form.getvalue("username")
 
-# Construct html
-print("Content-Type: text/html\n")  # Send HTTP header
 print("<!DOCTYPE html>")
 print("<html lang='en'>")
 print()
@@ -77,17 +67,17 @@ print("<title>42 User Check</title>")
 print("</head>")
 print("<body>")
 
-if db_username == input_username:
-	print("<h1>Welcome back <3</h1>")
-elif db_username is not None:
-	print("<h1>We don't judge stalkers around here</h1>")
+if db_username:
+	if db_username == input_username:
+		print("<h1>Welcome back <3</h1>")
+	else:
+		print("<h1>We don't judge stalkers around here</h1>")
 else:
 	print("<h1>Welcome, new little friend <3</h1>")
 	store_session(input_username, session_id)
 
 if form:
-	# Fetch and display user data
-	user_data = fetch_user(input_username)  # Corrected to use input_username
+	user_data = fetch_user(input_username)
 	if user_data:
 		photo = user_data["image"]["link"]
 		if photo:
@@ -95,10 +85,7 @@ if form:
 			print(f'<img class="student" src="{photo}" alt="Your intra photo" width="400">')
 			print('</div>')
 			print('<div class="memebox">')
-			if db_username == input_username:
-				print("<p>Look at your beautiful face</p>")
-			else:
-				print("<p>Look at this person, who is definitely not you, and their beautiful face</p>")
+			print("<p>Look at this beautiful face, shining bright like a diamond</p>")
 			print('</div>')
 		else:
 			print("<p>We couldn't find your photo....</p>")
