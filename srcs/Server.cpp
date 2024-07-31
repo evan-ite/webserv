@@ -176,7 +176,7 @@ void Server::handleRequest(int fd)
 	}
 	else if (!httpRequest.empty())
 	{
-		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 100);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		this->checkSession(request);
 		Response res(request, this->_settings);

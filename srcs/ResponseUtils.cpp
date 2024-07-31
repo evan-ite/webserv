@@ -47,16 +47,21 @@ std::string Response::extractFilePath(Request &request) {
 	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
 	std::string	file;
 
-	if (i < request.getLoc().length())
-		// If URI contains a filename extract it
+	if (i < request.getLoc().length()) 
+	{ // If URI contains a filename extract it
 		file = request.getLoc().substr(i);
-	else
-		// Else use index file
+		if (file.find('.') == std::string::npos)
+			file += "/" + _loc->index;
+	}
+	else // Else use index file
 		file = _loc->index;
 
+	if (file[0] && file[0] == '/')
+		file = file.substr(1);
+		
 	std::string filePath;
 	if (_loc->autoindex)
-	{ 	// directory listing
+	{ // directory listing
 		filePath = "";
 		this->createDirlisting(_loc->path);
 	}
@@ -167,7 +172,7 @@ void Response::createFiles(Request &request, int &status)
 /* Iterates over the possible extensions in MIME.txt and
 checks if the argument extension is valid. If the extension
 is found the corresponding content type is returned as
-"type/subtype". If no match is found an empty string wil be returned. */
+"type/subtype". If no match is found 'text/plain' will be returned. */
 std::string checkMime(const std::string &extension)
 {
     std::ifstream mime(MIMEFILE);
@@ -186,7 +191,7 @@ std::string checkMime(const std::string &extension)
         }
     }
     mime.close();
-    return "";
+    return "text/plain";
 }
 
 /* Takes a filename as argument and checks if the extension
