@@ -142,7 +142,7 @@ void	Response::createDirlisting(std::string dirPath)
 
 	std::size_t pos = htmlTemplate.find("INSERT");
 	if (pos == std::string::npos)
-		log(logERROR) << "Invalid directory listing template";
+		{log(logERROR) << "Invalid directory listing template";}
 	std::string insertList = this->loopDir(dirPath);
 	htmlTemplate.replace(pos, 6, insertList);
 
