@@ -67,6 +67,7 @@ class Response
 		std::string	_sessionId;
 		std::string	_body;
 		std::string _redir;
+		std::string _dirlistTemplate;
 
 		// Utils
 		Location 		*_loc;
