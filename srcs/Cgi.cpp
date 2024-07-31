@@ -12,16 +12,19 @@ Cgi::Cgi(Request *request, ServerSettings *serverData)
 	if (((request->getLoc().length() >= len
 		&& request->getLoc().substr(request->getLoc().size() - len) == ext)
 		|| request->getLoc().find(ext + "?") != std::string::npos)
-		&& serverData->cgi) {
-			this->_isTrue = true;
-			this->_request = request;
-			this->_serverData = serverData;
-		}
-	else {
+		&& serverData->cgi) 
+	{
+		this->_isTrue = true;
+		this->_request = request;
+		this->_serverData = serverData;
+	}
+	else 
+	{
 		this->_isTrue = false;
 		this->_request = NULL;
 		this->_serverData = NULL;
 	}
+	this->_env = NULL;
 }
 
 
@@ -33,7 +36,10 @@ Cgi::Cgi(const Cgi &copy)
 
 // Destructor
 Cgi::~Cgi()
-{}
+{
+	if (this->_env)
+		delete this->_env;
+}
 
 
 // Operators
@@ -115,8 +121,8 @@ void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
 /* Create an environment for the CGI script */
 char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 {
-	Request *request = this->_request;
-	ServerSettings *serverData = this->_serverData;
+	Request 					*request = this->_request;
+	ServerSettings				*serverData = this->_serverData;
 	std::vector<std::string>	envVec;
 
 	// Set up environment variables specific to GET or POST
