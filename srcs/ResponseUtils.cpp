@@ -6,8 +6,16 @@ bool Response::isValidRequest(Request &request) {
 		return false;
 	}
 	if (request.getConnection() != "keep-alive" && request.getConnection() != "close") {
-		log(logERROR) << "Invalid request: connection header is invalid:";
-		return false;
+		if (request.getConnection().empty())
+		{	
+			request.setConnection("keep-alive");
+			return true;
+		}
+		else 
+		{
+			log(logERROR) << "Invalid request: connection header is invalid:";
+			return false;
+		}
 	}
 	else
 		return true;
@@ -47,21 +55,18 @@ std::string Response::extractFilePath(Request &request) {
 		file = _loc->index;
 
 	std::string filePath;
-	if (this->_loc->path == "/")
-	{ 	// add root to path if needed
+	if (_loc->autoindex)
+	{ 	// directory listing
+		filePath = "";
+		this->createDirlisting(_loc->path);
+	}
+	else 
+	{
 		if (file.find(this->_loc->root) != std::string::npos)
 			filePath = file;
 		else
 			filePath = this->_loc->root + "/" + file;
 	}
-	else if (_loc->autoindex)
-	{ 	// directory listing
-		filePath = "";
-		this->createDirlisting(_loc->path);
-	}
-	else
-		// use path from URI
-		filePath = this->_loc->path + "/" + file;
 
 	return filePath;
 }

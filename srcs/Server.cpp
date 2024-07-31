@@ -108,8 +108,7 @@ bool Server::checkContentLength(std::string httpRequest, int fd)
 
 void Server::requestTooLarge(int fd)
 {
-	std::string body = readFileToString("content/error/413.html");
-	Response res(413, "Request object too large", "basic", "close", body);
+	Response res(413, "Request object too large", "basic", "close", "");
 	std::string response = res.makeResponse();
 	const char* resCString = response.c_str();
 	ssize_t result = send(fd, resCString, strlen(resCString), 0);
@@ -177,13 +176,13 @@ void Server::handleRequest(int fd)
 	}
 	else if (!httpRequest.empty())
 	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 100);
 		Request request(httpRequest);
 		this->checkSession(request);
 		Response res(request, this->_settings);
 		std::string resString = res.makeResponse();
 		this->addSession(res.getSessionId());
-		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)

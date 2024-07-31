@@ -172,6 +172,11 @@ std::string		Request::getConnection() {
 	return this->_connection;
 }
 
+void			Request::setConnection(std::string connection) {
+	this->_connection = connection;
+}
+
+
 std::string		Request::getsessionId() {
 	return this->_sessionId;
 }
