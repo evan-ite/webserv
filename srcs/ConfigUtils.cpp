@@ -167,7 +167,7 @@ void Config::parseServer(std::string key, std::string value, std::string line) {
 	}
 	else if (key == "dir_list") {
 		std::string path = this->_tempServer.root + "/" + value;
-		this->_tempServer.dirListTemplate = readFileToString(path);
+		this->_tempServer.dirlistTemplate = readFileToString(path);
 	}
 }
 

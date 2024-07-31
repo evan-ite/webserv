@@ -22,14 +22,13 @@ struct ServerSettings {
 	std::string server_name;
 	std::string root;
 	std::string host;
-	std::string dirlistTemplate;
 	int port;
 	int client_max_body_size;
 	bool client_body_in_file_only;
 	int client_body_buffer_size;
 	int client_body_timeout;
 	bool cgi;
-	std::string dirListTemplate;
+	std::string dirlistTemplate;
 	std::string cgi_extension;
 	std::string cgi_bin;
 
