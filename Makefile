@@ -35,4 +35,4 @@ test:
 	python3 utils/tests/connect_test.py localhost:8080
 
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re test key run
