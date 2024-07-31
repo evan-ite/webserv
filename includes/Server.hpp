@@ -36,6 +36,7 @@ class Server
 		void					requestTooLarge(int fd);
 		void 					checkSession(Request &req);
 		void 					addSession(std::string sessionId);
+		static void*			handleRequestWrapper(void* arg);
 };
 
 #endif

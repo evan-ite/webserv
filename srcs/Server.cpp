@@ -149,23 +149,83 @@ void Server::addSession(std::string sessionId)
 	this->_activeCookies.push_back(sesh);
 }
 
-void Server::handleRequest(int fd)
+// void Server::handleRequest(int fd)
+// {
+// 	char buffer[BUFFER_SIZE];
+// 	ssize_t count;
+// 	std::string httpRequest;
+// 	log(logINFO)	<< "Server " << this->_settings.host
+// 					<< ":" << this->_settings.port
+// 					<< " is reading from fd: " << fd;
+// 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
+// 	{
+// 		httpRequest.append(buffer, count);
+// 		if (!this->checkContentLength(httpRequest, fd))
+// 		{
+// 			httpRequest.clear();
+// 			log(logDEBUG) << "Shutting downd fd: " << fd;
+// 			close(fd);
+// 			break ;
+// 		}
+// 	}
+// 	if (count == 0 && httpRequest.empty())
+// 	{
+// 		close(fd);
+// 		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+// 	}
+// 	else if (count == -1)
+// 	{
+// 		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
+// 	}
+// 	if (!httpRequest.empty())
+// 	{
+// 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+// 		Request request(httpRequest);
+// 		this->checkSession(request);
+// 		Response res(request, this->_settings);
+// 		std::string resString = res.makeResponse();
+// 		this->addSession(res.getSessionId());
+// 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+// 		const char *resCStr = resString.data();
+// 		ssize_t sent = write(fd, resCStr, resString.size());
+// 		if (sent == -1)
+// 		{
+// 			close(fd); // Close on write error
+// 			log(logERROR) << "Error writing to socket, FD: " << fd;
+// 		}
+// 		if (res.getConnection() == "close")
+// 		{
+// 			close(fd);
+// 			log(logINFO) << "connection on fd " << fd << " closed on client request";
+// 		}
+// 		else
+// 		{
+// 			log(logINFO) << "connection on fd " << fd << " kept alive";
+// 		}
+// 	}
+// }
+
+void* Server::handleRequestWrapper(void* arg)
 {
+	int fd = *reinterpret_cast<int*>(arg);
+	delete reinterpret_cast<int*>(arg); // Free the allocated memory
+
+	// Assuming 'this' is passed as part of the argument
+	Server* server = reinterpret_cast<Server*>(arg);
+
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
-	log(logINFO)	<< "Server " << this->_settings.host
-					<< ":" << this->_settings.port
-					<< " is reading from fd: " << fd;
+	log(logINFO) << "Server is reading from fd: " << fd;
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
-		if (!this->checkContentLength(httpRequest, fd))
+		if (!server->checkContentLength(httpRequest, fd))
 		{
 			httpRequest.clear();
-			log(logDEBUG) << "Shutting downd fd: " << fd;
+			log(logDEBUG) << "Shutting down fd: " << fd;
 			close(fd);
-			break ;
+			return NULL;
 		}
 	}
 	if (count == 0 && httpRequest.empty())
@@ -179,13 +239,11 @@ void Server::handleRequest(int fd)
 	}
 	if (!httpRequest.empty())
 	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
-		this->checkSession(request);
-		Response res(request, this->_settings);
+		server->checkSession(request);
+		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
-		this->addSession(res.getSessionId());
-		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+		server->addSession(res.getSessionId());
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
@@ -202,5 +260,21 @@ void Server::handleRequest(int fd)
 		{
 			log(logINFO) << "connection on fd " << fd << " kept alive";
 		}
+	}
+	return NULL;
+}
+
+void Server::handleRequest(int fd)
+{
+	pthread_t thread;
+	int* fdPtr = new int(fd); // Allocate memory to pass the file descriptor
+	if (pthread_create(&thread, NULL, Server::handleRequestWrapper, fdPtr) != 0)
+	{
+		log(logERROR) << "Failed to create thread for fd: " << fd;
+		delete fdPtr; // Free the allocated memory on failure
+	}
+	else
+	{
+		pthread_detach(thread); // Detach the thread to allow it to run independently
 	}
 }
