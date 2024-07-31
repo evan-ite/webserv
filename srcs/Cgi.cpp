@@ -62,12 +62,14 @@ void	Cgi::execute(Response &response)
 
 	// Prepare to capture the CGI script's output
 	int pipefd[2];
-	if (pipe(pipefd) == -1) {
+	if (pipe(pipefd) == -1)
+	{
 		log(logERROR) << "Error creating pipe";
 		throw CgiException("500");
 	}
 	pid_t pid = fork();
-	if (pid == -1) {
+	if (pid == -1)
+	{
 		log(logERROR) << "Error forking";
 		throw CgiException("500");
 	}
