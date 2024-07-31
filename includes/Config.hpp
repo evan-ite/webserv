@@ -28,6 +28,7 @@ struct ServerSettings {
 	int client_body_buffer_size;
 	int client_body_timeout;
 	bool cgi;
+	std::string dirListTemplate;
 	std::string cgi_extension;
 	std::string cgi_bin;
 
