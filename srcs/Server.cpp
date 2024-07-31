@@ -99,7 +99,6 @@ bool Server::checkContentLength(std::string httpRequest, int fd)
 	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
 	if (cLen > this->_settings.client_max_body_size)
 	{
-		log(logDEBUG) << "cLen " << cLen << " this->_settings.client_max_body_size " << this->_settings.client_max_body_size;
 		this->requestTooLarge(fd);
 		return (0);
 	}
@@ -108,8 +107,7 @@ bool Server::checkContentLength(std::string httpRequest, int fd)
 
 void Server::requestTooLarge(int fd)
 {
-	std::string body = readFileToString("content/error/413.html");
-	Response res(413, "Request object too large", "basic", "close", body);
+	Response res(413, "Request object too large", "basic", "close", "");
 	std::string response = res.makeResponse();
 	const char* resCString = response.c_str();
 	ssize_t result = send(fd, resCString, strlen(resCString), 0);
@@ -170,12 +168,16 @@ void Server::handleRequest(int fd)
 			break ;
 		}
 	}
-	if (count == 0)
+	if (count == 0 && httpRequest.empty())
 	{
-		close(fd); // Close on empty request
-		log(logERROR) << "Empty request or client disconnected, FD: " << fd;
+		close(fd);
+		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
 	}
-	else if (!httpRequest.empty())
+	else if (count == -1)
+	{
+		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
+	}
+	if (!httpRequest.empty())
 	{
 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
@@ -192,6 +194,13 @@ void Server::handleRequest(int fd)
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 		}
 		if (res.getConnection() == "close")
+		{
 			close(fd);
+			log(logINFO) << "connection on fd " << fd << " closed on client request";
+		}
+		else
+		{
+			log(logINFO) << "connection on fd " << fd << " kept alive";
+		}
 	}
 }
