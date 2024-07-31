@@ -172,5 +172,5 @@ void	Cgi::createResponse(Response &response, std::string &cgiOutput)
 	response.setBody(cgiOutput);
 	response.setReason("OK");
 	response.setType("text/html");
-	response.setConnection(request->getConnection());
+	response.setConnection(this->_request->getConnection());
 }
