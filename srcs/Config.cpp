@@ -251,7 +251,7 @@ void Config::readServer(const std::string &filename)
 	int braceCount = 0;
 
 	if (!file.is_open())
-		throw std::runtime_error("Error: could not open file");
+		throw std::runtime_error("Error: could not open file: " + filename);
 
 	while (std::getline(file, line))
 	{

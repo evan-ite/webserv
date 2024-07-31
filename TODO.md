@@ -37,17 +37,17 @@
 - [x] Delete requests
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
-- [ ] Limit client body size for post requests
+- [x] Limit client body size for post requests
 - [X] Remove double dots from url
 - [X] Remove hardcode upload directory name
-- [ ] Remove the hardcoded file path in htmltemplate fot the delete.
+- [x] Remove the hardcoded file path in htmltemplate fot the delete.
 
 ## Response
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Base error pages on config instead of hard code
 - [x] Map / function to match error code to reason
 - [x] Base connection on request instead of hard code
-- [ ] Actually do something if connection is "close"
+- [x] Actually do something if connection is "close"
 
 ## CGI
 - [x] fork CGI (needs item in conf class)
@@ -57,13 +57,14 @@
 - [x] nice throw errors
 - [x] change language simple cgi
 - [x] put install dotenv lib in readme
+- [ ] cookies in cgi
 
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
 - [x] Organize content directory
 - [x] Good readme with structure explanation of code and explain api stuff
 - [ ] What is default and what should be in content dir?
-- [ ] Fallback and defaulr confusing names
+- [x] Fallback and defaulr confusing names
 
 ## Directory listing
 - [x] Directory Listing (needs item in conf class)
@@ -78,4 +79,5 @@
 - [ ] Chunked requests, what do we do about them!?! --> nothing?
 - [x] http redirects
 - [ ] Check forbidden functions
-- [ ] Cookiesssss
+- [x] Cookiesssss
+- [ ] Create python script to automate API key
