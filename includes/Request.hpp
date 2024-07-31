@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Request.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jstrozyk <jstrozyk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/01 17:57:13 by jstrozyk          #+#    #+#             */
-/*   Updated: 2024/07/24 16:52:55 by jstrozyk         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 # include "settings.hpp"
@@ -17,7 +5,8 @@
 enum HttpMethod {
 	GET,
 	POST,
-	DELETE
+	DELETE,
+	INVALID
 };
 
 class Request
@@ -37,11 +26,14 @@ class Request
 		};
 
 		std::string 	getLoc();
+		void		 	setLoc(std::string &location);
 		std::string		getContentType();
 		HttpMethod		getMethod();
 		int				getContentLen();
 		std::string		getBody();
 		std::string		getConnection();
+		std::string		getsessionId();
+		void			resetSessionId();
 
 		std::vector<std::pair<std::string, std::string> >	getFileData();
 
@@ -62,6 +54,8 @@ class Request
 		std::string _host;
 		std::string _userAgent;
 		std::string _connection;
+		std::string _transferEncoding;
+		std::string _sessionId;
 
 		std::vector<std::pair<std::string, std::string> > _fileData;
 };

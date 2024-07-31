@@ -26,6 +26,8 @@ class Response
 		void		setType(std::string type);
 		void		setBody(std::string body);
 		void		setConnection(std::string connection);
+		std::string	getConnection();
+		std::string	getSessionId();
 
 		class ResponseException : public std::exception {
 			private:
@@ -46,22 +48,25 @@ class Response
 		void		createFiles(Request &request, int &status);
 		void		getMethod(Request &request);
 		void		deleteMethod(Request &request);
-		Location	findLoc(const std::string& uri, ServerSettings serverData);
+		Location	findLoc(const std::string& uri, ServerSettings &serverData);
 		bool		checkMethod(std::string method);
-		void		createDirlisting(std::string fileName, std::string dirPath);
+		void		createDirlisting(std::string dirPath);
 		std::string	loopDir(std::string dirPath);
 		std::string findError(std::string errorCode);
 		std::string	getStatusMessage(std::string errorCode);
 		std::string extractFilePath(Request &request);
+		bool		isValidRequest(Request &request);
+		bool		checkExternal();
 
 		// To create response
 		int	_status;
 		std::string	_reason;
 		std::string	_type;
 		std::size_t	_len;
-		std::string	_date;
 		std::string	_connection;
+		std::string	_sessionId;
 		std::string	_body;
+		std::string _redir;
 
 		// Utils
 		Location 		*_loc;

@@ -8,7 +8,6 @@ Client::Client(const Client &copy)
 	this->_address = copy._address;
 	this->_fd = copy.getFd();
 	this->_key = copy.getKey();
-	this->_lastSeen = copy.getLastSeen();
 }
 
 Client::Client(int active_fd)
@@ -20,7 +19,6 @@ Client::Client(int active_fd)
 	if (!makeNonBlocking(fd))
 		throw acceptError();
 	this->setFd(fd);
-	this->setLastSeen(std::time(NULL));
 }
 
 // Destructor
@@ -31,7 +29,6 @@ Client& Client::operator=(const Client& assign)
 {
 	if (this != &assign)
 	{
-		this->_lastSeen = assign._lastSeen;
 		this->_key = assign._key;
 		this->_fd = assign._fd;
 		this->_address = assign._address;
@@ -40,14 +37,6 @@ Client& Client::operator=(const Client& assign)
 }
 
 // Getters / Setters
-std::time_t Client::getLastSeen() const
-{
-	return (this->_lastSeen);
-}
-void Client::setLastSeen(std::time_t lastSeen)
-{
-	this->_lastSeen = lastSeen;
-}
 
 int Client::getFd() const
 {
@@ -70,16 +59,6 @@ void Client::setKey(std::string key)
 void Client::setAddress(struct sockaddr_in addr)
 {
 	this->_address = addr;
-}
-
-void Client::timeout()
-{
-	std::time_t now = std::time(NULL);
-	if (now - this->getLastSeen() > CONNECTION_TIMEOUT)
-	{
-		log(logINFO) << "Connection timed out";
-		close(this->getFd());
-	}
 }
 
 const char * Client::acceptError::what() const throw()

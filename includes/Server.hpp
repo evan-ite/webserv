@@ -25,14 +25,17 @@ class Server
 		};
 	private:
 		Server();
-		const std::string&		getKey() const;
 		void					setupServerSocket();
 		int						_fd;
 		ServerSettings			_settings;
 		struct sockaddr_in		_address;
 		std::string				_key;
 		std::vector <Client>	_activeClients;
+		std::vector <Cookie>	_activeCookies;
+		bool					checkContentLength(std::string httpRequest, int fd);
+		void					requestTooLarge(int fd);
+		void 					checkSession(Request &req);
+		void 					addSession(std::string sessionId);
 };
 
-bool operator==(const Server& lhs, const Server& rhs);
 #endif

@@ -38,7 +38,9 @@
 - [x] Create Request object outside of Response object and parse request object to constructor of response
 - [x] Allow specific methods according to location
 - [ ] Limit client body size for post requests
-- [ ] Remove double dots from url
+- [X] Remove double dots from url
+- [X] Remove hardcode upload directory name
+- [ ] Remove the hardcoded file path in htmltemplate fot the delete.
 
 ## Response
 - [x] Create Request object outside of Response object and parse request object to constructor of response
@@ -51,7 +53,7 @@
 - [x] fork CGI (needs item in conf class)
 - [x] Second CGI connected to 42 API
 - [x] Revoked and renewed API creds
-- [x] create env file 
+- [x] create env file
 - [x] nice throw errors
 - [ ] change language simple cgi
 - [ ] put install dotenv lib in readme
@@ -59,19 +61,21 @@
 ## Create some structure
 - [ ] Divide long class cpp files in seperate files
 - [x] Organize content directory
-- [ ] Good readme with structure explanation of code and explain api stuff
+- [x] Good readme with structure explanation of code and explain api stuff
+- [ ] What is default and what should be in content dir?
+- [ ] Fallback and defaulr confusing names
 
 ## Directory listing
 - [x] Directory Listing (needs item in conf class)
 	- [x] Template for auto indexing
 	- [x] function to fill template
-- [ ] delete button next to files in dir listing
+- [x] delete button next to files in dir listing
 
 
 ## Extra
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
 - [ ] Chunked requests, what do we do about them!?! --> nothing?
-- [ ] http redirects
+- [x] http redirects
 - [ ] Check forbidden functions
 - [ ] Cookiesssss

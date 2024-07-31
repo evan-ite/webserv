@@ -2,28 +2,22 @@
 
 ## Overview
 
-**Webserv** is a project that involves building a custom HTTP server in C++98. This server is designed to handle basic HTTP requests and responses, serve static and dynamic content, and be robust and efficient. The project aims to provide an understanding of how web servers operate and the fundamentals of the HTTP protocol.
+**Webserv** is a project that involves building an NGINX-like server in C++98. The project aims to provide an understanding of how web servers operate and the fundamentals of the HTTP protocol.
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [Features](#features)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Configuration](#configuration)
-6. [Testing](#testing)
-7. [Collaborators](#collaborators)
-
-## Introduction
-
-The Hypertext Transfer Protocol (HTTP) is a foundational technology for the World Wide Web. It facilitates the communication between clients (such as web browsers) and servers to deliver web pages and other resources. This project involves creating a custom HTTP server that can handle various HTTP methods and serve both static and dynamic content.
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Configuration](#configuration)
+5. [Collaborators](#collaborators)
 
 ## Features
 
 - Serve static files (HTML, CSS, JavaScript, images).
 - Handle dynamic content using CGI scripts.
 - Support for HTTP methods: GET, POST, and DELETE.
-- Non-blocking I/O operations with `poll` (or equivalent).
+- Non-blocking I/O operations with `epoll`.
 - Customizable through configuration files.
 - Serve content on multiple ports.
 - Default error pages and customizable error handling.
@@ -33,16 +27,53 @@ The Hypertext Transfer Protocol (HTTP) is a foundational technology for the Worl
 
 1. **Clone the Repository:**
 
-   ```sh
-   git clone https://github.com/yourusername/webserv.git
-   cd webserv
-   ```
+	```sh
+	git clone https://github.com/evan-ite/webserv.git
+	cd webserv
+	```
 
-2. **Build the Project:**
+2. **Install Dependencies:**
 
-   ```sh
-   make
-   ```
+	Install C++ dependecies
+	```sh
+	sudo apt-get update
+	sudo apt-get install g++ make build-essential
+	```
+
+	Check if python is installed, otherwise install
+	```sh
+	python3 --version
+	sudo apt-get install python3
+	```
+
+	Check if python package installer is installed, otherwise install
+	```sh
+	pip3 --version
+	sudo apt-get install python3-pip
+	```
+
+	Install python dependencies
+	```sh
+	pip install requests python-dotenv
+	```
+
+3. **42 Network API:**
+
+	Rename temp.env
+	```sh
+	mv temp.env .env
+	```
+	To execute some of the CGI script you need acces to the 42 Network API:  [https://api.intra.42.fr/apidoc]. Read the documentation to retrieve your Client ID and Secret, enter both in `.env` in the root of this directory. Now you can retrieve your API Key as follows
+	```sh
+	./utils/getApiToken.sh
+	```
+	Copy your key from `utils/api_token.txt` and paste in `.env`.
+
+4. **Build the Project:**
+
+	```sh
+	make
+	```
 
 ## Usage
 
@@ -52,32 +83,36 @@ Run the server with a configuration file:
 ./webserv path/to/configuration/file
 ```
 
-If no configuration file is provided, the server will use a default configuration.
+If no configuration file is provided, the server will use a default configuration defined in conf/fallback.conf.
 
 ## Configuration
 
-The server's behavior is controlled by a configuration file, inspired by NGINX configuration files. Below is a sample configuration:
+The server's behavior is controlled by a configuration file, inspired by NGINX configuration files. For undefined settings the default settings from fallback.conf will be used. Below is a sample configuration:
 
 ```conf
 server {
-    listen 80;
-    server_name localhost;
+	listen 80;
+	server_name localhost;
 
-    location / {
-        root /var/www/html;
-        index index.html;
-        error_page 404 /404.html;
-    }
+	location / {
+		root content;
+		index html/index.html;
+		error_page 404 error/404.html;
+	}
 
-    location /cgi-bin/ {
-        cgi /usr/bin/php-cgi;
-    }
+	location /cgi-bin {
+		allow GET POST;
+	}
 
-    location /uploads/ {
-        root /var/www/uploads;
-        client_max_body_size 10M;
-        allow_uploads on;
-    }
+	location /upload {
+		root		content;
+		allow		GET POST DELETE;
+		autoindex	on;
+	}
+
+	location /weather {
+		return 301 https://kanikeenkortebroekaan.nl/
+	}
 }
 ```
 
@@ -89,19 +124,9 @@ server {
 - `root`: The root directory for serving files.
 - `index`: The default file to serve for directory requests.
 - `error_page`: Custom error page locations.
-- `cgi`: Path to CGI executable.
-- `client_max_body_size`: Maximum allowed size for client request bodies.
-- `allow_uploads`: Enable or disable file uploads.
+- `return`: Redirect to internal or external pages.
 
-## Testing
 
-- Use a web browser to access the server and verify it serves static files.
-- Use command-line tools like `curl` to test HTTP methods:
-  ```sh
-  curl -X GET http://localhost:80/
-  curl -X POST http://localhost:80/upload -F "file=@/path/to/file"
-  ```
-  
 ## Collaborators
 - Urbano Bazzanella Filho
 - Jan Strozyk
