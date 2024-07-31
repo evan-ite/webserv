@@ -56,6 +56,7 @@ session_id = os.environ.get('HTTP_COOKIE')
 db_username = get_username_by_session(session_id)
 input_username = form.getvalue("username")
 
+# Construct html
 print("<!DOCTYPE html>")
 print("<html lang='en'>")
 print()

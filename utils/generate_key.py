@@ -5,7 +5,7 @@ from dotenv import load_dotenv, set_key
 def get_api_key():
 	load_dotenv()
 	client_id = os.getenv('UID')
-	client_secret = os.getenv('Secret')
+	client_secret = os.getenv('SECRET')
 
 	if not client_id or not client_secret:
 		raise ValueError("UID and Secret must be set in the .env file")
