@@ -287,7 +287,7 @@ void Config::loadFallback(const std::string &filename) {
 
 void Config::parseConfig(const std::string &filename) {
 	try {
-		loadFallback(FALLBACK_CONF);
+		loadFallback(DEFAULT_CONF);
 		readServer(filename);
 	}
 	catch (std::exception &e) {

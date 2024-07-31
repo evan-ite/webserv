@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 		std::cout << "Usage: ./webserv [config_file]" << std::endl;
 		return (EXIT_SUCCESS);
 	}
-	std::string configPath(argv[1] ? argv[1] : DEFAULT_CONF);
+	std::string configPath(argv[1] ? argv[1] : BASIC_CONF);
 	try
 	{
 		log(logINFO) << "Starting virtual server(s)";
