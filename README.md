@@ -77,13 +77,13 @@
 
 ## Usage
 
-Run the server with a configuration file:
+Add your html and configuration to the content directory. To run the server with a configuration file:
 
 ```sh
 ./webserv path/to/configuration/file
 ```
 
-If no configuration file is provided, the server will use a default configuration defined in conf/fallback.conf.
+If no configuration file is provided, the server will use a default configuration defined in default/conf/default.conf.
 
 ## Configuration
 
