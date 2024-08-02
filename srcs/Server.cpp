@@ -121,7 +121,7 @@ void Server::checkSession(Request &req)
 {
 	std::string sessionId = req.getsessionId();
 	if (sessionId.empty())
-		return;
+		return ;
 	std::vector<Cookie>::iterator it = this->_activeCookies.begin();
 	for (; it != this->_activeCookies.end(); it++)
 	{
@@ -144,7 +144,7 @@ void Server::checkSession(Request &req)
 void Server::addSession(std::string sessionId)
 {
 	if (sessionId.empty())
-		return;
+		return ;
 	Cookie sesh(sessionId);
 	this->_activeCookies.push_back(sesh);
 }
@@ -224,7 +224,7 @@ void* Server::handleRequestWrapper(void* arg)
 			httpRequest.clear();
 			log(logDEBUG) << "Shutting down fd: " << fd;
 			close(fd);
-			return NULL;
+			return (NULL);
 		}
 	}
 
@@ -243,7 +243,7 @@ void* Server::handleRequestWrapper(void* arg)
 	// 	{
 	// 		log(logERROR) << "Error receiving data on fd: " << fd;
 	// 		close(fd);
-	// 		return NULL;
+	// 		return (NULL);
 	// 	}
 	// 	// Handle other errors or interrupts appropriately
 	// }
@@ -263,7 +263,7 @@ void* Server::handleRequestWrapper(void* arg)
 		{
 			log(logERROR) << "Error writing to socket, FD: " << fd;
 			close(fd);
-			return NULL;
+			return (NULL);
 		}
 
 		if (res.getConnection() == "close")
@@ -276,7 +276,7 @@ void* Server::handleRequestWrapper(void* arg)
 			log(logINFO) << "Connection on fd " << fd << " kept alive";
 		}
 	}
-	return NULL;
+	return (NULL);
 }
 
 void Server::handleRequest(int fd)

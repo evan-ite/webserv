@@ -78,7 +78,8 @@ void	Response::postMethod(Request &request)
 {
 	int status = 0;
 	createFiles(request, status);
-	switch (status) {
+	switch (status)
+	{
 		case 201:
 			this->_status = 201;
 			this->_reason = getStatusMessage("201");
@@ -112,16 +113,16 @@ void	Response::getMethod(Request &request)
 	this->_connection = request.getConnection();
 
 	// Check if body is empty or type was not found
-	if (this->_body == "" || this->_type == "") {
+	if (this->_body == "" || this->_type == "")
 		throw ResponseException("404");
-	}
 }
 
 void	Response::deleteMethod(Request &request)
 {
 	std::string file = _servSet->root + request.getLoc();
 
-	if (remove(file.c_str()) != 0) {
+	if (remove(file.c_str()) != 0)
+	{
 		log(logERROR) << "Failed to delete file: " << file;
 		throw ResponseException("404");
 	}
@@ -155,7 +156,8 @@ void	Response::createDirlisting(std::string dirPath)
 
 // Function that loops through directory and subdirectories and
 // creates html list of the content
-std::string	Response::loopDir(std::string dirPath) {
+std::string	Response::loopDir(std::string dirPath)
+{
 	std::ostringstream html;
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
@@ -163,37 +165,39 @@ std::string	Response::loopDir(std::string dirPath) {
 
 	struct dirent	*entry;
 	DIR		*dir = opendir(dirPath.c_str());
-	if (dir == NULL) {
+	if (dir == NULL)
+	{
 		log(logERROR) << "Error opening directory: " << dirPath;
 		throw ResponseException("500");
 	}
 
 	// Loop through directory and create a list in html
-	// html << "\n\t\t<ul>";
 	html << "<ul>";
-	while ((entry = readdir(dir)) != NULL) {
-		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-			// html << "\n\t\t\t<li> "
+	while ((entry = readdir(dir)) != NULL)
+	{
+		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+		{
 			html << "<li> "
 			<< entry->d_name
 			<< "<button onclick=\"deleteFile('"
 			<< entry->d_name
 			<< "')\">Delete</button>"
 			<< "</li>";
-			if (entry->d_type == DT_DIR) {
+			if (entry->d_type == DT_DIR)
+			{
 				std::string	subPath = dirPath + "/" + entry->d_name;
 				html << this->loopDir(subPath);
 			}
 		}
 	}
-	// html << "\n\t\t</ul>";
 	html << "</ul>";
 
-	if (closedir(dir) != 0) {
+	if (closedir(dir) != 0)
+	{
 		log(logERROR) << "Error closing directory: " << dirPath;
 		throw ResponseException("500");
 	}
-	return html.str();
+	return (html.str());
 }
 
 std::string Response::makeResponse()
@@ -247,29 +251,35 @@ Response & Response::operator=(const Response &assign)
 	return (*this);
 }
 
-void	Response::setStatus(int status) {
+void	Response::setStatus(int status)
+{
 	this->_status = status;
 }
 
-void	Response::setReason(std::string reason) {
+void	Response::setReason(std::string reason)
+{
 	this->_reason = reason;
 }
 
-void	Response::setType(std::string type) {
+void	Response::setType(std::string type)
+{
 	this->_type = type;
 }
 
-void	Response::setBody(std::string body) {
+void	Response::setBody(std::string body)
+{
 	this->_body = body;
 	this->_len = body.size();
 }
 
-void	Response::setConnection(std::string connection) {
+void	Response::setConnection(std::string connection)
+{
 	this->_connection = connection;
 }
 
-std::string	Response::getConnection() {
-	return this->_connection;
+std::string	Response::getConnection()
+{
+	return (this->_connection);
 }
 
 std::string	Response::getSessionId()

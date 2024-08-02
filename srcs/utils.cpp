@@ -15,24 +15,24 @@ std::string findKey(std::string file_str, std::string keyword, char separator)
 	std::string::size_type start_pos = file_str.find(keyword);
 
 	if (start_pos == std::string::npos)
-		return "";
+		return ("");
 
 	start_pos += keyword.length();
 	std::string::size_type end_pos = file_str.find(separator, start_pos);
 
 	if (end_pos == std::string::npos)
-		return file_str.substr(start_pos);
+		return (file_str.substr(start_pos));
 
-	return file_str.substr(start_pos, end_pos - start_pos);
+	return (file_str.substr(start_pos, end_pos - start_pos));
 }
 
 std::string splitReturnFirst(const std::string& str, const std::string& delimiter)
 {
 	size_t pos = str.find(delimiter);
 	if (pos == std::string::npos)
-		return str;
+		return (str);
 	else
-		return str.substr(0, pos);
+		return (str.substr(0, pos));
 }
 
 /* Takes a filename (incl path) as argument and returns
@@ -44,7 +44,7 @@ std::string readFileToString(const std::string& filename)
 	if (!file.is_open())
 	{
 		log(logERROR) << "Error opening file: " << filename;
-		return "";
+		return ("");
 	}
 
 	// Get file size
@@ -58,7 +58,7 @@ std::string readFileToString(const std::string& filename)
 	file.close();
 
 	// Convert buffer to std::string
-	return std::string(buffer.data(), buffer.size());
+	return (std::string(buffer.data(), buffer.size()));
 }
 
 // mostly chatgpt but I do think I understand what it does
@@ -78,7 +78,7 @@ int make_socket_non_blocking(int sfd)
 		log(logERROR) << "critical fcntl error";
 		return (-1);
 	}
-	return 0;
+	return (0);
 }
 
 /* Returns date and time in astring formatted for the HTTP response */
@@ -89,25 +89,28 @@ std::string getDateTime()
 	struct std::tm *gmt_time = std::gmtime(&raw_time);
 	char buffer[30];
 	std::strftime(buffer, 30, "%a, %d %b %Y %H:%M:%S GMT", gmt_time);
-	return std::string(buffer);
+	return (std::string(buffer));
 }
 
 /* Int to string */
-std::string toString(int value) {
+std::string toString(int value)
+{
 	std::ostringstream oss;
 	oss << value;
-	return oss.str();
+	return (oss.str());
 }
 
 // Function to convert std::vector<std::string> to char**
-char** vectorToCharStarStar(const std::vector<std::string>& vec) {
+char** vectorToCharStarStar(const std::vector<std::string>& vec)
+{
 	int numElements = vec.size();
 
 	// Allocate memory for an array of char* pointers
 	char** charArray = new char*[numElements + 1];
 
 	// Copy each string from the vector into the char* array
-	for (int i = 0; i < numElements; ++i) {
+	for (int i = 0; i < numElements; ++i)
+	{
 		// Allocate memory for each string and copy it
 		charArray[i] = new char[vec[i].length() + 1];  // +1 for null terminator
 		std::strcpy(charArray[i], vec[i].c_str());
@@ -115,7 +118,7 @@ char** vectorToCharStarStar(const std::vector<std::string>& vec) {
 
 	charArray[numElements] = NULL;
 
-	return charArray;
+	return (charArray);
 }
 
 int	makeNonBlocking(int fd)
@@ -132,7 +135,7 @@ int	makeNonBlocking(int fd)
 		log(logERROR) << "critical fcntl error";
 		return (0);
 	}
-	return 1;
+	return (1);
 }
 
 /* Takes a string, splits it on delim and returns a vector of std::string tokens */
@@ -142,7 +145,8 @@ std::vector<std::string> split(const std::string& str, char del) // are we using
 	size_t start = 0;
 	size_t end = str.find(del);
 
-	while (end != std::string::npos) {
+	while (end != std::string::npos)
+	{
 		tokens.push_back(str.substr(start, end - start));
 		start = end + 1;
 		end = str.find(del, start);
@@ -171,10 +175,11 @@ std::string removeSubstr(const std::string& str, const std::string& substr)
 	std::string	result = str;
 	std::string::size_type pos = str.find(substr);
 
-	while (pos != std::string::npos) {
+	while (pos != std::string::npos)
+	{
 		result.erase(pos, substr.length());
 		pos = result.find(substr);
 	}
 
-	return result;
+	return (result);
 }

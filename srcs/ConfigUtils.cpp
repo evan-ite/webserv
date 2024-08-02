@@ -1,19 +1,23 @@
 #include "../includes/settings.hpp"
 
 
-void Config::countBraces(std::string line, int *braceCount) {
+void Config::countBraces(std::string line, int *braceCount)
+{
 	size_t openBraces = std::count(line.begin(), line.end(), '{');
 	size_t closeBraces = std::count(line.begin(), line.end(), '}');
 	*braceCount += openBraces - closeBraces;
 }
 
-bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value) {
-	if (line.find("}") != std::string::npos && *parsingLocation) {
+bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value)
+{
+	if (line.find("}") != std::string::npos && *parsingLocation)
+	{
 		this->_tempServer.locations[currentLocation->path] = *currentLocation;
 		*parsingLocation = false;
 		return (true);
 	}
-	if (line.find("location") != std::string::npos) {
+	if (line.find("location") != std::string::npos)
+	{
 		if (_tempServer.locations.find(value) != _tempServer.locations.end())
 			*currentLocation = _tempServer.locations[value];
 		else
@@ -25,11 +29,13 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 }
 
 
-std::vector<std::string> Config::getPorts(std::string server) {
+std::vector<std::string> Config::getPorts(std::string server)
+{
 	std::vector<std::string> ports;
 	size_t startPos = 0;
 
-	while (true) {
+	while (true)
+	{
 		size_t pos = server.find("listen", startPos);
 		if (pos == std::string::npos) break;
 		size_t endPos = server.find(";", pos);
@@ -42,14 +48,16 @@ std::vector<std::string> Config::getPorts(std::string server) {
 			ports.push_back(port);
 		startPos = endPos + 1;
 	}
-	return ports;
+	return (ports);
 }
 
-std::vector<std::string> Config::getHosts(std::string server) {
+std::vector<std::string> Config::getHosts(std::string server)
+{
 	std::vector<std::string> hosts;
 	size_t startPos = 0;
 
-	while (true) {
+	while (true)
+	{
 		size_t pos = server.find("host", startPos);
 		if (pos == std::string::npos || !isblank(server[pos + 4])) break;
 		size_t endPos = server.find(";", pos);
@@ -62,15 +70,17 @@ std::vector<std::string> Config::getHosts(std::string server) {
 			hosts.push_back(host);
 		startPos = endPos + 1;
 	}
-	return hosts;
+	return (hosts);
 }
 
-void Config::parseLocation(Location *currentLocation, std::string key, std::string value, std::string line) {
+void Config::parseLocation(Location *currentLocation, std::string key, std::string value, std::string line)
+{
 	if (key == "root")
 		currentLocation->root = value;
 	else if (key == "index")
 		currentLocation->index = value;
-	else if (key == "error_page") {
+	else if (key == "error_page")
+	{
 		std::istringstream iss(line);
 		std::string error_code;
 		std::string error_page;
@@ -87,7 +97,8 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->allow_uploads = (value == "on");
 	else if (key == "autoindex")
 		currentLocation->autoindex = (value == "on");
-	else if (key == "return") {
+	else if (key == "return")
+	{
 		std::istringstream iss(line);
 		std::string redir;
 		iss >> redir;
@@ -98,11 +109,13 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		removeCharacter(redir, '"');
 		currentLocation->redir = redir;
 	}
-	else if (key == "allow") {
+	else if (key == "allow")
+	{
 		std::istringstream iss(line);
 		std::string allow;
 		iss >> allow;
-		while (iss >> allow) {
+		while (iss >> allow)
+		{
 			removeCharacter(allow, ';');
 			currentLocation->allow.push_back(allow);
 		}
@@ -121,14 +134,16 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 		this->_tempServer.root = value;
 	else if (key == "host")
 		this->_tempServer.host = value;
-	else if (key == "listen") {
+	else if (key == "listen")
+	{
 		std::istringstream iss(value);
 		int port;
 		if (!(iss >> port))
 			throw std::runtime_error("Error: invalid port number");
 		this->_tempServer.port = port;
 	}
-	else if (key == "client_max_body_size") {
+	else if (key == "client_max_body_size")
+	{
 		std::istringstream iss(value);
 		int size;
 		if (!(iss >> size))
@@ -137,14 +152,16 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 	}
 	else if (key == "client_body_in_file_only")
 		this->_tempServer.client_body_in_file_only = (value == "on");
-	else if (key == "client_body_buffer_size") {
+	else if (key == "client_body_buffer_size")
+	{
 		std::istringstream iss(value);
 		int size;
 		if (!(iss >> size))
 			throw std::runtime_error("Error: invalid client_body_buffer_size");
 		this->_tempServer.client_body_buffer_size = size;
 	}
-	else if (key == "client_body_timeout") {
+	else if (key == "client_body_timeout")
+	{
 		std::istringstream iss(value);
 		int timeout;
 		if (!(iss >> timeout))
@@ -157,7 +174,8 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 		this->_tempServer.cgi_extension = value;
 	else if (key == "cgi_bin")
 		this->_tempServer.cgi_bin = value;
-	else if (key == "error_page") {
+	else if (key == "error_page")
+	{
 		std::istringstream iss(line);
 		std::string error_code;
 		std::string error_page;
@@ -170,13 +188,15 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 		removeCharacter(error_page, '"');
 		this->_tempServer.error_pages[error_code] = this->_tempServer.root + "/" + error_page;
 	}
-	else if (key == "dir_list") {
+	else if (key == "dir_list")
+	{
 		std::string path = this->_tempServer.root + "/" + value;
 		this->_tempServer.dirlistTemplate = readFileToString(path);
 	}
 }
 
-void Config::makeStatusMessages(ServerSettings &server) {
+void Config::makeStatusMessages(ServerSettings &server)
+{
 	server.error_messages["400"] = "Bad Request";
 	server.error_messages["403"] = "Forbidden";
 	server.error_messages["404"] = "Not Found";
@@ -189,8 +209,10 @@ void Config::makeStatusMessages(ServerSettings &server) {
 	server.error_messages["204"] = "No Content";
 }
 
-void Config::removeCharacter(std::string& str, char charToRemove) {
-	for (std::string::size_type i = 0; i < str.size(); ) {
+void Config::removeCharacter(std::string& str, char charToRemove)
+{
+	for (std::string::size_type i = 0; i < str.size(); )
+	{
 		if (str[i] == charToRemove)
 			str.erase(i, 1);
 		else

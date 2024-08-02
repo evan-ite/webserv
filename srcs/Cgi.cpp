@@ -51,12 +51,12 @@ Cgi::~Cgi()
 Cgi & Cgi::operator=(const Cgi &assign)
 {
 	(void) assign;
-	return *this;
+	return (*this);
 }
 
 bool	Cgi::isTrue()
 {
-	return this->_isTrue;
+	return (this->_isTrue);
 }
 
 void	Cgi::execute(Response &response)
@@ -133,10 +133,13 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	std::vector<std::string>	envVec;
 
 	// Set up environment variables specific to GET or POST
-	if (request->getMethod() == GET) {
+	if (request->getMethod() == GET)
+	{
 		envVec.push_back("REQUEST_METHOD=GET");
 		envVec.push_back("QUERY_STRING=" + findKey(request->getLoc(), "?", ' '));
-	} else if (request->getMethod() == POST) {
+	}
+	else if (request->getMethod() == POST)
+	{
 		envVec.push_back("REQUEST_METHOD=POST");
 		envVec.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
 		envVec.push_back("CONTENT_LENGTH=" + toString(request->getContentLen()));
@@ -155,7 +158,7 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	envVec.push_back("SERVER_PORT=" + toString(serverData->port));
 	envVec.push_back("SERVER_ADDR=" + serverData->host);
 
-	return vectorToCharStarStar(envVec);
+	return (vectorToCharStarStar(envVec));
 }
 
  /* Determine the path to the CGI script based on the request, location and server.
