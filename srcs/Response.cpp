@@ -43,7 +43,7 @@ Response::Response(Request &request, ServerSettings &serverData)
 			this->_sessionId = generateRandomString(12);
 		else
 			this->_sessionId = "";
-		Cgi cgi(&request, &serverData);
+		Cgi cgi(&request, &serverData, this->_loc);
 		HttpMethod method = request.getMethod();
 
 		if (!isValidRequest(request))

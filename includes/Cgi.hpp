@@ -6,7 +6,7 @@ class Cgi
 {
 	public:
 		// Constructors
-		Cgi(Request *request, ServerSettings *serverData);
+		Cgi(Request *request, ServerSettings *serverData, Location *loc);
 
 		// Destructor
 		~Cgi();
@@ -34,6 +34,7 @@ class Cgi
 
 		Request 		*_request;
 		ServerSettings	*_serverData;
+		Location		*_loc;
 		bool			_isTrue;
 		char			**_env;
 

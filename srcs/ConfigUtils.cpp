@@ -107,6 +107,12 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 			currentLocation->allow.push_back(allow);
 		}
 	}
+	else if (key == "cgi")
+		currentLocation->cgi = (value == "on");
+	else if (key == "cgi_extension")
+		currentLocation->cgi_extension = value;
+	else if (key == "cgi_bin")
+		currentLocation->cgi_bin = value;
 }
 
 void Config::parseServer(std::string key, std::string value, std::string line) {

@@ -1,30 +1,36 @@
 #include "../includes/settings.hpp"
 
 // Constructors
-Cgi::Cgi():  _request(NULL), _serverData(NULL), _isTrue(false)
+Cgi::Cgi(): _isTrue(false)
 {}
 
-Cgi::Cgi(Request *request, ServerSettings *serverData)
+Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
 {
-	std::string ext = serverData->cgi_extension; // default ".cgi"
+	this->_env = NULL;
+	std::string ext;
+
+	if (loc->cgi)
+		ext = loc->cgi_extension;
+	else if (serverData->cgi)
+		ext = serverData->cgi_extension;
+	else {
+		this->_isTrue = false;
+		return ;
+	}
+
 	std::size_t	len = ext.length();
 
 	if (((request->getLoc().length() >= len
 		&& request->getLoc().substr(request->getLoc().size() - len) == ext)
-		|| request->getLoc().find(ext + "?") != std::string::npos)
-		&& serverData->cgi) 
+		|| request->getLoc().find(ext + "?") != std::string::npos)) 
 	{
 		this->_isTrue = true;
 		this->_request = request;
 		this->_serverData = serverData;
+		this->_loc = loc;
 	}
 	else 
-	{
 		this->_isTrue = false;
-		this->_request = NULL;
-		this->_serverData = NULL;
-	}
-	this->_env = NULL;
 }
 
 
@@ -154,17 +160,25 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	return vectorToCharStarStar(envVec);
 }
 
- /* Determine the path to the CGI script based on the request and serverData.
+ /* Determine the path to the CGI script based on the request, location and server.
 Store the found strings in the arguments passed by reference. */
 void Cgi::extractCgi(std::string &cgiFile, std::string &cgiScriptPath)
 {
 	Request *request = this->_request;
-	ServerSettings *serverData = this->_serverData;
-
-	std::size_t	i = request->getLoc().rfind("/");
-	std::size_t	j = request->getLoc().rfind(serverData->cgi_extension);
-	cgiFile = request->getLoc().substr(i, j - i + serverData->cgi_extension.length());
-	cgiScriptPath = serverData->root + serverData->cgi_bin + cgiFile;
+	if (this->_loc->cgi)
+	{
+		std::size_t	i = request->getLoc().rfind("/");
+		std::size_t	j = request->getLoc().rfind(_loc->cgi_extension);
+		cgiFile = request->getLoc().substr(i, j - i + _loc->cgi_extension.length());
+		cgiScriptPath = _loc->root + _loc->cgi_bin + cgiFile;
+	}
+	else if (this->_serverData->cgi)
+	{
+		std::size_t	i = request->getLoc().rfind("/");
+		std::size_t	j = request->getLoc().rfind(_serverData->cgi_extension);
+		cgiFile = request->getLoc().substr(i, j - i + _serverData->cgi_extension.length());
+		cgiScriptPath = _serverData->root + _serverData->cgi_bin + cgiFile;
+	}
 }
 
 /* Read the output of the CGI script from the pipe
