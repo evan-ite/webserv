@@ -73,7 +73,6 @@ void Request::parse(std::string httpRequest)
 		ssize_t pos = this->_sessionId.find('=');
 		this->_sessionId = this->_sessionId.substr(1 + pos);
 	}
-	log(logDEBUG) << "session_id: " << this->_sessionId;
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
 }

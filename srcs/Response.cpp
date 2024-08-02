@@ -25,6 +25,10 @@ Response::Response(Request &request, ServerSettings &serverData)
 	{
 		this->_loc = new Location;
 		*this->_loc = findLoc(request.getLoc(), serverData);
+		if (serverData.dirlistTemplate.empty())
+			this->_dirlistTemplate = DIRLIST;
+		else
+			this->_dirlistTemplate = serverData.dirlistTemplate;
 		if (!this->_loc->redir.empty())
 		{
 			// Handle external and internal redirection
@@ -134,9 +138,11 @@ void	Response::deleteMethod(Request &request)
 // Creates an html page with name fileName that lists the content of dirPath
 void	Response::createDirlisting(std::string dirPath)
 {
-	std::string htmlTemplate = DIRLIST;
+	std::string htmlTemplate = this->_dirlistTemplate;
 
 	std::size_t pos = htmlTemplate.find("INSERT");
+	if (pos == std::string::npos)
+		{log(logERROR) << "Invalid directory listing template";}
 	std::string insertList = this->loopDir(dirPath);
 	htmlTemplate.replace(pos, 6, insertList);
 

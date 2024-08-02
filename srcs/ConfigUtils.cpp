@@ -163,7 +163,11 @@ void Config::parseServer(std::string key, std::string value, std::string line) {
 			throw std::runtime_error("Error: invalid error page");
 		removeCharacter(error_page, ';');
 		removeCharacter(error_page, '"');
-		this->_tempServer.error_pages[error_code] = error_page;
+		this->_tempServer.error_pages[error_code] = this->_tempServer.root + "/" + error_page;
+	}
+	else if (key == "dir_list") {
+		std::string path = this->_tempServer.root + "/" + value;
+		this->_tempServer.dirlistTemplate = readFileToString(path);
 	}
 }
 

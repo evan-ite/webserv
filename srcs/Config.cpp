@@ -174,6 +174,7 @@ std::ostream& operator<<(std::ostream& os, const ServerSettings& server) {
 	os << "CGI: " << (server.cgi ? "true" : "false") << std::endl;
 	os << "CGI Extension: " << server.cgi_extension << std::endl;
 	os << "CGI Bin: " << server.cgi_bin << std::endl;
+	os << "Dir List Template: " << server.dirlistTemplate.size() << std::endl;
 
 	os << "Error Pages:" << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it) {
