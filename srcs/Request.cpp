@@ -80,23 +80,26 @@ void Request::parse(std::string httpRequest)
 }
 
 
-std::string Request::findBoundary(const std::string& httpRequest) {
+std::string Request::findBoundary(const std::string& httpRequest)
+{
 	size_t pos = httpRequest.find("boundary=");
 	if (pos == std::string::npos) return "";
 	pos += 9; // Length of "boundary="
 	size_t endPos = httpRequest.find("\r", pos);
-	return "--" + httpRequest.substr(pos, endPos - pos);
+	return ("--" + httpRequest.substr(pos, endPos - pos));
 }
 
-void Request::parsePart(const std::string& part) {
+void Request::parsePart(const std::string& part)
+{
 	std::string::size_type headerEndPos = part.find("\r\n\r\n");
-	if (headerEndPos == std::string::npos) return;
+	if (headerEndPos == std::string::npos) return ;
 
 	std::string headers = part.substr(0, headerEndPos);
 	std::string content = part.substr(headerEndPos + 4); // Skip the CRLF
 
 	size_t filenamePos = headers.find("filename=\"");
-	if (filenamePos != std::string::npos) {
+	if (filenamePos != std::string::npos)
+	{
 		filenamePos += 10; // Length of "filename=\""
 		size_t filenameEndPos = headers.find("\"", filenamePos);
 		std::string filename = headers.substr(filenamePos, filenameEndPos - filenamePos);
@@ -104,11 +107,13 @@ void Request::parsePart(const std::string& part) {
 	}
 }
 
-void Request::parseMultipart(const std::string& httpRequest) {
+void Request::parseMultipart(const std::string& httpRequest)
+{
 	std::string boundary = findBoundary(httpRequest);
-	if (boundary.empty()) {
+	if (boundary.empty())
+	{
 		_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
-		return;
+		return ;
 	}
 	std::istringstream stream(httpRequest);
 	std::string line;
@@ -131,57 +136,70 @@ void Request::parseMultipart(const std::string& httpRequest) {
 	}
 }
 
-void Request::printFileData() {
+void Request::printFileData()
+{
 	if (this->_fileData.empty())
 		return ;
 
-	for (size_t i = 0; i < _fileData.size(); ++i) {
+	for (size_t i = 0; i < _fileData.size(); ++i)
+	{
 		log(logDEBUG) << "Pair " << i+1 << ": (" << _fileData[i].first << ", " << _fileData[i].second << ")\n";
 	}
 }
 
-std::string		Request::getLoc() {
-	return this->_location;
+std::string		Request::getLoc()
+{
+	return (this->_location);
 }
 
-void 	Request::setLoc(std::string &location) {
+void 	Request::setLoc(std::string &location)
+{
 	this->_location = location;
 }
 
 
-std::string		Request::getContentType() {
-	return this->_contentType;
+std::string		Request::getContentType()
+{
+	return (this->_contentType);
 }
 
-HttpMethod		Request::getMethod() {
-	return this->_method;
+HttpMethod		Request::getMethod()
+{
+	return (this->_method);
 }
 
-int				Request::getContentLen() {
-	return this->_contentLength;
+int				Request::getContentLen()
+{
+	return (this->_contentLength);
 }
 
-std::string		Request::getBody() {
-	return this->_body;
+std::string		Request::getBody()
+{
+	return (this->_body);
 }
 
-std::vector<std::pair<std::string, std::string> >	Request::getFileData() {
-	return this->_fileData;
+std::vector<std::pair<std::string, std::string> >	Request::getFileData()
+{
+	return (this->_fileData);
 }
 
-std::string		Request::getConnection() {
-	return this->_connection;
+std::string		Request::getConnection()
+{
+	return (this->_connection);
 }
 
-void			Request::setConnection(std::string connection) {
+void			Request::setConnection(std::string connection)
+{
 	this->_connection = connection;
 }
 
 
-std::string		Request::getsessionId() {
-	return this->_sessionId;
+std::string		Request::getsessionId()
+{
+	return (this->_sessionId);
 }
 
-void			Request::resetSessionId() {
+void			Request::resetSessionId()
+{
 	this->_sessionId = "";
 }

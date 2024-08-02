@@ -2,7 +2,8 @@
 # define CONFIG_HPP
 # include "settings.hpp"
 
-struct Location {
+struct Location
+{
 	std::string	path;
 	std::string	root;
 	std::string	index;
@@ -21,8 +22,8 @@ struct Location {
 
 
 
-struct ServerSettings {
-	std::string server_name;
+struct ServerSettings
+{
 	std::string root;
 	std::string host;
 	int 		port;
@@ -40,7 +41,8 @@ struct ServerSettings {
 	std::map<std::string, Location> locations;
 };
 
-class Config {
+class Config
+{
 	public:
 		Config(void);
 		Config(const std::string &filename);

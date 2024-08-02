@@ -17,10 +17,12 @@ class Server
 		bool				clientHasFD(int fd);
 		int					addClient(int fd);
 		void				handleRequest(int fd);
-		class clientError : public std::exception {
+		class clientError : public std::exception
+		{
 			virtual const char* what() const throw();
 		};
-		class socketError : public std::exception {
+		class socketError : public std::exception
+		{
 			virtual const char* what() const throw();
 		};
 	private:
