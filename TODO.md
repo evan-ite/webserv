@@ -58,6 +58,8 @@
 - [x] change language simple cgi
 - [x] put install dotenv lib in readme
 - [x] cookies in cgi
+- [ ] cgi also on location level
+- [ ] add cgi pass 
 
 ## Create some structure
 - [x] Divide long class cpp files in seperate files
