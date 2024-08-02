@@ -2,17 +2,10 @@
 # define REQUEST_HPP
 # include "settings.hpp"
 
-enum HttpMethod
-{
-	GET,
-	POST,
-	DELETE,
-	INVALID
-};
-
 class Request
 {
 	public:
+		Request();
 		Request(std::string httpRequest);
 		Request(const Request &copy);
 		~Request();
@@ -40,7 +33,6 @@ class Request
 
 
 	private:
-		Request();
 		void parse(std::string httpRequest);
 		void printFileData();
 		std::string findBoundary(const std::string& httpRequest);

@@ -2,34 +2,31 @@
 
 Webserv::Webserv() {}
 
-Webserv::Webserv(Config &conf) : _conf(conf) {}
+Webserv::Webserv(const Webserv &copy) : _servers(copy._servers) {}
 
-Webserv::Webserv(const Webserv &copy)
+Webserv::~Webserv()
 {
-	this->_conf = copy._conf;
+	log(logINFO) << "Shutting down webserv";
 }
-
-Webserv::~Webserv() {}
 
 Webserv & Webserv::operator=(const Webserv &assign)
 {
-	this->_conf = assign._conf;
+	this->_servers = assign._servers;
 	return (*this);
 }
 
-int	Webserv::run()
+int	Webserv::run(Config conf)
 {
 	this->setupEpoll();
-	std::map<std::string, ServerSettings>				sMap = this->_conf.getServersMap();
-	std::map<std::string, ServerSettings> ::iterator	it = sMap.begin();
+	std::map<std::string, Server>				sMap = conf.getServersMap();
+	std::map<std::string, Server> ::iterator	it = sMap.begin();
 	for (; it != sMap.end(); it++)
 	{
-		Server s(it->first, it->second);
-		this->addServer(s);
+		this->addServer(it->second);
 		log(logINFO) << "Server listening: " << it->first;
 	}
 
-	if (this->getNumberServers())
+	if (this->_servers.size() > 0)
 		this->handleEpollEvents();
 	else
 		log(logINFO) << "No active server conf found - quitting";
@@ -47,7 +44,7 @@ void Webserv::epollAddFD(int fd)
 	struct epoll_event event;
 	event.data.fd = fd;
 	event.events = EPOLLIN | EPOLLET;
-	if (epoll_ctl(this->getEpollFD(), EPOLL_CTL_ADD, fd, &event) == -1)
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, fd, &event) == -1)
 		throw epollError();
 }
 
@@ -58,22 +55,12 @@ void	Webserv::setupEpoll()
 		throw epollError();
 }
 
-int	Webserv::getNumberServers()
-{
-	return (this->_servers.size());
-}
-
-int	Webserv::getEpollFD()
-{
-	return (this->_epoll_fd);
-}
-
 void Webserv::handleEpollEvents()
 {
 	struct epoll_event events[MAX_EVENTS];
 	while (g_signal)
 	{
-		int numEvents = epoll_wait(this->getEpollFD(), events, MAX_EVENTS, -1);
+		int numEvents = epoll_wait(this->_epoll_fd, events, MAX_EVENTS, -1);
 		if (numEvents == -1)
 			throw epollError();
 		for (int i = 0; i < numEvents; ++i)

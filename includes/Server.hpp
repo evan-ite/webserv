@@ -2,21 +2,29 @@
 # define SERVER_HPP
 # include "settings.hpp"
 
-class Server
+class Server : public ASetting
 {
 	public:
 		// Constructors
-		Server(std::string key, ServerSettings settings);
+		Server();
+		// Server(std::string host, int port);
 		Server(const Server &copy);
 		// Destructor
 		~Server();
 		// Operators
 		Server & operator=(const Server &assign);
 		// Getters / Setters
+		void				setHost(std::string host);
+		void				setPort(int port);
 		int					getFd() const;
-		bool				clientHasFD(int fd);
 		int					addClient(int fd);
+		void				addLocation(Location loc);
+		int					getMaxSize(std::string loc);
+		// funcs
+		bool				clientHasFD(int fd);
 		void				handleRequest(int fd);
+		void				display() const;
+		// exceptions
 		class clientError : public std::exception
 		{
 			virtual const char* what() const throw();
@@ -26,19 +34,20 @@ class Server
 			virtual const char* what() const throw();
 		};
 	private:
-		Server();
-		void					setupServerSocket();
-		int						_fd;
-		ServerSettings			_settings;
-		struct sockaddr_in		_address;
-		std::string				_key;
-		std::vector <Client>	_activeClients;
-		std::vector <Cookie>	_activeCookies;
-		bool					checkContentLength(std::string httpRequest, int fd);
-		void					requestTooLarge(int fd);
-		void 					checkSession(Request &req);
-		void 					addSession(std::string sessionId);
-		static void*			handleRequestWrapper(void* arg);
+		std::string							_port;
+		std::string							_host;
+		int									_fd;
+		struct sockaddr_in					_address;
+		std::string							_key;
+		std::vector <Client>				_activeClients;
+		std::vector <Cookie>				_activeCookies;
+		std::map <std::string, Location>	_locations;
+		void								setupServerSocket();
+		bool								checkContentLength(std::string httpRequest, int fd);
+		void								requestTooLarge(int fd);
+		void 								checkSession(Request &req);
+		void 								addSession(std::string sessionId);
+		static void*						handleRequestWrapper(void* arg);
 };
 
 #endif

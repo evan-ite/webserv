@@ -73,12 +73,12 @@ std::vector<std::string> Config::getHosts(std::string server)
 	return (hosts);
 }
 
-void Config::parseLocation(Location *currentLocation, std::string key, std::string value, std::string line)
+void Config::parseLocation(Server *server, Location *currentLocation, std::string key, std::string value, std::string line)
 {
 	if (key == "root")
-		currentLocation->root = value;
+		currentLocation->setRoot(value);
 	else if (key == "index")
-		currentLocation->index = value;
+		currentLocation->setIndex(value);
 	else if (key == "error_page")
 	{
 		std::istringstream iss(line);
@@ -91,12 +91,12 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 			throw std::runtime_error("Error: invalid error page");
 		removeCharacter(error_page, ';');
 		removeCharacter(error_page, '"');
-		currentLocation->loc_error_pages[error_code] = error_page;
+		currentLocation->addErrorPage(error_code, error_page);
 	}
 	else if (key == "allow_uploads")
-		currentLocation->allow_uploads = (value == "on");
+		currentLocation->setAllowUploads(((value == "on")));
 	else if (key == "autoindex")
-		currentLocation->autoindex = (value == "on");
+		currentLocation->setAutoindex(((value == "on")));
 	else if (key == "return")
 	{
 		std::istringstream iss(line);
@@ -107,7 +107,7 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 			throw std::runtime_error("Error: invalid redirection value");
 		removeCharacter(redir, ';');
 		removeCharacter(redir, '"');
-		currentLocation->redir = redir;
+		currentLocation->setRedir(redir);
 	}
 	else if (key == "allow")
 	{
@@ -117,30 +117,31 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		while (iss >> allow)
 		{
 			removeCharacter(allow, ';');
-			currentLocation->allow.push_back(allow);
+			currentLocation->addAllow(allow);
 		}
 	}
 	else if (key == "cgi")
-		currentLocation->cgi = (value == "on");
+		currentLocation->setCgi(((value == "on")));
 	else if (key == "cgi_extension")
-		currentLocation->cgi_extension = value;
+		currentLocation->setCgiExtension(value);
 	else if (key == "cgi_bin")
-		currentLocation->cgi_bin = value;
+		currentLocation->setCgiBin(value);
 }
 
 void Config::parseServer(std::string key, std::string value, std::string line)
 {
 	if (key == "root")
-		this->_tempServer.root = value;
+		this->_tempServer.setRoot(value);
 	else if (key == "host")
-		this->_tempServer.host = value;
+		this->_tempServer.setHost(value);
 	else if (key == "listen")
 	{
 		std::istringstream iss(value);
 		int port;
 		if (!(iss >> port))
 			throw std::runtime_error("Error: invalid port number");
-		this->_tempServer.port = port;
+		this->_tempServer.setPort(port);
+
 	}
 	else if (key == "client_max_body_size")
 	{
@@ -148,32 +149,14 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 		int size;
 		if (!(iss >> size))
 			throw std::runtime_error("Error: invalid client_max_body_size");
-		this->_tempServer.client_max_body_size = size;
-	}
-	else if (key == "client_body_in_file_only")
-		this->_tempServer.client_body_in_file_only = (value == "on");
-	else if (key == "client_body_buffer_size")
-	{
-		std::istringstream iss(value);
-		int size;
-		if (!(iss >> size))
-			throw std::runtime_error("Error: invalid client_body_buffer_size");
-		this->_tempServer.client_body_buffer_size = size;
-	}
-	else if (key == "client_body_timeout")
-	{
-		std::istringstream iss(value);
-		int timeout;
-		if (!(iss >> timeout))
-			throw std::runtime_error("Error: invalid client_body_timeout");
-		this->_tempServer.client_body_timeout = timeout;
+		this->_tempServer.setClientMaxBodySize(size);
 	}
 	else if (key == "cgi")
-		this->_tempServer.cgi = (value == "on");
+		this->_tempServer.setCgi((value == "on"));
 	else if (key == "cgi_extension")
-		this->_tempServer.cgi_extension = value;
+		this->_tempServer.setCgiExtension(value);
 	else if (key == "cgi_bin")
-		this->_tempServer.cgi_bin = value;
+		this->_tempServer.setCgiBin(value);
 	else if (key == "error_page")
 	{
 		std::istringstream iss(line);
@@ -186,27 +169,13 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 			throw std::runtime_error("Error: invalid error page");
 		removeCharacter(error_page, ';');
 		removeCharacter(error_page, '"');
-		this->_tempServer.error_pages[error_code] = this->_tempServer.root + "/" + error_page;
+		this->_tempServer.addErrorPage(error_code, this->_tempServer.getRoot() + "/" + error_page);
 	}
 	else if (key == "dir_list")
 	{
-		std::string path = this->_tempServer.root + "/" + value;
-		this->_tempServer.dirlistTemplate = readFileToString(path);
+		std::string path = this->_tempServer.getRoot() + "/" + value;
+		this->_tempServer.setDirlistTemplate(path);
 	}
-}
-
-void Config::makeStatusMessages(ServerSettings &server)
-{
-	server.error_messages["400"] = "Bad Request";
-	server.error_messages["403"] = "Forbidden";
-	server.error_messages["404"] = "Not Found";
-	server.error_messages["405"] = "Method Not Allowed";
-	server.error_messages["413"] = "Request Entity Too Large";
-	server.error_messages["415"] = "Unsupported Media Type";
-	server.error_messages["500"] = "Internal Server Error";
-	server.error_messages["200"] = "OK";
-	server.error_messages["201"] = "Created";
-	server.error_messages["204"] = "No Content";
 }
 
 void Config::removeCharacter(std::string& str, char charToRemove)

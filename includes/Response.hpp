@@ -7,7 +7,7 @@ class Response
 {
 	public:
 		// Constructors
-		Response(Request &request, ServerSettings &confData);
+		Response(Request &request, Location &loc);
 		Response(int	status,
 				std::string	reason,
 				std::string	type,
@@ -19,8 +19,7 @@ class Response
 
 		// Operators
 		Response & operator=(const Response &assign);
-
-		std::string makeResponse();
+		// setters and getters
 		void		setStatus(int status);
 		void		setReason(std::string reason);
 		void		setType(std::string type);
@@ -28,6 +27,10 @@ class Response
 		void		setConnection(std::string connection);
 		std::string	getConnection();
 		std::string	getSessionId();
+		// funcs
+		std::string	makeResponse();
+		bool		handleRedir(std::string redir);
+		bool		handleCGI(Request &request);
 
 		class ResponseException : public std::exception {
 			private:
@@ -47,15 +50,12 @@ class Response
 		void		createFiles(Request &request, int &status);
 		void		getMethod(Request &request);
 		void		deleteMethod(Request &request);
-		Location	findLoc(const std::string& uri, ServerSettings &serverData);
-		bool		checkMethod(std::string method);
+		void		checkMethod(HttpMethod method, Request &request);
 		void		createDirlisting(std::string dirPath);
 		std::string	loopDir(std::string dirPath);
-		std::string findError(std::string errorCode);
 		std::string	getStatusMessage(std::string errorCode);
 		std::string extractFilePath(Request &request);
 		bool		isValidRequest(Request &request);
-		bool		checkExternal();
 		// To create response
 		int			_status;
 		std::string	_reason;
@@ -67,8 +67,7 @@ class Response
 		std::string _redir;
 		std::string _dirlistTemplate;
 		// Utils
-		Location 		*_loc;
-		ServerSettings	*_servSet;
+		Location 		_loc;
 };
 
 

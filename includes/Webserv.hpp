@@ -6,10 +6,10 @@
 class Webserv
 {
 	public:
-		Webserv(Config &conf);
+		Webserv();
 		~Webserv();
 		Webserv & operator=(const Webserv &assign);
-		int					run();
+		int					run(Config conf);
 		class configError : public std::exception {
 			virtual const char* what() const throw();
 		};
@@ -22,13 +22,9 @@ class Webserv
 
 	private:
 		void				addServer(Server s);
-		int					getEpollFD();
 		void				epollAddFD(int fd);
-		int					getNumberServers();
 
 		Webserv(const Webserv &copy);
-		Webserv();
-		Config							_conf;
 		int								_epoll_fd;
 		std::vector<Server>				_servers;
 		void							setupEpoll();

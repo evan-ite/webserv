@@ -23,8 +23,8 @@ int main(int argc, char **argv)
 	{
 		log(logINFO) << "Starting virtual server(s)";
 		Config conf(configPath);
-		Webserv webserv(conf);
-		webserv.run();
+		Webserv webserv;
+		webserv.run(conf);
 	}
 	catch (std::exception &e)
 	{

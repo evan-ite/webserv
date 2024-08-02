@@ -15,60 +15,35 @@ Response::Response(int	status,
 	this->_len = body.size();
 	this->_connection = connection;
 	this->_body = body;
-	this->_loc = NULL;
-	this->_servSet = NULL;
 }
 
-Response::Response(Request &request, ServerSettings &serverData)
+Response::Response(Request &request, Location &loc)
 {
 	try
 	{
-		this->_loc = new Location;
-		*this->_loc = findLoc(request.getLoc(), serverData);
-		if (serverData.dirlistTemplate.empty())
-			this->_dirlistTemplate = DIRLIST;
-		else
-			this->_dirlistTemplate = serverData.dirlistTemplate;
-		if (!this->_loc->redir.empty())
-		{
-			// Handle external and internal redirection
-			if (this->checkExternal())
-				return ;
-			std::string newLoc = removeSubstr(request.getLoc(), this->_loc->path);
-			request.setLoc(newLoc);
-			*this->_loc = findLoc(this->_loc->redir, serverData);
-		}
-		this->_servSet = &serverData;
+		this->_loc = loc;
+		HttpMethod method = request.getMethod();
 		if (request.getsessionId().empty())
 			this->_sessionId = generateRandomString(12);
 		else
 			this->_sessionId = "";
-		Cgi cgi(&request, &serverData, this->_loc);
-		HttpMethod method = request.getMethod();
 
 		if (!isValidRequest(request))
 			throw ResponseException("400");
-		else if (cgi.isTrue())
-			cgi.execute(*this);
-		else if (method == POST && this->checkMethod("POST"))
-			postMethod(request);
-		else if (method == GET && this->checkMethod("GET"))
-			getMethod(request);
-		else if (method == DELETE && this->checkMethod("DELETE"))
-			deleteMethod(request);
-		else
-			throw ResponseException("405");
-
+		else if (this->handleRedir(loc.getRedir()))
+			return ;
+		else if (this->handleCGI(request))
+			return ;
+		this->checkMethod(method, request);
 		log(logDEBUG) << "Response object succesfully created";
 	}
 	catch (std::exception &e)
 	{
-		// Handle other methods or send a 405 Method Not Allowed response
+		std::pair<std::string, std::string> error = loc.findError(e.what());
 		this->_status = atoi(e.what());
-		// this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
-		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
+		this->_reason = error.first;
 		this->_type = "text/html";
-		this->_body = readFileToString(findError(e.what()));
+		this->_body = readFileToString(error.second);
 		this->_connection = "close";
 		this->_len = _body.length();
 	}
@@ -119,7 +94,7 @@ void	Response::getMethod(Request &request)
 
 void	Response::deleteMethod(Request &request)
 {
-	std::string file = _servSet->root + request.getLoc();
+	std::string file = this->_loc.getRoot() + request.getLoc();
 
 	if (remove(file.c_str()) != 0)
 	{
@@ -148,7 +123,7 @@ void	Response::createDirlisting(std::string dirPath)
 	htmlTemplate.replace(pos, 6, insertList);
 
 	while((pos = htmlTemplate.find("PATH")) != std::string::npos)
-		htmlTemplate.replace(pos, 4, this->_loc->path);
+		htmlTemplate.replace(pos, 4, this->_loc.getPath());
 
 	this->setBody(htmlTemplate);
 
@@ -161,7 +136,7 @@ std::string	Response::loopDir(std::string dirPath)
 	std::ostringstream html;
 	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
 		dirPath = dirPath.substr(1);
-	dirPath = this->_servSet->root + "/" + dirPath;
+	dirPath = this->_loc.getRoot() + "/" + dirPath;
 
 	struct dirent	*entry;
 	DIR		*dir = opendir(dirPath.c_str());
@@ -231,11 +206,7 @@ Response::Response(const Response &copy) :
 {}
 
 // Destructor
-Response::~Response()
-{
-	if (this->_loc)
-		delete _loc;
-}
+Response::~Response() {}
 
 // Operators
 Response & Response::operator=(const Response &assign)
@@ -247,7 +218,6 @@ Response & Response::operator=(const Response &assign)
 	this->_body = assign._body;
 	this->_len = assign._len;
 	this->_loc = assign._loc;
-	this->_servSet = assign._servSet;
 	return (*this);
 }
 

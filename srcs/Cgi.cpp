@@ -1,43 +1,33 @@
 #include "../includes/settings.hpp"
 
 // Constructors
-Cgi::Cgi(): _isTrue(false) {}
-
-Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
+Cgi::Cgi(Request &request, Location &loc)
 {
 	this->_env = NULL;
 	std::string ext;
 
-	if (loc->cgi)
-		ext = loc->cgi_extension;
-	else if (serverData->cgi)
-		ext = serverData->cgi_extension;
-	else {
+	if (loc.getCgi())
+		ext = loc.getCgiExtension();
+	else
+	{
 		this->_isTrue = false;
 		return ;
 	}
 
 	std::size_t	len = ext.length();
 
-	if (((request->getLoc().length() >= len
-		&& request->getLoc().substr(request->getLoc().size() - len) == ext)
-		|| request->getLoc().find(ext + "?") != std::string::npos))
-	{
-		this->_isTrue = true;
-		this->_request = request;
-		this->_serverData = serverData;
+	if (((request.getLoc().length() >= len
+		&& request.getLoc().substr(request.getLoc().size() - len) == ext)
+		|| request.getLoc().find(ext + "?") != std::string::npos))
 		this->_loc = loc;
-	}
 	else
 		this->_isTrue = false;
 }
-
 
 Cgi::Cgi(const Cgi &copy)
 {
 	(void) copy;
 }
-
 
 // Destructor
 Cgi::~Cgi()
@@ -108,10 +98,10 @@ void	Cgi::execute(Response &response)
 
 void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
 {
-	Request *request = this->_request;
+	Request request = this->_request;
 	// If POST, write the data to the pipe
-	if (request->getMethod() == POST)
-		write(pipefd[1], request->getBody().data(), request->getBody().size());
+	if (request.getMethod() == POST)
+		write(pipefd[1], request.getBody().data(), request.getBody().size());
 
 	dup2(pipefd[0], STDIN_FILENO);
 	close(pipefd[0]);
@@ -128,36 +118,31 @@ void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
 /* Create an environment for the CGI script */
 char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 {
-	Request 					*request = this->_request;
-	ServerSettings				*serverData = this->_serverData;
+	Request 					request = this->_request;
 	std::vector<std::string>	envVec;
 
 	// Set up environment variables specific to GET or POST
-	if (request->getMethod() == GET)
+	if (request.getMethod() == GET)
 	{
 		envVec.push_back("REQUEST_METHOD=GET");
-		envVec.push_back("QUERY_STRING=" + findKey(request->getLoc(), "?", ' '));
+		envVec.push_back("QUERY_STRING=" + findKey(request.getLoc(), "?", ' '));
 	}
-	else if (request->getMethod() == POST)
+	else if (request.getMethod() == POST)
 	{
 		envVec.push_back("REQUEST_METHOD=POST");
 		envVec.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
-		envVec.push_back("CONTENT_LENGTH=" + toString(request->getContentLen()));
+		envVec.push_back("CONTENT_LENGTH=" + toString(request.getContentLen()));
 	}
 	// Set up common environment variables required by the CGI script
 	envVec.push_back("REDIRECT_STATUS=200");
 	envVec.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	envVec.push_back("REQUEST_URI=" + request->getLoc());
-	envVec.push_back("HTTP_COOKIE=" + request->getsessionId());
-
+	envVec.push_back("REQUEST_URI=" + request.getLoc());
+	envVec.push_back("HTTP_COOKIE=" + request.getsessionId());
 	envVec.push_back("SCRIPT_NAME=" + cgiPath);
 	envVec.push_back("SCRIPT_FILENAME=" + cgiFile);
-
 	envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	envVec.push_back("SERVER_SOFTWARE=Webserv/1.0");
-	envVec.push_back("SERVER_PORT=" + toString(serverData->port));
-	envVec.push_back("SERVER_ADDR=" + serverData->host);
-
+	// do we really need to pass port and host? I removed it, but can add if we REALLY need it
 	return (vectorToCharStarStar(envVec));
 }
 
@@ -165,21 +150,11 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 Store the found strings in the arguments passed by reference. */
 void Cgi::extractCgi(std::string &cgiFile, std::string &cgiScriptPath)
 {
-	Request *request = this->_request;
-	if (this->_loc->cgi)
-	{
-		std::size_t	i = request->getLoc().rfind("/");
-		std::size_t	j = request->getLoc().rfind(_loc->cgi_extension);
-		cgiFile = request->getLoc().substr(i, j - i + _loc->cgi_extension.length());
-		cgiScriptPath = _loc->root + _loc->cgi_bin + cgiFile;
-	}
-	else if (this->_serverData->cgi)
-	{
-		std::size_t	i = request->getLoc().rfind("/");
-		std::size_t	j = request->getLoc().rfind(_serverData->cgi_extension);
-		cgiFile = request->getLoc().substr(i, j - i + _serverData->cgi_extension.length());
-		cgiScriptPath = _serverData->root + _serverData->cgi_bin + cgiFile;
-	}
+	Request request = this->_request;
+	std::size_t	i = request.getLoc().rfind("/");
+	std::size_t	j = request.getLoc().rfind(this->_loc.getCgiExtension());
+	cgiFile = request.getLoc().substr(i, j - i + this->_loc.getCgiExtension().length());
+	cgiScriptPath = this->_loc.getRoot() + this->_loc.getCgiBin() + cgiFile;
 }
 
 /* Read the output of the CGI script from the pipe
@@ -201,7 +176,7 @@ void	Cgi::createResponse(Response &response, std::string &cgiOutput)
 	response.setBody(cgiOutput);
 	response.setReason("OK");
 	response.setType("text/html");
-	response.setConnection(this->_request->getConnection());
+	response.setConnection(this->_request.getConnection());
 
 	log(logDEBUG) << "Created CGI response succesfully";
 }

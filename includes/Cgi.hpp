@@ -6,7 +6,7 @@ class Cgi
 {
 	public:
 		// Constructors
-		Cgi(Request *request, ServerSettings *serverData, Location *loc);
+		Cgi(Request &request, Location &loc);
 
 		// Destructor
 		~Cgi();
@@ -32,9 +32,8 @@ class Cgi
 		Cgi();
 		Cgi(const Cgi &copy);
 
-		Request 		*_request;
-		ServerSettings	*_serverData;
-		Location		*_loc;
+		Request 		_request;
+		Location		_loc;
 		bool			_isTrue;
 		char			**_env;
 

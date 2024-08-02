@@ -24,125 +24,58 @@ bool Response::isValidRequest(Request &request)
 		return (true);
 }
 
-// check if redir contains URL scheme, if so redirect to
-// this URL
-bool Response::checkExternal()
-{
-	if (this->_loc->redir.find("http") == 0 || this->_loc->redir.find("https") == 0)
-	{
-		this->_status = 302;
-		this->_reason = "Found";
-		this->_connection = "close";
-		this->_redir = this->_loc->redir;
-		this->_len = 0;
-
-		return (true);
-	}
-
-	return (false);
-}
-
 // Function that returns the correct file path, based on the URI
 // and the root and index from the config file. Returnd empty string
 // in the case of directory listing
 std::string Response::extractFilePath(Request &request)
 {
 	// Find end of the location path in the URI
-	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
+	std::size_t	i = request.getLoc().find(this->_loc.getPath()) + this->_loc.getPath().length();
 	std::string	file;
 
 	if (i < request.getLoc().length())
 	{ // If URI contains a filename extract it
 		file = request.getLoc().substr(i);
 		if (file.find('.') == std::string::npos)
-			file += "/" + _loc->index;
+			file += "/" + this->_loc.getIndex();
 	}
 	else // Else use index file
-		file = _loc->index;
+		file = this->_loc.getIndex();
 
 	if (file[0] && file[0] == '/')
 		file = file.substr(1);
 
 	std::string filePath;
-	if (_loc->autoindex)
+	if (this->_loc.getAutoindex())
 	{ // directory listing
 		filePath = "";
-		this->createDirlisting(_loc->path);
+		this->createDirlisting(this->_loc.getPath());
 	}
 	else
 	{
-		if (file.find(this->_loc->root) != std::string::npos)
+		if (file.find(this->_loc.getRoot()) != std::string::npos)
 			filePath = file;
 		else
-			filePath = this->_loc->root + "/" + file;
+			filePath = this->_loc.getRoot() + "/" + file;
 	}
 
 	return (filePath);
 }
 
-
-// Returns path to correct error page
-std::string Response::findError(std::string errorCode)
+void Response::checkMethod(HttpMethod method, Request &request)
 {
-	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
-		return (_loc->root + "/" + _loc->loc_error_pages[errorCode]);
-	else if (_servSet->error_pages.find(errorCode) != _servSet->error_pages.end())
-		return (_servSet->error_pages[errorCode]);
+
+	void (Response::*funcs[3])(Request &) = {&Response::getMethod, &Response::postMethod, &Response::deleteMethod};
+
+	if (this->_loc.findAllow(method))
+		(this->*funcs[method])(request);
 	else
-		return (_servSet->error_pages["500"]);
-}
-
-// Returns the correct status message for the given status code
-std::string Response::getStatusMessage(std::string statusCode)
-{
-	if (_servSet->error_messages.find(statusCode) != _servSet->error_messages.end())
-		return (_servSet->error_messages[statusCode]);
-	else
-		return ("Internal Server Error");
-}
-
-
-/* Loops over all possible server locations and checks if they match the request location.
-If no match was found, the first location in the map is used as default. */
-Location Response::findLoc(const std::string& uri, ServerSettings &sett)
-{
-	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
-	for (; it != sett.locations.end(); ++it)
-	{
-		if (it->first == uri)
-		{
-			Location loc = it->second;
-			return (loc);
-		}
-	}
-
-	size_t lastSlash = uri.find_last_of('/');
-	if (lastSlash == 0)
-		return (sett.locations["/"]);
-	else if (lastSlash != std::string::npos)
-	{
-		std::string shortUri = uri.substr(0, lastSlash);
-		return (this->findLoc(shortUri, sett));
-	}
-	else
-		return (sett.locations.at("/")); // Handle the case when no match is found - we need a smarter way of just returning item 0?
-}
-
-// Check if the method is allowed in the location, argument should
-// be method in capital letters, return value is true if method is allowed
-bool	Response::checkMethod(std::string method)
-{
-	Location loc = *this->_loc;
-	std::vector<std::string>::iterator it = std::find(loc.allow.begin(), loc.allow.end(), method);
-
-	if (it != loc.allow.end())
-		return (true);
-	return (false);
+		throw std::runtime_error("405");
 }
 
 void Response::createFiles(Request &request, int &status)
 {
-	std::string file = _servSet->root + "/" + _loc->path + "/";
+	std::string file = this->_loc.getRoot() + "/" + this->_loc.getPath() + "/";
 	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
 
 	if (fileData.empty())
@@ -219,4 +152,29 @@ std::string findType(const std::string &filename)
 	std::string extension = filename.substr(i + 1);
 
 	return checkMime(extension);
+}
+
+bool Response::handleRedir(std::string redir)
+{
+	if (redir.empty())
+		return (false);
+	this->_status = 302;
+	this->_reason = "Found";
+	this->_connection = "close";
+	this->_len = 0;
+	this->_redir = redir;
+	return (true);
+}
+
+bool Response::handleCGI(Request &request)
+{
+	Cgi cgi(request, this->_loc);
+	if (cgi.isTrue())
+	{
+		cgi.execute(*this);
+		return (true);
+	}
+	else
+		return (false);
+
 }
