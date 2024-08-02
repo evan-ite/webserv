@@ -115,10 +115,9 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->cgi_bin = value;
 }
 
-void Config::parseServer(std::string key, std::string value, std::string line) {
-	if (key == "server_name")
-		this->_tempServer.server_name = value;
-	else if (key == "root")
+void Config::parseServer(std::string key, std::string value, std::string line)
+{
+	if (key == "root")
 		this->_tempServer.root = value;
 	else if (key == "host")
 		this->_tempServer.host = value;

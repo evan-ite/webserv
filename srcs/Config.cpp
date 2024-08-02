@@ -163,7 +163,6 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 
 std::ostream& operator<<(std::ostream& os, const ServerSettings& server) {
 	os << "================ Server ===================" << std::endl;
-	os << "Server Name: " << server.server_name << std::endl;
 	os << "Root: " << server.root << std::endl;
 	os << "Host: " << server.host << std::endl;
 	os << "Port: " << server.port << std::endl;

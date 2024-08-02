@@ -1,8 +1,7 @@
 #include "../includes/settings.hpp"
 
 // Constructors
-Cgi::Cgi(): _isTrue(false)
-{}
+Cgi::Cgi(): _isTrue(false) {}
 
 Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
 {
@@ -22,14 +21,14 @@ Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
 
 	if (((request->getLoc().length() >= len
 		&& request->getLoc().substr(request->getLoc().size() - len) == ext)
-		|| request->getLoc().find(ext + "?") != std::string::npos)) 
+		|| request->getLoc().find(ext + "?") != std::string::npos))
 	{
 		this->_isTrue = true;
 		this->_request = request;
 		this->_serverData = serverData;
 		this->_loc = loc;
 	}
-	else 
+	else
 		this->_isTrue = false;
 }
 
@@ -154,7 +153,6 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	envVec.push_back("SERVER_SOFTWARE=Webserv/1.0");
 	envVec.push_back("SERVER_PORT=" + toString(serverData->port));
-	envVec.push_back("SERVER_NAME=" + serverData->server_name);
 	envVec.push_back("SERVER_ADDR=" + serverData->host);
 
 	return vectorToCharStarStar(envVec);
@@ -190,7 +188,7 @@ std::string Cgi::readCgiOutput(int *pipefd)
 	ssize_t bytesRead;
 	while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		cgiOutput.append(buffer, bytesRead);
-	
+
 	return cgiOutput;
 }
 

@@ -250,12 +250,12 @@ void* Server::handleRequestWrapper(void* arg)
 
 	if (!httpRequest.empty())
 	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		server->checkSession(request);
 		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
-		this->addSession(res.getSessionId());
+		server->addSession(res.getSessionId());
 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());

@@ -43,7 +43,6 @@ class Response
 	private:
 		Response(const Response &copy);
 		Response();
-
 		void		postMethod(Request &request);
 		void		createFiles(Request &request, int &status);
 		void		getMethod(Request &request);
@@ -57,9 +56,8 @@ class Response
 		std::string extractFilePath(Request &request);
 		bool		isValidRequest(Request &request);
 		bool		checkExternal();
-
 		// To create response
-		int	_status;
+		int			_status;
 		std::string	_reason;
 		std::string	_type;
 		std::size_t	_len;
@@ -68,7 +66,6 @@ class Response
 		std::string	_body;
 		std::string _redir;
 		std::string _dirlistTemplate;
-
 		// Utils
 		Location 		*_loc;
 		ServerSettings	*_servSet;
