@@ -67,7 +67,7 @@ void Server::setupServerSocket()
 		throw socketError();
 	if (bind(this->_fd, reinterpret_cast<struct sockaddr*>(&_address), sizeof(this->_address)) < 0)
 		throw socketError();
-	if (listen(this->_fd, 6) < 0)
+	if (listen(this->_fd, 128) < 0)
 		throw socketError();
 }
 
@@ -209,6 +209,7 @@ void* Server::handleRequestWrapper(void* arg)
 	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
 	Server* server = args->first;
 	int fd = args->second;
+	delete args;
 
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
@@ -249,11 +250,12 @@ void* Server::handleRequestWrapper(void* arg)
 
 	if (!httpRequest.empty())
 	{
+		log(logDEBUG) << "REQ\n" << httpRequest;
 		Request request(httpRequest);
 		server->checkSession(request);
 		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
-		log(logDEBUG) << resString;
+		log(logDEBUG) << "RES\n" << resString;
 		server->addSession(res.getSessionId());
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
@@ -281,11 +283,10 @@ void Server::handleRequest(int fd)
 {
 	pthread_t thread;
 	std::pair<Server*, int>* args = new std::pair<Server*, int>(this, fd);
-	int* fdPtr = new int(fd); // Allocate memory to pass the file descriptor
 	if (pthread_create(&thread, NULL, this->handleRequestWrapper, args) != 0)
 	{
 		log(logERROR) << "Failed to create thread for fd: " << fd;
-		delete fdPtr; // Free the allocated memory on failure
+		delete args; // Free the allocated memory on failure
 	}
 	else
 	{

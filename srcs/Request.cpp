@@ -64,6 +64,8 @@ void Request::parse(std::string httpRequest)
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
 	this->_host = findKey(httpRequest, "Host:", '\r');
 	this->_connection = findKey(httpRequest, "Connection: ", '\r');
+	if (this->_connection != "close")
+		this->_connection = "keep-alive";
 	this->_transferEncoding = findKey(httpRequest, "Transfer-Encoding: ", '\r');
 	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
