@@ -31,5 +31,5 @@ Logger::Logger(loglevel_e _loglevel)
 Logger::~Logger()
 {
 	this->_buffer << std::endl;
-	std::cout << this->_buffer.str();
+	std::cerr << this->_buffer.str();
 }

@@ -1,4 +1,3 @@
-#!/bin/bash
 
 read -n "$CONTENT_LENGTH" POST_DATA
 IFS="&" read -ra KEY_VALUE_PAIRS <<< "$POST_DATA"
