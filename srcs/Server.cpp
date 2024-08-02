@@ -67,7 +67,7 @@ void Server::setupServerSocket()
 		throw socketError();
 	if (bind(this->_fd, reinterpret_cast<struct sockaddr*>(&_address), sizeof(this->_address)) < 0)
 		throw socketError();
-	if (listen(this->_fd, 6) < 0)
+	if (listen(this->_fd, 128) < 0)
 		throw socketError();
 }
 
@@ -149,58 +149,147 @@ void Server::addSession(std::string sessionId)
 	this->_activeCookies.push_back(sesh);
 }
 
-void Server::handleRequest(int fd)
+// void Server::handleRequest(int fd)
+// {
+// 	char buffer[BUFFER_SIZE];
+// 	ssize_t count;
+// 	std::string httpRequest;
+// 	log(logINFO)	<< "Server " << this->_settings.host
+// 					<< ":" << this->_settings.port
+// 					<< " is reading from fd: " << fd;
+// 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
+// 	{
+// 		httpRequest.append(buffer, count);
+// 		if (!this->checkContentLength(httpRequest, fd))
+// 		{
+// 			httpRequest.clear();
+// 			log(logDEBUG) << "Shutting downd fd: " << fd;
+// 			close(fd);
+// 			break ;
+// 		}
+// 	}
+// 	if (count == 0 && httpRequest.empty())
+// 	{
+// 		close(fd);
+// 		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+// 	}
+// 	else if (count == -1)
+// 	{
+// 		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
+// 	}
+// 	if (!httpRequest.empty())
+// 	{
+// 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+// 		Request request(httpRequest);
+// 		this->checkSession(request);
+// 		Response res(request, this->_settings);
+// 		std::string resString = res.makeResponse();
+// 		this->addSession(res.getSessionId());
+// 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+// 		const char *resCStr = resString.data();
+// 		ssize_t sent = write(fd, resCStr, resString.size());
+// 		if (sent == -1)
+// 		{
+// 			close(fd); // Close on write error
+// 			log(logERROR) << "Error writing to socket, FD: " << fd;
+// 		}
+// 		if (res.getConnection() == "close")
+// 		{
+// 			close(fd);
+// 			log(logINFO) << "connection on fd " << fd << " closed on client request";
+// 		}
+// 		else
+// 		{
+// 			log(logINFO) << "connection on fd " << fd << " kept alive";
+// 		}
+// 	}
+// }
+void* Server::handleRequestWrapper(void* arg)
 {
+	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
+	Server* server = args->first;
+	int fd = args->second;
+	delete args;
+
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
-	log(logINFO)	<< "Server " << this->_settings.host
-					<< ":" << this->_settings.port
-					<< " is reading from fd: " << fd;
+	log(logINFO) << "Server is reading from fd: " << fd;
+
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
-		if (!this->checkContentLength(httpRequest, fd))
+		if (!server->checkContentLength(httpRequest, fd))
 		{
 			httpRequest.clear();
-			log(logDEBUG) << "Shutting downd fd: " << fd;
+			log(logDEBUG) << "Shutting down fd: " << fd;
 			close(fd);
-			break ;
+			return NULL;
 		}
 	}
-	if (count == 0 && httpRequest.empty())
+
+	if (count == 0)
 	{
-		close(fd);
-		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+		// Client closed the connection
+		if (httpRequest.empty())
+		{
+			close(fd);
+			log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+		}
 	}
-	else if (count == -1)
-	{
-		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
-	}
+	// else if (count == -1)
+	// {
+	// 	if (errno != EINTR)
+	// 	{
+	// 		log(logERROR) << "Error receiving data on fd: " << fd;
+	// 		close(fd);
+	// 		return NULL;
+	// 	}
+	// 	// Handle other errors or interrupts appropriately
+	// }
+
 	if (!httpRequest.empty())
 	{
-		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 100);
+		log(logDEBUG) << "REQ\n" << httpRequest;
 		Request request(httpRequest);
-		this->checkSession(request);
-		Response res(request, this->_settings);
+		server->checkSession(request);
+		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
-		this->addSession(res.getSessionId());
-		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
+		log(logDEBUG) << "RES\n" << resString;
+		server->addSession(res.getSessionId());
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
 		{
-			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
+			close(fd);
+			return NULL;
 		}
+
 		if (res.getConnection() == "close")
 		{
 			close(fd);
-			log(logINFO) << "connection on fd " << fd << " closed on client request";
+			log(logINFO) << "Connection on fd " << fd << " closed on client request";
 		}
 		else
 		{
-			log(logINFO) << "connection on fd " << fd << " kept alive";
+			log(logINFO) << "Connection on fd " << fd << " kept alive";
 		}
+	}
+	return NULL;
+}
+
+void Server::handleRequest(int fd)
+{
+	pthread_t thread;
+	std::pair<Server*, int>* args = new std::pair<Server*, int>(this, fd);
+	if (pthread_create(&thread, NULL, this->handleRequestWrapper, args) != 0)
+	{
+		log(logERROR) << "Failed to create thread for fd: " << fd;
+		delete args; // Free the allocated memory on failure
+	}
+	else
+	{
+		pthread_detach(thread); // Detach the thread to allow it to run independently
 	}
 }

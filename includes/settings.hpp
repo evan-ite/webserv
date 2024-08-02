@@ -25,6 +25,7 @@
 # include <cctype>
 # include <sys/wait.h>
 # include <dirent.h>
+# include <pthread.h>
 // defines
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024 //read buffer size for sockets
@@ -32,7 +33,6 @@
 # define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
 # define LOGLEVEL logDEBUG
-# define UPLOAD_DIR "content/upload/"
 # define DEFAULT_CONF "./default/conf/default.conf"
 # define TEMPLATE   "./content/html/template2.html"
 # define COOKIE_LIFETIME 300 // in seconds

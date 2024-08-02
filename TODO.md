@@ -57,7 +57,7 @@
 - [x] nice throw errors
 - [x] change language simple cgi
 - [x] put install dotenv lib in readme
-- [ ] cookies in cgi
+- [x] cookies in cgi
 
 ## Create some structure
 - [x] Divide long class cpp files in seperate files

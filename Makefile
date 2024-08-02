@@ -16,7 +16,7 @@ $(OBJDIR)/%.o: %.cpp
 $(NAME): $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
-run:
+run: all
 	./$(NAME) content/conf/basic.conf
 
 clean:
