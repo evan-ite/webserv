@@ -58,8 +58,6 @@
 - [x] change language simple cgi
 - [x] put install dotenv lib in readme
 - [x] cookies in cgi
-- [ ] cgi also on location level
-- [ ] add cgi pass 
 
 ## Create some structure
 - [x] Divide long class cpp files in seperate files
@@ -79,8 +77,9 @@
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
 - [ ] Chunked requests
-- [ ] Siege
+- [x] Siege
 - [x] http redirects
 - [ ] Check forbidden functions
 - [x] Cookiesssss
 - [x] Create python script to automate API key
+- [ ] remove server_name
