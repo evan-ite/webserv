@@ -48,11 +48,11 @@ int Server::getFd() const
 
 const char * Server::clientError::what() const throw()
 {
-	return "Client did something weird";
+	return "Client Error";
 }
 const char * Server::socketError::what() const throw()
 {
-	return "Socket did something weird";
+	return "Socket Error";
 }
 
 void Server::setupServerSocket()

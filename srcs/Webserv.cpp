@@ -100,13 +100,13 @@ void Webserv::handleEpollEvents()
 
 const char * Webserv::configError::what() const throw()
 {
-	return ("Config did something weird");
+	return ("Config Error");
 }
 const char * Webserv::internalError::what() const throw()
 {
-	return ("Webserv did something weird");
+	return ("Webserv Error");
 }
 const char * Webserv::epollError::what() const throw()
 {
-	return ("Epoll did something weird");
+	return ("Epoll Error");
 }
