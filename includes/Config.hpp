@@ -3,15 +3,18 @@
 # include "settings.hpp"
 
 struct Location {
-	std::string path;
-	std::string root;
-	std::string index;
-	std::map<std::string, std::string> loc_error_pages;
-	std::string redir;
-	bool autoindex;
-	std::vector<std::string> allow;
-	bool allow_uploads;
+	std::string	path;
+	std::string	root;
+	std::string	index;
+	std::string	redir;
+	bool		cgi;
+	std::string	cgi_extension;
+	std::string	cgi_bin;
+	bool		autoindex;
+	bool 		allow_uploads;
 
+	std::map<std::string, std::string>	loc_error_pages;
+	std::vector<std::string>			allow;
 	Location(const std::string& path) : path(path) {}
 	Location() : path("") {};
 };
@@ -22,15 +25,15 @@ struct ServerSettings {
 	std::string server_name;
 	std::string root;
 	std::string host;
-	std::string dirlistTemplate;
-	int port;
-	int client_max_body_size;
-	bool client_body_in_file_only;
-	int client_body_buffer_size;
-	int client_body_timeout;
-	bool cgi;
-	std::string cgi_extension;
-	std::string cgi_bin;
+	int 		port;
+	int 		client_max_body_size;
+	bool		client_body_in_file_only;
+	int 		client_body_buffer_size;
+	int 		client_body_timeout;
+	bool		cgi;
+	std::string	cgi_extension;
+	std::string	cgi_bin;
+	std::string	dirlistTemplate;
 
 	std::map<std::string, std::string> error_pages;
 	std::map<std::string, std::string> error_messages;

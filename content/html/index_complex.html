@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="../styles_complex.css">
+	<title>Webserv</title>
+</head>
+<body>
+	<h1 id="greeting">Hi Queen!!!</h1>
+	<div class="formbox">
+		<form id="uploadForm1" action="/upload" method="POST" enctype="multipart/form-data">
+			<input type="file" name="file"><br><br>
+			<input class="btn" type="submit" value="Upload">
+		</form>
+		<button class="btn" onclick="window.location.href='/upload'">Show Files</button>
+	</div>
+	<div class="formbox">
+		<form id="uploadForm2" action="/test" method="POST" enctype="multipart/form-data">
+			<input type="file" name="file"><br><br>
+			<input class="btn" type="submit" value="Upload">
+		</form>
+		<button class="btn" onclick="window.location.href='/test'">Show Files</button>
+	</div>
+	<div class="memebox">
+		<img class="meme" src="../assets/internet-meme.jpeg" alt="How do I download an internet" width="300">
+		<video class="meme" width="320" height="240" controls>
+			<source src="../assets/office.mp4" type="video/mp4">
+		</video>
+	</div>
+	<h2>Test my crazy cgi skills here </h2>
+	<div class="formbox">
+		<form action="/cgi-bin/simple.cgi" method="post">
+			Favourite food: <input class="cgi-input" type="text" name="favorite"><br>
+			Worst food: <input class="cgi-input" type="text" name="worst"><br>
+			<input class="btn" type="submit" value="Submit">
+		</form>
+	</div>
+
+	<h2>Test my crazy cgi skills - IN BASH </h2>
+	<div class="formbox">
+		<form action="/cgi-bin/simple_bash.cgi" method="post">
+			Coding language I looooove: <input class="cgi-input" type="text" name="favorite"><br>
+			Coding language I HATE: <input class="cgi-input" type="text" name="worst"><br>
+			<input class="btn" type="submit" value="Submit">
+		</form>
+	</div>
+
+	<h2>Or type in your 42 intra username </h2>
+	<div class="formbox">
+		<form action="/cgi-bin/username.cgi" method="post">
+			Username: <input class="cgi-input" type="text" name="username"><br>
+			<input class="btn" type="submit" value="Submit">
+		</form>
+	</div>
+
+	<script>
+		function getCookie(name) {
+			const value = `; ${document.cookie}`;
+			const parts = value.split(`; ${name}=`);
+			if (parts.length === 2) return parts.pop().split(';').shift();
+			return null;
+		}
+
+		function checkSession() {
+			const sessionCookie = getCookie('session_id');
+			if (sessionCookie) {
+				document.getElementById('greeting').innerText = `Hi Queen!! Your session ID is: ${sessionCookie}`;
+			}
+		}
+
+		window.onload = function() {
+	checkSession();
+
+	document.querySelectorAll('#uploadForm1, #uploadForm2').forEach(function(form) {
+		form.addEventListener('submit', function(event) {
+			event.preventDefault();
+
+			var formData = new FormData(form);
+
+			fetch(form.action, {
+				method: form.method,
+				body: formData
+			}).then(response => {
+				if (!response.ok) {
+					if (response.status === 413) {
+						alert('File too large. Please try again with a smaller file.');
+					} else {
+						alert('Upload failed. Please try again.');
+					}
+					location.reload();
+				} else {
+					alert('Upload successful!');
+					location.reload();
+				}
+			}).catch(error => {
+				alert('An error occurred. Please try again.');
+				location.reload();
+			});
+		});
+	});
+};
+	</script>
+</body>
+</html>
