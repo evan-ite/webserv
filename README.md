@@ -92,7 +92,7 @@ The server's behavior is controlled by a configuration file, inspired by NGINX c
 ```conf
 server {
 	listen 80;
-	server_name localhost;
+	host localhost;
 
 	location / {
 		root content;
@@ -119,7 +119,6 @@ server {
 ### Key Configuration Options
 
 - `listen`: Port number to listen on.
-- `server_name`: The hostname of the server.
 - `location`: Defines how to handle requests to specific URL paths.
 - `root`: The root directory for serving files.
 - `index`: The default file to serve for directory requests.

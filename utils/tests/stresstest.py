@@ -3,19 +3,28 @@ import requests
 import concurrent.futures
 import time
 
+def chunked_request(url, method='POST', chunk_size=10):
+	def generate_chunks(data, chunk_size):
+		for i in range(0, len(data), chunk_size):
+			yield data[i:i + chunk_size]
+
+	data = "This is a chunked request body." * 10  # Example data
+	headers = {'Transfer-Encoding': 'chunked'}
+
+	with requests.Session() as session:
+		req = requests.Request(method, url, headers=headers)
+		prepped = session.prepare_request(req)
+
+		# Send the request in chunks
+		for chunk in generate_chunks(data, chunk_size):
+			prepped.body = chunk
+			response = session.send(prepped)
+			print(f"Chunk sent, response status: {response.status_code}")
+
 def test_requests(server_url):
 	try:
-		response = requests.get(server_url)
-		print(f"Valid GET response: {response.status_code}")
-
-		response = requests.post(server_url, json={"key": "value"})
-		print(f"Valid POST response: {response.status_code}")
-
-		response = requests.delete(server_url)
-		print(f"Valid DELETE response: {response.status_code}")
-
-		response = requests.request("INVALID_METHOD", server_url)
-		print(f"Malformed request response: {response.status_code}")
+		chunked_request(server_url, method='POST')
+		print("Chunked POST request sent successfully.")
 
 	except requests.RequestException as e:
 		print(f"Error: {e}")

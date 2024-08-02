@@ -17,10 +17,12 @@ class Server
 		bool				clientHasFD(int fd);
 		int					addClient(int fd);
 		void				handleRequest(int fd);
-		class clientError : public std::exception {
+		class clientError : public std::exception
+		{
 			virtual const char* what() const throw();
 		};
-		class socketError : public std::exception {
+		class socketError : public std::exception
+		{
 			virtual const char* what() const throw();
 		};
 	private:
@@ -36,6 +38,8 @@ class Server
 		void					requestTooLarge(int fd);
 		void 					checkSession(Request &req);
 		void 					addSession(std::string sessionId);
+		static void*			handleRequestWrapper(void* arg);
+		static void				handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody);
 };
 
 #endif

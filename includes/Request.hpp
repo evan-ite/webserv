@@ -2,7 +2,8 @@
 # define REQUEST_HPP
 # include "settings.hpp"
 
-enum HttpMethod {
+enum HttpMethod
+{
 	GET,
 	POST,
 	DELETE,
@@ -21,7 +22,7 @@ class Request
 		public:
 			const char* what() const throw()
 			{
-				return "Invalid HTTP method.";
+				return ("Invalid HTTP method.");
 			}
 		};
 
@@ -35,7 +36,6 @@ class Request
 		void			setConnection(std::string connection);
 		std::string		getsessionId();
 		void			resetSessionId();
-
 		std::vector<std::pair<std::string, std::string> >	getFileData();
 
 
@@ -46,19 +46,19 @@ class Request
 		std::string findBoundary(const std::string& httpRequest);
 		void parsePart(const std::string& part);
 		void parseMultipart(const std::string& httpRequest);
+		std::string makeName();
 
-		std::string	_location;
-		HttpMethod	_method;
-		std::string _body;
-		std::string _contentType;
-		int			_contentLength;
-		std::string _host;
-		std::string _userAgent;
-		std::string _connection;
-		std::string _transferEncoding;
-		std::string _sessionId;
-
-		std::vector<std::pair<std::string, std::string> > _fileData;
+		std::string											_location;
+		HttpMethod											_method;
+		std::string											_body;
+		std::string											_contentType;
+		int													_contentLength;
+		std::string											_host;
+		std::string											_userAgent;
+		std::string											_connection;
+		std::string											_transferEncoding;
+		std::string											_sessionId;
+		std::vector<std::pair<std::string, std::string> >	_fileData;
 };
 
 #endif

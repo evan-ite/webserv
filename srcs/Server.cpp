@@ -67,7 +67,7 @@ void Server::setupServerSocket()
 		throw socketError();
 	if (bind(this->_fd, reinterpret_cast<struct sockaddr*>(&_address), sizeof(this->_address)) < 0)
 		throw socketError();
-	if (listen(this->_fd, 6) < 0)
+	if (listen(this->_fd, 128) < 0)
 		throw socketError();
 }
 
@@ -121,7 +121,7 @@ void Server::checkSession(Request &req)
 {
 	std::string sessionId = req.getsessionId();
 	if (sessionId.empty())
-		return;
+		return ;
 	std::vector<Cookie>::iterator it = this->_activeCookies.begin();
 	for (; it != this->_activeCookies.end(); it++)
 	{
@@ -144,63 +144,206 @@ void Server::checkSession(Request &req)
 void Server::addSession(std::string sessionId)
 {
 	if (sessionId.empty())
-		return;
+		return ;
 	Cookie sesh(sessionId);
 	this->_activeCookies.push_back(sesh);
 }
 
-void Server::handleRequest(int fd)
+// void Server::handleRequest(int fd)
+// {
+// 	char buffer[BUFFER_SIZE];
+// 	ssize_t count;
+// 	std::string httpRequest;
+// 	log(logINFO)	<< "Server " << this->_settings.host
+// 					<< ":" << this->_settings.port
+// 					<< " is reading from fd: " << fd;
+// 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
+// 	{
+// 		httpRequest.append(buffer, count);
+// 		if (!this->checkContentLength(httpRequest, fd))
+// 		{
+// 			httpRequest.clear();
+// 			log(logDEBUG) << "Shutting downd fd: " << fd;
+// 			close(fd);
+// 			break ;
+// 		}
+// 	}
+// 	if (count == 0 && httpRequest.empty())
+// 	{
+// 		close(fd);
+// 		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+// 	}
+// 	else if (count == -1)
+// 	{
+// 		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
+// 	}
+// 	if (!httpRequest.empty())
+// 	{
+// 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+// 		Request request(httpRequest);
+// 		this->checkSession(request);
+// 		Response res(request, this->_settings);
+// 		std::string resString = res.makeResponse();
+// 		this->addSession(res.getSessionId());
+// 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+// 		const char *resCStr = resString.data();
+// 		ssize_t sent = write(fd, resCStr, resString.size());
+// 		if (sent == -1)
+// 		{
+// 			close(fd); // Close on write error
+// 			log(logERROR) << "Error writing to socket, FD: " << fd;
+// 		}
+// 		if (res.getConnection() == "close")
+// 		{
+// 			close(fd);
+// 			log(logINFO) << "connection on fd " << fd << " closed on client request";
+// 		}
+// 		else
+// 		{
+// 			log(logINFO) << "connection on fd " << fd << " kept alive";
+// 		}
+// 	}
+// }
+void* Server::handleRequestWrapper(void* arg)
 {
+	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
+	Server* server = args->first;
+	int fd = args->second;
+	delete args;
+
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
-	log(logINFO)	<< "Server " << this->_settings.host
-					<< ":" << this->_settings.port
-					<< " is reading from fd: " << fd;
+	std::string chunkedBody;
+	bool isChunked = false;
+	log(logINFO) << "Server is reading from fd: " << fd;
+
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
-		if (!this->checkContentLength(httpRequest, fd))
-		{
-			httpRequest.clear();
-			log(logDEBUG) << "Shutting downd fd: " << fd;
-			close(fd);
-			break ;
+		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+			isChunked = true;
+		if (isChunked && httpRequest.find("\r\n\r\n") != std::string::npos)
+			handleChunkedRequest(httpRequest, isChunked, chunkedBody);
+		else {
+			if (!server->checkContentLength(httpRequest, fd))
+			{
+				httpRequest.clear();
+				log(logDEBUG) << "Shutting down fd: " << fd;
+				close(fd);
+				return (NULL);
+			}
 		}
 	}
-	if (count == 0 && httpRequest.empty())
+	if (count == 0)
 	{
-		close(fd);
-		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+		// Client closed the connection
+		if (httpRequest.empty())
+		{
+			close(fd);
+			log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+		}
 	}
-	else if (count == -1)
-	{
-		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
-	}
+	// else if (count == -1)
+	// {
+	// 	if (errno != EINTR)
+	// 	{
+	// 		log(logERROR) << "Error receiving data on fd: " << fd;
+	// 		close(fd);
+	// 		return (NULL);
+	// 	}
+	// 	// Handle other errors or interrupts appropriately
+	// }
+
 	if (!httpRequest.empty())
 	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
-		this->checkSession(request);
-		Response res(request, this->_settings);
+		server->checkSession(request);
+		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
-		this->addSession(res.getSessionId());
+		server->addSession(res.getSessionId());
 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)
 		{
-			close(fd); // Close on write error
 			log(logERROR) << "Error writing to socket, FD: " << fd;
+			close(fd);
+			return (NULL);
 		}
+
 		if (res.getConnection() == "close")
 		{
 			close(fd);
-			log(logINFO) << "connection on fd " << fd << " closed on client request";
+			log(logINFO) << "Connection on fd " << fd << " closed on client request";
 		}
 		else
 		{
-			log(logINFO) << "connection on fd " << fd << " kept alive";
+			log(logINFO) << "Connection on fd " << fd << " kept alive";
 		}
+	}
+	return (NULL);
+}
+
+void Server::handleRequest(int fd)
+{
+	pthread_t thread;
+	std::pair<Server*, int>* args = new std::pair<Server*, int>(this, fd);
+	if (pthread_create(&thread, NULL, this->handleRequestWrapper, args) != 0)
+	{
+		log(logERROR) << "Failed to create thread for fd: " << fd;
+		delete args; // Free the allocated memory on failure
+	}
+	else
+	{
+		pthread_detach(thread); // Detach the thread to allow it to run independently
+	}
+}
+
+
+void Server::handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody)
+{
+	size_t pos = 0;
+	std::string chunkSize;
+	std::string chunk;
+	// save header in chunkedBody
+	if (chunkedBody.empty())
+	{
+		pos = httpRequest.find("\r\n\r\n");
+		if (pos != std::string::npos)
+		{
+			chunkedBody = httpRequest.substr(0, pos + 4);
+			httpRequest.erase(0, pos + 4);
+		}
+	}
+	while ((pos = httpRequest.find("\r\n")) != std::string::npos)
+	{
+		chunkSize = httpRequest.substr(0, pos);
+		httpRequest.erase(0, pos + 2);
+		if (chunkSize.empty())
+		{
+			isChunked = false;
+			break;
+		}
+		size_t size = 0;
+		std::istringstream iss(chunkSize);
+		iss >> std::hex >> size;
+		if (iss.fail() || size == 0)
+		{
+			isChunked = false;
+			break;
+		}
+		if (httpRequest.length() < size)
+			break;
+		chunk = httpRequest.substr(0, size);
+		httpRequest.erase(0, size + 2);
+		if (!chunk.empty())
+			chunkedBody += chunk;
+	}
+	if (!isChunked)
+	{
+		httpRequest = chunkedBody;
+		chunkedBody.clear();
 	}
 }

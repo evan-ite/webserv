@@ -1,8 +1,7 @@
 #include "../includes/settings.hpp"
 
 // Constructors
-Cgi::Cgi(): _isTrue(false)
-{}
+Cgi::Cgi(): _isTrue(false) {}
 
 Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
 {
@@ -29,14 +28,14 @@ Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
 	std::size_t	len = ext.length();
 	if (((request->getLoc().length() >= len
 		&& request->getLoc().substr(request->getLoc().size() - len) == ext)
-		|| request->getLoc().find(ext + "?") != std::string::npos)) 
+		|| request->getLoc().find(ext + "?") != std::string::npos))
 	{
 		this->_isTrue = true;
 		this->_request = request;
 		this->_serverData = serverData;
 		this->_loc = loc;
 	}
-	else 
+	else
 		this->_isTrue = false;
 }
 
@@ -59,12 +58,12 @@ Cgi::~Cgi()
 Cgi & Cgi::operator=(const Cgi &assign)
 {
 	(void) assign;
-	return *this;
+	return (*this);
 }
 
 bool	Cgi::isTrue()
 {
-	return this->_isTrue;
+	return (this->_isTrue);
 }
 
 void	Cgi::execute(Response &response)
@@ -145,10 +144,13 @@ char ** Cgi::createEnv(std::string const &cgiPath)
 	std::vector<std::string>	envVec;
 
 	// Set up environment variables specific to GET or POST
-	if (request->getMethod() == GET) {
+	if (request->getMethod() == GET)
+	{
 		envVec.push_back("REQUEST_METHOD=GET");
 		envVec.push_back("QUERY_STRING=" + findKey(request->getLoc(), "?", ' '));
-	} else if (request->getMethod() == POST) {
+	}
+	else if (request->getMethod() == POST)
+	{
 		envVec.push_back("REQUEST_METHOD=POST");
 		envVec.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
 		envVec.push_back("CONTENT_LENGTH=" + toString(request->getContentLen()));
@@ -165,10 +167,9 @@ char ** Cgi::createEnv(std::string const &cgiPath)
 	envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	envVec.push_back("SERVER_SOFTWARE=Webserv/1.0");
 	envVec.push_back("SERVER_PORT=" + toString(serverData->port));
-	envVec.push_back("SERVER_NAME=" + serverData->server_name);
 	envVec.push_back("SERVER_ADDR=" + serverData->host);
 
-	return vectorToCharStarStar(envVec);
+	return (vectorToCharStarStar(envVec));
 }
 
  /* Determine the path to the CGI script based on the request, location and server.
@@ -203,7 +204,7 @@ std::string Cgi::readCgiOutput(int *pipefd)
 	ssize_t bytesRead;
 	while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		cgiOutput.append(buffer, bytesRead);
-	
+
 	return cgiOutput;
 }
 

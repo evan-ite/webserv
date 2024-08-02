@@ -83,4 +83,4 @@
 - [ ] Check forbidden functions
 - [x] Cookiesssss
 - [x] Create python script to automate API key
-- [ ] remove server_name
+- [x] remove server_name
