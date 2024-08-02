@@ -113,6 +113,8 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->cgi_extension = value;
 	else if (key == "cgi_bin")
 		currentLocation->cgi_bin = value;
+	else if (key == "cgi_pass")
+		currentLocation->cgi_pass = value;
 }
 
 void Config::parseServer(std::string key, std::string value, std::string line) {
@@ -158,6 +160,8 @@ void Config::parseServer(std::string key, std::string value, std::string line) {
 		this->_tempServer.cgi_extension = value;
 	else if (key == "cgi_bin")
 		this->_tempServer.cgi_bin = value;
+	else if (key == "cgi_pass")
+		this->_tempServer.cgi_pass = value;
 	else if (key == "error_page") {
 		std::istringstream iss(line);
 		std::string error_code;

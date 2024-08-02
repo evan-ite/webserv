@@ -10,6 +10,7 @@ struct Location {
 	bool		cgi;
 	std::string	cgi_extension;
 	std::string	cgi_bin;
+	std::string	cgi_pass;
 	bool		autoindex;
 	bool 		allow_uploads;
 
@@ -33,6 +34,7 @@ struct ServerSettings {
 	bool		cgi;
 	std::string	cgi_extension;
 	std::string	cgi_bin;
+	std::string	cgi_pass;
 	std::string	dirlistTemplate;
 
 	std::map<std::string, std::string> error_pages;
