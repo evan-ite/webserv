@@ -22,6 +22,10 @@ Response::Response(Request &request, Location &loc)
 	try
 	{
 		this->_loc = loc;
+		this->_status = 200;
+		this->_type = "text/html";
+		this->_body = "";
+		// this->_nonroot = request.getPath().substr(loc.getRoot().length());
 		HttpMethod method = request.getMethod();
 		if (request.getsessionId().empty())
 			this->_sessionId = generateRandomString(12);
@@ -39,13 +43,14 @@ Response::Response(Request &request, Location &loc)
 	}
 	catch (std::exception &e)
 	{
-		std::pair<std::string, std::string> error = loc.findError(e.what());
 		this->_status = atoi(e.what());
-		this->_reason = error.first;
-		this->_type = "text/html";
-		this->_body = readFileToString(error.second);
-		this->_connection = "close";
-		this->_len = _body.length();
+		// std::pair<std::string, std::string> error = loc.findError(e.what());
+		// this->_status = atoi(e.what());
+		// this->_reason = error.first;
+		// this->_type = "text/html";
+		// this->_body = readFileToString(error.second);
+		// this->_connection = "close";
+		// this->_len = _body.length();
 	}
 }
 
@@ -53,16 +58,11 @@ void	Response::postMethod(Request &request)
 {
 	int status = 0;
 	createFiles(request, status);
+	this->_status = status;
 	switch (status)
 	{
 		case 201:
-			this->_status = 201;
-			this->_reason = getStatusMessage("201");
-			this->_type = "text/html";
-			this->_connection = request.getConnection();
-			this->_body = "";
-			this->_len = _body.length();
-			break;
+			return;
 		case 500:
 			throw ResponseException("500");
 		case 400:
@@ -73,42 +73,34 @@ void	Response::postMethod(Request &request)
 void	Response::getMethod(Request &request)
 {
 	std::string filePath = this->extractFilePath(request);
-
-	this->_status = 200;
 	if (!filePath.empty())
 	{
 		this->_body = readFileToString(filePath);
 		this->_type = findType(filePath);
 	}
-	else
-		this->_type = "text/html";
-	this->_len = _body.length();
-	this->_reason = getStatusMessage("200");
-
-	this->_connection = request.getConnection();
-
-	// Check if body is empty or type was not found
 	if (this->_body == "" || this->_type == "")
 		throw ResponseException("404");
+	else
+		this->_status = 200;
 }
 
 void	Response::deleteMethod(Request &request)
 {
-	std::string file = this->_loc.getRoot() + request.getLoc();
+	std::string file = this->_loc.getRoot() + request.getPath();
 
 	if (remove(file.c_str()) != 0)
 	{
 		log(logERROR) << "Failed to delete file: " << file;
 		throw ResponseException("404");
 	}
-	else {
-		this->_status = 200;
-		this->_reason = getStatusMessage("200");
-		this->_type = "text/html";
-		this->_connection = request.getConnection();
-		this->_body = "";
-		this->_len = _body.length();
-	}
+	// else {
+	// 	this->_status = 200;
+	// 	this->_reason = getStatusMessage("200");
+	// 	this->_type = "text/html";
+	// 	this->_connection = request.getConnection();
+	// 	this->_body = "";
+	// 	this->_len = _body.length();
+	// }
 }
 
 // Creates an html page with name fileName that lists the content of dirPath
@@ -177,18 +169,19 @@ std::string	Response::loopDir(std::string dirPath)
 
 std::string Response::makeResponse()
 {
+	std::pair<std::string, std::string> code = this->_loc.findError(this->_status);
 	std::ostringstream response;
 
-	response << HTTPVERSION << " " << this->_status << " " << this->_reason << "\r\n";
+	response << HTTPVERSION << " " << this->_status << " " << code.first << "\r\n";
 	response << "Date: " << getDateTime() << "\r\n";
-	response << "Content-Length: " << this->_len << "\r\n";
+	response << "Content-Length: " << this->_body.length() << "\r\n";
 	if (this->_type != "")
 		response << "Content-Type: " << this->_type << "\r\n";
 	response << "Connection: " << this->_connection << "\r\n";
 	if (!this->_sessionId.empty())
 		response << "Set-Cookie: session_id=" << this->_sessionId << "\r\n";
-	if (!this->_redir.empty())
-		response << "Location: " << this->_redir << "\r\n";
+	// if (!this->_redir.empty())
+	// 	response << "Location: " << this->_redir << "\r\n";
 	response << "\r\n";
 	std::string return_value = response.str();
 	if (this->_len)

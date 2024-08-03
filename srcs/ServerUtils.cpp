@@ -134,7 +134,8 @@ void* Server::handleRequestWrapper(void* arg)
 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		server->checkSession(request);
-		Response res(request, server.findLocation(request.getLoc()));
+		Location loc = server->findLocation(request.getPath());
+		Response res(request, loc);
 		std::string resString = res.makeResponse();
 		server->addSession(res.getSessionId());
 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
@@ -174,5 +175,3 @@ void Server::handleRequest(int fd)
 		pthread_detach(thread); // Detach the thread to allow it to run independently
 	}
 }
-
-void Server::display() const {} // to be implemented?

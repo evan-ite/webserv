@@ -17,19 +17,25 @@ class Config
 		std::map<std::string, Server> getServersMap(void) const;
 
 	private:
-		Server loadServerStruct(const std::string &configString);
+		Server _tempServer;
 		std::map<std::string, Server> _Servers;
-		void parseLocation(Server *server, Location *currentLocation, std::string key, std::string value, std::string line);
-		void parseServer(Server *server, std::string key, std::string value, std::string line);
+
+		// void parseLocation(Location *currentLocation, std::string key, std::string value, std::string line);
+		// void parseServer(std::string key, std::string value, std::string line);
 		bool locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value);
 		void readServer(const std::string &filename);
 		void countBraces(std::string line, int *braceCount);
-		std::vector<std::string> getPorts(std::string server);
-		std::vector<std::string> getHosts(std::string server);
+		// std::vector<std::string> getPorts(std::string server);
+		// std::vector<std::string> getHosts(std::string server);
+		std::vector<std::string> getPortHost(const std::string& server, const std::string& keyword);
 		void parseMultipleServers(std::string server);
-		void parseConfig(const std::string &filename);
-		void removeCharacter(std::string& str, char charToRemove);
-		Server	_tempServer;
+		// void parseConfig(const std::string &filename);
+		// void removeCharacter(std::string& str, char charToRemove);
+
+		void loadFallback(const std::string &filename);
+		void loadServerStruct(const std::string &configString);
+		void parse(ASetting* ptr, std::string key, std::string value, std::string line);
+		void printServers(void) const;
 };
 
 #endif

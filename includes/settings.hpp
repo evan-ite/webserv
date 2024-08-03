@@ -61,12 +61,12 @@ enum HttpMethod
 
 // local header files
 # include "ASetting.hpp"
-# include "Location.hpp"
-# include "Config.hpp"
 # include "Cookie.hpp"
 # include "Client.hpp"
+# include "Location.hpp"
 # include "Request.hpp"
 # include "Server.hpp"
+# include "Config.hpp"
 # include "Logger.hpp"
 # include "Response.hpp"
 # include "Webserv.hpp"
@@ -86,5 +86,6 @@ std::string	removeSubstr(const std::string& str, const std::string& substr);
 char**		vectorToCharStarStar(const std::vector<std::string>& vec);
 int			makeNonBlocking(int fd);
 std::string	generateRandomString(int length);
+void removeCharacter(std::string& str, char charToRemove);
 
 #endif

@@ -1,15 +1,13 @@
 #include "../includes/settings.hpp"
 
-/*
- file_str = "HTTP/1.1 200 OK
-			Date: Thu, 27 Jun 2024 12:00:00 GMT
-			Content-Type: text/html; charset=UTF-8
-			Content-Length: 1256
-			Connection: keep-alive "
- keyword = Date:
- seperator = \n
- return value is " Thu, 27 Jun 2024 12:00:00 GMT"
-*/
+/**
+ * Finds a key in a given string and returns the value associated with it.
+ *
+ * @param file_str The string to search for the key.
+ * @param keyword The key to search for.
+ * @param separator The character that separates the key and value.
+ * @return The value associated with the key, or an empty string if the key is not found.
+ */
 std::string findKey(std::string file_str, std::string keyword, char separator)
 {
 	std::string::size_type start_pos = file_str.find(keyword);
@@ -26,6 +24,13 @@ std::string findKey(std::string file_str, std::string keyword, char separator)
 	return (file_str.substr(start_pos, end_pos - start_pos));
 }
 
+/**
+ * Splits a string by a delimiter and returns the first part.
+ *
+ * @param str The string to split.
+ * @param delimiter The delimiter to split the string by.
+ * @return The first part of the string before the delimiter. If the delimiter is not found, the entire string is returned.
+ */
 std::string splitReturnFirst(const std::string& str, const std::string& delimiter)
 {
 	size_t pos = str.find(delimiter);
@@ -59,26 +64,6 @@ std::string readFileToString(const std::string& filename)
 
 	// Convert buffer to std::string
 	return (std::string(buffer.data(), buffer.size()));
-}
-
-// mostly chatgpt but I do think I understand what it does
-/* Takes a socket filedescriptor as argument and sets it to
-non-blocking mode. Returns 0 on success, -1 on error. */
-int make_socket_non_blocking(int sfd)
-{
-	int flags = fcntl(sfd, F_GETFL, 0);
-	if (flags == -1)
-	{
-		log(logERROR) << "critical fcntl error";
-		return (-1);
-	}
-	flags |= O_NONBLOCK;
-	if (fcntl(sfd, F_SETFL, flags) == -1)
-	{
-		log(logERROR) << "critical fcntl error";
-		return (-1);
-	}
-	return (0);
 }
 
 /* Returns date and time in astring formatted for the HTTP response */
@@ -121,6 +106,12 @@ char** vectorToCharStarStar(const std::vector<std::string>& vec)
 	return (charArray);
 }
 
+/**
+ * Makes a file descriptor non-blocking.
+ *
+ * @param fd The file descriptor to make non-blocking.
+ * @return 1 if the file descriptor was successfully made non-blocking, 0 otherwise.
+ */
 int	makeNonBlocking(int fd)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
@@ -156,7 +147,12 @@ std::vector<std::string> split(const std::string& str, char del) // are we using
 }
 
 
-/*Generates a pseudorandom alphanumeric string of 'length' characters*/
+/**
+ * Generates a pseudorandom string of the specified length.
+ *
+ * @param length The length of the random string to generate.
+ * @return The randomly generated string.
+ */
 std::string generateRandomString(int length)
 {
 	const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -169,7 +165,13 @@ std::string generateRandomString(int length)
 	return (result);
 }
 
-// Function that removes substr from str and returns the new string.
+/**
+ * @brief Removes all occurrences of a substring from a given string.
+ *
+ * @param str The original string.
+ * @param substr The substring to be removed.
+ * @return The modified string with all occurrences of the substring removed.
+ */
 std::string removeSubstr(const std::string& str, const std::string& substr)
 {
 	std::string	result = str;
@@ -182,4 +184,39 @@ std::string removeSubstr(const std::string& str, const std::string& substr)
 	}
 
 	return (result);
+}
+
+/**
+ * @brief Removes all occurrences of a specified character from a string.
+ *
+ * This function removes all occurrences of the specified character `charToRemove` from the input string `str`.
+ *
+ * @param str The string from which to remove the character.
+ * @param charToRemove The character to be removed from the string.
+ */
+void removeCharacter(std::string& str, char charToRemove)
+{
+	for (std::string::size_type i = 0; i < str.size(); )
+	{
+		if (str[i] == charToRemove)
+			str.erase(i, 1);
+		else
+			++i;
+	}
+}
+
+std::ostream& operator<<(std::ostream& os, Location& loc)
+{
+	os << "Location Path: " << loc.getPath() << "\n";
+	os << "Location Root: " << loc.getRoot() << "\n";
+	os << "Location Index: " << loc.getIndex() << "\n";
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Server& server)
+{
+	os << "Server Host: " << server.getHost() << "\n";
+	os << "Server Port: " << server.getPort() << "\n";
+	os << "Server FD: " << server.getFd() << "\n";
+	return os;
 }

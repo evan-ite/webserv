@@ -53,7 +53,6 @@ class Response
 		void		checkMethod(HttpMethod method, Request &request);
 		void		createDirlisting(std::string dirPath);
 		std::string	loopDir(std::string dirPath);
-		std::string	getStatusMessage(std::string errorCode);
 		std::string extractFilePath(Request &request);
 		bool		isValidRequest(Request &request);
 		// To create response

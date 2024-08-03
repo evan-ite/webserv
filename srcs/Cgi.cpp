@@ -16,9 +16,9 @@ Cgi::Cgi(Request &request, Location &loc)
 
 	std::size_t	len = ext.length();
 
-	if (((request.getLoc().length() >= len
-		&& request.getLoc().substr(request.getLoc().size() - len) == ext)
-		|| request.getLoc().find(ext + "?") != std::string::npos))
+	if (((request.getPath().length() >= len
+		&& request.getPath().substr(request.getPath().size() - len) == ext)
+		|| request.getPath().find(ext + "?") != std::string::npos))
 		this->_loc = loc;
 	else
 		this->_isTrue = false;
@@ -125,7 +125,7 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	if (request.getMethod() == GET)
 	{
 		envVec.push_back("REQUEST_METHOD=GET");
-		envVec.push_back("QUERY_STRING=" + findKey(request.getLoc(), "?", ' '));
+		envVec.push_back("QUERY_STRING=" + findKey(request.getPath(), "?", ' '));
 	}
 	else if (request.getMethod() == POST)
 	{
@@ -136,7 +136,7 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	// Set up common environment variables required by the CGI script
 	envVec.push_back("REDIRECT_STATUS=200");
 	envVec.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	envVec.push_back("REQUEST_URI=" + request.getLoc());
+	envVec.push_back("REQUEST_URI=" + request.getPath());
 	envVec.push_back("HTTP_COOKIE=" + request.getsessionId());
 	envVec.push_back("SCRIPT_NAME=" + cgiPath);
 	envVec.push_back("SCRIPT_FILENAME=" + cgiFile);
@@ -151,9 +151,9 @@ Store the found strings in the arguments passed by reference. */
 void Cgi::extractCgi(std::string &cgiFile, std::string &cgiScriptPath)
 {
 	Request request = this->_request;
-	std::size_t	i = request.getLoc().rfind("/");
-	std::size_t	j = request.getLoc().rfind(this->_loc.getCgiExtension());
-	cgiFile = request.getLoc().substr(i, j - i + this->_loc.getCgiExtension().length());
+	std::size_t	i = request.getPath().rfind("/");
+	std::size_t	j = request.getPath().rfind(this->_loc.getCgiExtension());
+	cgiFile = request.getPath().substr(i, j - i + this->_loc.getCgiExtension().length());
 	cgiScriptPath = this->_loc.getRoot() + this->_loc.getCgiBin() + cgiFile;
 }
 

@@ -20,10 +20,14 @@ class Server : public ASetting
 		int					addClient(int fd);
 		void				addLocation(Location loc);
 		int					getMaxSize(std::string loc);
+		std::string			getHost() const;
+		std::string			getPort() const;
 		// funcs
 		bool				clientHasFD(int fd);
 		void				handleRequest(int fd);
 		void				display() const;
+		Location			findLocation(std::string uri);
+		bool				locationExists(std::string uri);
 		// exceptions
 		class clientError : public std::exception
 		{
@@ -49,5 +53,7 @@ class Server : public ASetting
 		void 								addSession(std::string sessionId);
 		static void*						handleRequestWrapper(void* arg);
 };
+
+std::ostream& operator<<(std::ostream& os, const Server& server);
 
 #endif

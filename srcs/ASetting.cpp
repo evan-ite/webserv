@@ -1,5 +1,7 @@
 #include "../includes/settings.hpp"
 
+ASetting::~ASetting() {}
+
 // Setters
 void ASetting::setRoot(const std::string& root)
 {

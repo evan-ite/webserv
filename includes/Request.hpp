@@ -19,8 +19,8 @@ class Request
 			}
 		};
 
-		std::string 	getLoc();
-		void		 	setLoc(std::string &location);
+		std::string 	getPath();
+		void		 	setPath(std::string &location);
 		std::string		getContentType();
 		HttpMethod		getMethod();
 		int				getContentLen();
@@ -39,7 +39,7 @@ class Request
 		void parsePart(const std::string& part);
 		void parseMultipart(const std::string& httpRequest);
 
-		std::string											_location;
+		std::string											_path;
 		HttpMethod											_method;
 		std::string											_body;
 		std::string											_contentType;

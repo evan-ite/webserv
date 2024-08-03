@@ -2,7 +2,7 @@
 
 bool Response::isValidRequest(Request &request)
 {
-	if (request.getLoc().find("..") != std::string::npos)
+	if (request.getPath().find("..") != std::string::npos)
 	{
 		log(logERROR) << "Invalid request: path contains double dots.";
 		return (false);
@@ -30,12 +30,12 @@ bool Response::isValidRequest(Request &request)
 std::string Response::extractFilePath(Request &request)
 {
 	// Find end of the location path in the URI
-	std::size_t	i = request.getLoc().find(this->_loc.getPath()) + this->_loc.getPath().length();
+	std::size_t	i = request.getPath().find(this->_loc.getPath()) + this->_loc.getPath().length();
 	std::string	file;
 
-	if (i < request.getLoc().length())
+	if (i < request.getPath().length())
 	{ // If URI contains a filename extract it
-		file = request.getLoc().substr(i);
+		file = request.getPath().substr(i);
 		if (file.find('.') == std::string::npos)
 			file += "/" + this->_loc.getIndex();
 	}

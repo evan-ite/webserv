@@ -8,14 +8,12 @@ Location::Location(const std::string& path)
 
 Location::Location() : _path("") {}
 
-void Location::display() const {}
-
-std::string Location::getPath()
+std::string Location::getPath() const
 {
 	return (this->_path);
 }
 
-std::string Location::getRedir()
+std::string Location::getRedir() const
 {
 	return (this->_redir);
 }
@@ -50,7 +48,29 @@ std::pair<std::string, std::string>	Location::findError(std::string errorCode)
 	{
 		error = this->errors["500"];
 	}
-
 	return (error);
+}
 
+std::pair<std::string, std::string>	Location::findError(const int errorCode)
+{
+	std::ostringstream oss;
+	oss << errorCode;
+	std::pair<std::string, std::string> error;
+	try
+	{
+		error = this->errors[oss.str()];
+	}
+	catch(const std::exception& e)
+	{
+		error = this->errors["500"];
+	}
+	return (error);
+}
+
+/**
+ * @brief Display the location information.
+ */
+void Location::display() const
+{
+	log(logINFO) << this;
 }

@@ -12,7 +12,7 @@ Request::Request(const Request &copy)
 	this->_method = copy._method;
 	this->_host = copy._host;
 	this->_contentLength = copy._contentLength;
-	this->_location = copy._location;
+	this->_path = copy._path;
 	this->_userAgent = copy._userAgent;
 	this->_connection = copy._connection;
 	this->_fileData = copy._fileData;
@@ -28,7 +28,7 @@ Request & Request::operator=(const Request &assign)
 	this->_method = assign._method;
 	this->_host = assign._host;
 	this->_contentLength = assign._contentLength;
-	this->_location = assign._location;
+	this->_path = assign._path;
 	this->_userAgent = assign._userAgent;
 	this->_connection = assign._connection;
 	this->_fileData = assign._fileData;
@@ -42,23 +42,23 @@ void Request::parse(std::string httpRequest)
 	if (method == "GET")
 	{
 		this->_method = GET;
-		this->_location = findKey(httpRequest, "GET ", ' ');
+		this->_path = findKey(httpRequest, "GET ", ' ');
 	}
 	else if (method == "POST")
 	{
 		this->_method = POST;
-		this->_location = findKey(httpRequest, "POST ", ' ');
+		this->_path = findKey(httpRequest, "POST ", ' ');
 		if (this->_contentLength != -1)
 			this->parseMultipart(httpRequest);
 	}
 	else if (method == "DELETE")
 	{
 		this->_method = DELETE;
-		this->_location = findKey(httpRequest, "DELETE ", ' ');
+		this->_path = findKey(httpRequest, "DELETE ", ' ');
 	}
 	else {
 		this->_method = INVALID;
-		this->_location = "/";
+		this->_path = "/";
 		log(logERROR) << "Invalid http method";
 	}
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
@@ -147,14 +147,14 @@ void Request::printFileData()
 	}
 }
 
-std::string		Request::getLoc()
+std::string		Request::getPath()
 {
-	return (this->_location);
+	return (this->_path);
 }
 
-void 	Request::setLoc(std::string &location)
+void 	Request::setPath(std::string &location)
 {
-	this->_location = location;
+	this->_path = location;
 }
 
 
