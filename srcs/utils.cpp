@@ -205,6 +205,13 @@ void removeCharacter(std::string& str, char charToRemove)
 	}
 }
 
+/**
+ * Overloaded insertion operator for printing the Location object.
+ *
+ * @param os The output stream to write to.
+ * @param loc The Location object to be printed.
+ * @return The output stream after writing the Location object.
+ */
 std::ostream& operator<<(std::ostream& os, Location& loc)
 {
 	os << "Location Path: " << loc.getPath() << "\n";
@@ -213,6 +220,13 @@ std::ostream& operator<<(std::ostream& os, Location& loc)
 	return os;
 }
 
+/**
+ * Overloaded stream insertion operator to print the details of a Server object.
+ *
+ * @param os The output stream to write the server details to.
+ * @param server The Server object whose details are to be printed.
+ * @return The output stream after writing the server details.
+ */
 std::ostream& operator<<(std::ostream& os, const Server& server)
 {
 	os << "Server Host: " << server.getHost() << "\n";

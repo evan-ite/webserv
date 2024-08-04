@@ -1,24 +1,41 @@
 #include "../includes/settings.hpp"
 
+/**
+ * @brief Constructs a Location object with the given path.
+ *
+ * @param path The path associated with the location.
+ */
 Location::Location(const std::string& path)
 {
 	this->_path = path;
-	this->allow[0] = false;
-	this->allow[1] = false;
-	this->allow[2] = false;
-	this->allow[3] = false;
 	this->allow[4] = false;
+	this->cgi = -1;
+	this->autoindex = -1;
+	this->allow_uploads = -1;
+	this->client_max_body_size = -1;
 }
 
+/**
+ * @brief Default constructor for the Location class.
+ * Initializes the _path member variable to an empty string and sets all elements of the allow array to false.
+ */
 Location::Location() : _path("")
 {
-	this->allow[0] = false;
-	this->allow[1] = false;
-	this->allow[2] = false;
-	this->allow[3] = false;
 	this->allow[4] = false;
 }
 
+/**
+ * @brief Copy constructor for the Location class.
+ *
+ * This constructor initializes the Location object by copying the values from another ASetting object.
+ * It first calls the base class copy constructor to copy the common settings.
+ * Then, it checks if the other object is actually a derived Location object using dynamic_cast.
+ * If it is, it copies the specific Location settings (path, redirection) to the current object.
+ * If it is not, it throws a std::bad_cast exception.
+ *
+ * @param other The ASetting object to be copied.
+ * @throws std::bad_cast If the other object is not a derived Location object.
+ */
 Location::Location(const ASetting& other) : ASetting(other)
 {
 	const Location* derived = dynamic_cast<const Location*>(&other);
@@ -26,7 +43,6 @@ Location::Location(const ASetting& other) : ASetting(other)
 	{
 		this->_path = derived->_path;
 		this->_redir = derived->_redir;
-		this->_server = derived->_server;
 	}
 	else
 		throw std::bad_cast();
@@ -38,7 +54,7 @@ Location::Location(const ASetting& other) : ASetting(other)
  * This function assigns the values of another ASetting object to the current Location object.
  * It first calls the base class assignment operator to copy the common settings.
  * Then, it checks if the other object is actually a derived Location object using dynamic_cast.
- * If it is, it copies the specific Location settings (path, redirection, server) to the current object.
+ * If it is, it copies the specific Location settings (path, redirection) to the current object.
  * If it is not, it throws a std::bad_cast exception.
  *
  * @param other The ASetting object to be assigned to the current Location object.
@@ -55,7 +71,6 @@ Location& Location::operator=(const ASetting& other)
 		{
 			this->_path = derived->_path;
 			this->_redir = derived->_redir;
-			this->_server = derived->_server;
 		}
 		else
 			throw std::bad_cast();
@@ -63,54 +78,66 @@ Location& Location::operator=(const ASetting& other)
 	return (*this);
 }
 
+/**
+ * @brief Getter for the path variable.
+ *
+ * @return std::string The path associated with the location.
+ */
 std::string Location::getPath() const
 {
 	return (this->_path);
 }
 
+/**
+ * @brief Getter for the redirection variable.
+ *
+ * @return std::string The redirection associated with the location.
+ */
 std::string Location::getRedir() const
 {
 	return (this->_redir);
 }
 
+/**
+ * @brief Setter for the path variable.
+ *
+ * @param p The new path to be set.
+ */
 void Location::setPath(std::string p)
 {
 	this->_path = p;
 }
 
+/**
+ * @brief Setter for the redirection variable.
+ *
+ * @param r The new redirection to be set.
+ */
 void Location::setRedir(std::string r)
 {
 	this->_redir = r;
 }
 
+/**
+ * @brief Setter for the server variable.
+ *
+ * @param s Pointer to the Server object.
+ */
 void Location::setServer(Server* s)
 {
-	this->_server = s;
+	this->server = s;
 }
 
-bool Location::findAllow(HttpMethod method)
-{
-	log(logDEBUG) << "Checking if method is allowed in location";
-	log(logDEBUG) << "Method: " << method;
-	log(logDEBUG) << "Get: " << this->allow[0];
-	log(logDEBUG) << "Post: " << this->allow[1];
-	log(logDEBUG) << "Delete: " << this->allow[2];
-	log(logDEBUG) << "Self-set: " << this->allow[4];
-
-	if (this->allow[4])
-		return (this->allow[method]);
-	else
-	{
-		log(logDEBUG) << "Checking if method is allowed in server";
-		return (this->_server->findAllow(method));
-	}
-	return (false);
-}
-
+/**
+ * @brief Adds an allowed method to the allow array.
+ *
+ * This function sets the corresponding index in the allow array to true based on the given method.
+ * If the method is not recognized, it sets the last index to true as an indicator that this was set location-specific.
+ *
+ * @param method The method to be added to the allow array.
+ */
 void Location::addAllow(std::string method)
 {
-	log(logDEBUG) << "Adding allowed method to location";
-	log(logDEBUG) << "Method: " << method;
 	this->allow[4] = true; // Indicator that this was set location-specific
 	if (method == "GET")
 		this->allow[0] = true;
@@ -122,9 +149,17 @@ void Location::addAllow(std::string method)
 		this->allow[3] = true;
 }
 
-std::pair<std::string, std::string>	Location::findError(std::string errorCode)
+/**
+ * @brief Finds the error message for the given error code.
+ *
+ * This function searches for the error message associated with the given error code in the errors map.
+ * If the error code is not found, it returns the error message for the "500" error code.
+ *
+ * @param errorCode The error code to search for.
+ * @return std::pair<std::string, std::string> The error message and description.
+ */
+std::pair<std::string, std::string> Location::findError(std::string errorCode)
 {
-
 	std::pair<std::string, std::string> error;
 	try
 	{
@@ -137,7 +172,16 @@ std::pair<std::string, std::string>	Location::findError(std::string errorCode)
 	return (error);
 }
 
-std::pair<std::string, std::string>	Location::findError(const int errorCode)
+/**
+ * @brief Finds the error message for the given error code.
+ *
+ * This function searches for the error message associated with the given error code in the errors map.
+ * If the error code is not found, it returns the error message for the "500" error code.
+ *
+ * @param errorCode The error code to search for.
+ * @return std::pair<std::string, std::string> The error message and description.
+ */
+std::pair<std::string, std::string> Location::findError(const int errorCode)
 {
 	std::ostringstream oss;
 	oss << errorCode;
@@ -151,12 +195,4 @@ std::pair<std::string, std::string>	Location::findError(const int errorCode)
 		error = this->errors["500"];
 	}
 	return (error);
-}
-
-/**
- * @brief Display the location information.
- */
-void Location::display() const
-{
-	log(logINFO) << this;
 }

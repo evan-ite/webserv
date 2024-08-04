@@ -2,6 +2,11 @@
 
 loglevel_e loglevel = LOGLEVEL;
 
+/**
+ * @brief Logger class constructor.
+ *
+ * @param _loglevel The log level for the logger.
+ */
 Logger::Logger(loglevel_e _loglevel)
 {
 	std::time_t now = std::time(0);
@@ -28,8 +33,13 @@ Logger::Logger(loglevel_e _loglevel)
 	_buffer << timeBuffer << " " << _loglevel << " : " << ANSI_RESET;
 }
 
+/**
+ * @brief Logger class destructor.
+ *
+ * Prints the log message stored in the buffer and appends a newline character.
+ */
 Logger::~Logger()
 {
-	this->_buffer << std::endl;
-	std::cout << this->_buffer.str();
+	_buffer << std::endl;
+	std::cout << _buffer.str();
 }

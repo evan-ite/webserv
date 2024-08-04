@@ -6,30 +6,29 @@ void signalhandler(int sig)
 {
 	if (sig == SIGINT)
 		g_signal = 0;
-	log(logINFO) << "SIGINT received, shutting down";
 }
 
-Config testConfig()
-{
-	Server server;
-	Config conf;
-	server.setHost("localhost");
-	server.setPort(8080);
-	server.setRoot("./default");
-	server.setClientMaxBodySize(1024);
-	server.setCgi(false);
+// Config testConfig()
+// {
+// 	Server server;
+// 	Config conf;
+// 	server.setHost("localhost");
+// 	server.setPort(8080);
+// 	server.setRoot("./default");
+// 	server.setClientMaxBodySize(1024);
+// 	server.setCgi(false);
 
-	Location rootLocation;
-	rootLocation.setRoot("default");
-	rootLocation.addAllow("GET");
-	rootLocation.setIndex("html/index.html");
-	rootLocation.setAutoindex(false);
+// 	Location rootLocation;
+// 	rootLocation.setRoot("default");
+// 	rootLocation.addAllow("GET");
+// 	rootLocation.setIndex("html/index.html");
+// 	rootLocation.setAutoindex(false);
 
-	server.addLocation(rootLocation);
-	conf._Servers["localhost:8080"] = server;
+// 	server.addLocation(rootLocation);
+// 	conf._Servers["localhost:8080"] = server;
 
-	return (conf);
-}
+// 	return (conf);
+// }
 
 int main(int argc, char **argv)
 {
@@ -45,9 +44,19 @@ int main(int argc, char **argv)
 	{
 		log(logINFO) << "Starting virtual server(s)";
 		Config conf(configPath);
-		Config conf2 = testConfig();
+		// Config conf2 = testConfig();
 		Webserv webserv;
-		webserv.run(conf2);
+		// webserv.run(conf2);
+		std::map<std::string, Server> serversMap = conf.getServersMap();
+		std::map<std::string, Server>::iterator it = serversMap.begin();
+		for (; it != serversMap.end(); it++)
+		{
+			log(logDEBUG) << "--------------------------------";
+			log(logDEBUG) << "first: \n" << it->first;
+			log(logDEBUG) << "second: \n" << it->second;
+			log(logDEBUG) << "--------------------------------";
+		}
+		webserv.run(conf);
 	}
 	catch (std::exception &e)
 	{

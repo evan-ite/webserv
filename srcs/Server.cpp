@@ -5,13 +5,7 @@
  */
 Server::Server()
 {
-	// Initialize member variables
-	this->allow[0] = true;
-	this->allow[1] = false;
-	this->allow[2] = false;
-	this->autoindex = false;
-	this->allow_uploads = false;
-	this->cgi = false;
+	this->server = this;
 }
 
 /**
@@ -23,10 +17,10 @@ Server::Server(const ASetting& other) : ASetting(other)
 	const Server* derived = dynamic_cast<const Server*>(&other);
 	if (derived)
 	{
+		this->server = this;
 		this->_port = derived->_port;
 		this->_host = derived->_host;
 		this->_fd = derived->_fd;
-		this->_address = derived->_address;
 		this->_key = derived->_key;
 		this->_locations = derived->_locations;
 	}
@@ -60,10 +54,10 @@ Server& Server::operator=(const ASetting& other)
 		const Server* derived = dynamic_cast<const Server*>(&other);
 		if (derived)
 		{
+			this->server = this;
 			this->_port = derived->_port;
 			this->_host = derived->_host;
 			this->_fd = derived->_fd;
-			this->_address = derived->_address;
 			this->_key = derived->_key;
 			this->_locations = derived->_locations;
 		}
@@ -72,7 +66,6 @@ Server& Server::operator=(const ASetting& other)
 	}
 	return (*this);
 }
-
 
 /**
  * @brief Get the file descriptor of the server.
@@ -83,11 +76,19 @@ int Server::getFd() const
 	return (this->_fd);
 }
 
+/**
+ * @brief Get the host of the server.
+ * @return The host of the server.
+ */
 std::string Server::getHost() const
 {
 	return(this->_host);
 }
 
+/**
+ * @brief Get the port of the server.
+ * @return The port of the server.
+ */
 int Server::getPort() const
 {
 	return(this->_port);
@@ -210,7 +211,7 @@ Location Server::findLocation(std::string uri)
 }
 
 /**
- * Checks if a given location string exists in the server's locations map.
+ * @brief Checks if a given location string exists in the server's locations map.
  *
  * @param locationString The location string to check.
  * @return `true` if the location string exists, `false` otherwise.
@@ -221,12 +222,4 @@ bool Server::locationExists(std::string locationString)
 		return (true);
 	else
 		return (false);
-}
-
-/**
- * @brief Display the server information.
- */
-void Server::display() const
-{
-	log(logINFO) << *this;
 }

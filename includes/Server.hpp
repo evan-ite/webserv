@@ -24,7 +24,6 @@ class Server : public ASetting
 		// funcs
 		bool		clientHasFD(int fd);
 		void		handleRequest(int fd);
-		void		display() const;
 		Location	findLocation(std::string uri);
 		bool		locationExists(std::string uri);
 		void		setupServerSocket();
@@ -39,9 +38,8 @@ class Server : public ASetting
 		};
 	private:
 		int									_port;
-		std::string							_host;
 		int									_fd;
-		struct sockaddr_in					_address;
+		std::string							_host;
 		std::string							_key;
 		std::vector <Client>				_activeClients;
 		std::vector <Cookie>				_activeCookies;
