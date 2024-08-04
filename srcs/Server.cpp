@@ -6,6 +6,7 @@
 Server::Server()
 {
 	this->server = this;
+	this->_fd = -1;
 }
 
 /**
@@ -183,32 +184,38 @@ int Server::getMaxSize(std::string loc)
 }
 
 /**
- * @brief Find the location associated with the given URI.
+ * @brief Find the longest saved location associated with the given URI.
  * @param uri The URI to find the location for.
  * @return The location associated with the URI.
  */
-Location Server::findLocation(std::string uri)
+Location Server::findLocation(const std::string& uri) const
 {
-
-	// if (uri.empty() || uri == "/")
-	// 	return (this->_locations["/"]);
-	std::map<std::string, Location>::iterator it = this->_locations.begin();
-	for (; it != this->_locations.end(); it++)
+	std::map<std::string, Location>::const_iterator it = this->_locations.find(uri);
+	if (it != this->_locations.end())
 	{
-		if (it->first == uri)
-		{
-			it->second.setServer(this);
+		return (it->second);
+	}
+	// Fallback: Look for the longest matching prefix (e.g., "/path/to/resource" -> "/path/to")
+	std::string path = uri;
+	while (true) {
+		size_t pos = path.find_last_of('/');
+		if (pos == std::string::npos) break;
+
+		path = path.substr(0, pos);
+		it = this->_locations.find(path);
+		if (it != this->_locations.end()) {
 			return (it->second);
 		}
 	}
-	size_t pos = uri.find_last_of('/');
-	if (pos != std::string::npos)
-	{
-		uri = uri.substr(0, pos);
-		return (this->findLocation(uri));
-	}
-	return (this->_locations["/"].setServer(this), this->_locations["/"]);
+	// If no match is found, return the root location ("/")
+	it = this->_locations.find("/");
+	if (it != this->_locations.end())
+		return (it->second);
+
+	throw std::runtime_error("Default location not found in server conf.");
 }
+
+
 
 /**
  * @brief Checks if a given location string exists in the server's locations map.
@@ -220,6 +227,31 @@ bool Server::locationExists(std::string locationString)
 {
 	if (this->_locations.find(locationString) != this->_locations.end())
 		return (true);
-	else
-		return (false);
+	return (false);
 }
+
+
+void Server::printLocations(std::ostream& os)
+{
+	std::map<std::string, Location>::iterator it = this->_locations.begin();
+	for (; it != this->_locations.end(); it++)
+	{
+		try
+		{
+			os << it->second;
+		}
+		catch (std::bad_cast& e)
+		{
+			os << "Bad cast exception: " << e.what() << std::endl;
+		}
+	}
+}
+
+// void Server::printLocations(std::ostream& os) const
+// {
+// 	std::map<std::string, Location>::const_iterator it = this->_locations.begin();
+// 	for (; it != this->_locations.end(); it++)
+// 	{
+// 		os << it->second;
+// 	}
+// }

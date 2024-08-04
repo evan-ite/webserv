@@ -7,6 +7,8 @@ Config::Config(const std::string &filename)
 	try
 	{
 		this->loadFallback(DEFAULT_CONF);
+		log(logDEBUG) << "Default config loaded";
+		log(logDEBUG) << this->_tempServer;
 		this->readServer(filename);
 	}
 	catch (std::exception &e)
@@ -43,7 +45,10 @@ void Config::readServer(const std::string &filename)
 
 	while (std::getline(file, line))
 	{
-		if (line.find("server") != std::string::npos) // change this to starts_with!
+		line = trimLeadingWhitespace(line);
+		if (startsWith(line, "#") || line.empty())
+			continue;	// skip comments and empty lines
+		if (startsWith(line, "server"))
 			parseServer = true;
 		if (parseServer)
 		{
@@ -134,24 +139,10 @@ void Config::loadFallback(const std::string &filename)
 	this->_Servers.insert(std::make_pair("default", this->_tempServer));
 }
 
-Server Config::getServer(std::string serverHost) const // Throws an exception (std::out_of_range) if the key doesn't exist in the map.
-{
-	return (this->_Servers.at(serverHost));
-}
-
 std::map<std::string, Server> Config::getServersMap(void) const
 {
 	std::map<std::string, Server> servers = this->_Servers;
 	if (servers.find("default") != servers.end())
 		servers.erase("default");
 	return servers;
-}
-
-void Config::printServers(void) const
-{
-	for (std::map<std::string, Server>::const_iterator serverPair = _Servers.begin(); \
-		serverPair != _Servers.end(); ++serverPair)
-	{
-		std::cout << serverPair->second << std::endl;
-	}
 }

@@ -24,6 +24,6 @@ class Location : public ASetting
 		std::string	_redir;
 };
 
-std::ostream& operator<<(std::ostream& os, Location& loc);
+std::ostream& operator<<(std::ostream& os, const Location& loc);
 
 #endif

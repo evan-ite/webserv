@@ -193,9 +193,7 @@ void* Server::handleRequestWrapper(void* arg)
 		Request request(httpRequest);
 		server->checkSession(request);
 		Location loc = server->findLocation(request.getPath());
-		log(logDEBUG) << "Location found: " << loc.getPath();
-		log(logDEBUG) << "root: " << loc.getRoot();
-		log(logDEBUG) << "allow[0]: " << loc.findAllow(GET);
+		loc.setServer(server);
 		Response res(request, loc);
 		std::string resString = res.makeResponse();
 		server->addSession(res.getSessionId());

@@ -36,8 +36,9 @@ class ASetting
 		int			getAutoindex() const;
 		int			getAllowUploads() const;
 		int			getClientMaxBodySize() const;
-
+		void		print(std::ostream& os) const;
 	protected:
+		// vars
 		Server*														server;
 		std::string													root;
 		bool														allow[4]; // 0 = get, 1 = post, 2 = delete, 3 = invalid, 4 = set in location - this could be a single int if we use bitwise ops
@@ -52,5 +53,7 @@ class ASetting
 		int															client_max_body_size;
 		std::map<std::string, std::pair<std::string, std::string> >	errors;
 };
+
+std::ostream& operator<<(std::ostream& os, const ASetting& setting);
 
 #endif

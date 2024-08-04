@@ -12,8 +12,6 @@ class Config
 		Config(const Config &src);
 		~Config(void);
 		Config &operator=(const Config &rhs);
-		// getter
-		Server getServer(std::string server_IP) const; // do we need this?
 		std::map<std::string, Server> getServersMap(void) const;
 
 		std::map<std::string, Server> _Servers; //make private after debugging
@@ -27,7 +25,6 @@ class Config
 		void loadFallback(const std::string &filename);
 		void loadServerStruct(const std::string &configString);
 		void parse(ASetting* ptr, std::string key, std::string value, std::string line);
-		void printServers(void) const;
 };
 
 #endif

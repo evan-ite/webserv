@@ -212,12 +212,14 @@ void removeCharacter(std::string& str, char charToRemove)
  * @param loc The Location object to be printed.
  * @return The output stream after writing the Location object.
  */
-std::ostream& operator<<(std::ostream& os, Location& loc)
+std::ostream& operator<<(std::ostream& os, const Location& loc)
 {
+	os << "~~~ LOCATION ~~~\n";
 	os << "Location Path: " << loc.getPath() << "\n";
 	os << "Location Root: " << loc.getRoot() << "\n";
 	os << "Location Index: " << loc.getIndex() << "\n";
-	return os;
+	loc.ASetting::print(os);
+	return (os);
 }
 
 /**
@@ -229,8 +231,69 @@ std::ostream& operator<<(std::ostream& os, Location& loc)
  */
 std::ostream& operator<<(std::ostream& os, const Server& server)
 {
+	os << "~~~ SERVER ~~~\n";
 	os << "Server Host: " << server.getHost() << "\n";
 	os << "Server Port: " << server.getPort() << "\n";
 	os << "Server FD: " << server.getFd() << "\n";
-	return os;
+	server.print(os);
+	Location loc = server.findLocation("/");
+	os << loc;
+	// os << server.findLocation("/");
+	// server.printLocations(os);
+	return (os);
+}
+
+// /**
+//  * Overloaded stream insertion operator to print the details of a ASetting object.
+//  *
+//  * @param os The output stream to write the settings object details to.
+//  * @param setting The object whose details are to be printed.
+//  * @return The output stream after writing the details.
+//  */
+// std::ostream& operator<<(std::ostream& os, const ASetting& setting)
+// {
+// 	setting.print(os);
+// 	return (os);
+// }
+
+/**
+ * @brief Trims leading whitespace characters from a given string.
+ *
+ * This function removes all leading whitespace characters from the input string
+ * and returns the resulting string.
+ *
+ * @param str The input string from which leading whitespace will be removed.
+ * @return A new string with leading whitespace removed.
+ */
+
+std::string trimLeadingWhitespace(const std::string& str)
+{
+	std::string result = str;
+	std::string::iterator it = result.begin();
+
+	// Iterate through the string until we find a non-whitespace character
+	while (it != result.end() && std::isspace(static_cast<unsigned char>(*it))) {
+		++it;
+	}
+
+	// Erase the leading whitespace characters
+	result.erase(result.begin(), it);
+
+	return (result);
+}
+/**
+ * @brief Checks if a string starts with a given prefix.
+ *
+ * This function checks if the input string starts with the specified prefix.
+ * It returns true if the string starts with the prefix, and false otherwise.
+ *
+ * @param str The input string to be checked.
+ * @param prefix The prefix to check for at the beginning of the input string.
+ * @return true if the input string starts with the prefix, false otherwise.
+ */
+bool startsWith(const std::string& str, const std::string& prefix)
+{
+	if (prefix.size() > str.size())
+		return (false);
+	return (std::equal(prefix.begin(), prefix.end(), str.begin()));
 }

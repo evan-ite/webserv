@@ -87,6 +87,8 @@ std::string	removeSubstr(const std::string& str, const std::string& substr);
 char**		vectorToCharStarStar(const std::vector<std::string>& vec);
 int			makeNonBlocking(int fd);
 std::string	generateRandomString(int length);
-void removeCharacter(std::string& str, char charToRemove);
+void		removeCharacter(std::string& str, char charToRemove);
+std::string	trimLeadingWhitespace(const std::string& str);
+bool		startsWith(const std::string& str, const std::string& prefix);
 
 #endif

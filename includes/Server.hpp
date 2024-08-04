@@ -24,9 +24,10 @@ class Server : public ASetting
 		// funcs
 		bool		clientHasFD(int fd);
 		void		handleRequest(int fd);
-		Location	findLocation(std::string uri);
+		Location	findLocation(const std::string& uri) const;
 		bool		locationExists(std::string uri);
 		void		setupServerSocket();
+		void		printLocations(std::ostream& os);
 		// exceptions
 		class clientError : public std::exception
 		{

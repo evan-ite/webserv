@@ -358,3 +358,25 @@ bool ASetting::findAllow(HttpMethod method)
 		return (this->server->findAllow(method));
 	return (false);
 }
+
+
+void ASetting::print(std::ostream& os) const
+{
+	os << "Root: " << root << "\n";
+	os << "Allow GET: " << (allow[0] ? "true" : "false") << "\n";
+	os << "Allow POST: " << (allow[1] ? "true" : "false") << "\n";
+	os << "Allow DELETE: " << (allow[2] ? "true" : "false") << "\n";
+	os << "Directory Listing Template: " << dirlistTemplate << "\n";
+	os << "CGI Enabled: " << (cgi ? "true" : "false") << "\n";
+	os << "CGI Extension: " << cgi_extension << "\n";
+	os << "CGI Bin: " << cgi_bin << "\n";
+	os << "CGI Pass: " << cgi_pass << "\n";
+	os << "Index: " << index << "\n";
+	os << "Autoindex: " << (autoindex ? "true" : "false") << "\n";
+	os << "Allow Uploads: " << (allow_uploads ? "true" : "false") << "\n";
+	os << "Client Max Body Size: " << client_max_body_size << "\n";
+	os << "Error Pages: \n";
+	for (std::map<std::string, std::pair<std::string, std::string> >::const_iterator it = errors.begin(); it != errors.end(); ++it) {
+		os << "  " << it->first << ": " << it->second.second << "\n";
+	}
+}
