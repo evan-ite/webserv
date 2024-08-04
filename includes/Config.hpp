@@ -16,9 +16,9 @@ class Config
 		// getter
 		std::map<std::string, Server> getServersMap(void) const;
 
+		std::map<std::string, Server> _Servers; //make private after debugging
 	private:
 		Server _tempServer;
-		std::map<std::string, Server> _Servers;
 
 		// void parseLocation(Location *currentLocation, std::string key, std::string value, std::string line);
 		// void parseServer(std::string key, std::string value, std::string line);

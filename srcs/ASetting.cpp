@@ -1,6 +1,52 @@
 #include "../includes/settings.hpp"
 
+ASetting::ASetting() {}
+
+ASetting::ASetting(const ASetting& other)
+{
+	this->root = other.root;
+	this->allow[0] = other.allow[0];
+	this->allow[1] = other.allow[1];
+	this->allow[2] = other.allow[2];
+	this->allow[3] = other.allow[3];
+	this->allow[4] = other.allow[4];
+	this->dirlistTemplate = other.dirlistTemplate;
+	this->cgi = other.cgi;
+	this->cgi_extension = other.cgi_extension;
+	this->cgi_bin = other.cgi_bin;
+	this->cgi_pass = other.cgi_pass;
+	this->index = other.index;
+	this->autoindex = other.autoindex;
+	this->allow_uploads = other.allow_uploads;
+	this->client_max_body_size = other.client_max_body_size;
+	this->errors = other.errors;
+}
+
 ASetting::~ASetting() {}
+
+ASetting& ASetting::operator=(const ASetting& other)
+{
+	if (this != &other)
+	{
+		this->root = other.root;
+		this->allow[0] = other.allow[0];
+		this->allow[1] = other.allow[1];
+		this->allow[2] = other.allow[2];
+		this->allow[3] = other.allow[3];
+		this->allow[4] = other.allow[4];
+		this->dirlistTemplate = other.dirlistTemplate;
+		this->cgi = other.cgi;
+		this->cgi_extension = other.cgi_extension;
+		this->cgi_bin = other.cgi_bin;
+		this->cgi_pass = other.cgi_pass;
+		this->index = other.index;
+		this->autoindex = other.autoindex;
+		this->allow_uploads = other.allow_uploads;
+		this->client_max_body_size = other.client_max_body_size;
+		this->errors = other.errors;
+	}
+	return (*this);
+}
 
 // Setters
 void ASetting::setRoot(const std::string& root)
@@ -145,12 +191,18 @@ void ASetting::addErrorPage(std::string error_code, std::string error_page)
 
 void ASetting::addAllow(std::string method)
 {
+	this->allow[4] = false; // set to false when called from SERVER, LOCATION will overwrite
 	if (method == "GET")
 		this->allow[0] = true;
 	else if (method == "POST")
 		this->allow[1] = true;
 	else if (method == "DELETE")
-		this->allow[3] = true;
+		this->allow[2] = true;
 	else
-		this->allow[4] = true;
+		this->allow[3] = true;
+}
+
+bool ASetting::findAllow(HttpMethod method)
+{
+	return (this->allow[method]);
 }

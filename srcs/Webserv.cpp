@@ -4,10 +4,7 @@ Webserv::Webserv() {}
 
 Webserv::Webserv(const Webserv &copy) : _servers(copy._servers) {}
 
-Webserv::~Webserv()
-{
-	log(logINFO) << "Shutting down webserv";
-}
+Webserv::~Webserv() {}
 
 Webserv & Webserv::operator=(const Webserv &assign)
 {
@@ -22,6 +19,7 @@ int	Webserv::run(Config conf)
 	std::map<std::string, Server> ::iterator	it = sMap.begin();
 	for (; it != sMap.end(); it++)
 	{
+		it->second.setupServerSocket();
 		this->addServer(it->second);
 		log(logINFO) << "Server listening: " << it->first;
 	}
@@ -95,5 +93,7 @@ const char * Webserv::internalError::what() const throw()
 }
 const char * Webserv::epollError::what() const throw()
 {
+	if (g_signal == 0)
+		return ("SIGINT received, shutting down");
 	return ("Epoll did something weird");
 }

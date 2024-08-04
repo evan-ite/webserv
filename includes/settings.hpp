@@ -26,6 +26,7 @@
 # include <sys/wait.h>
 # include <dirent.h>
 # include <pthread.h>
+# include <typeinfo>
 
 // Error descriptions
 # define E400 "Bad Request"

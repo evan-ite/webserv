@@ -18,27 +18,20 @@ Server::Server()
  * @brief Copy constructor for the Server class.
  * @param copy The Server object to be copied.
  */
-Server::Server(const Server &copy)
+Server::Server(const ASetting& other) : ASetting(other)
 {
-	// Copy member variables
-	this->_port = copy._port;
-	this->_host = copy._host;
-	this->_fd = copy._fd;
-	this->_address = copy._address;
-	this->_key = copy._key;
-	this->_locations = copy._locations;
-	this->root = copy.root;
-	this->allow[3] = copy.allow[3];
-	this->errors = copy.errors;
-	this->dirlistTemplate = copy.dirlistTemplate;
-	this->cgi = copy.cgi;
-	this->cgi_extension = copy.cgi_extension;
-	this->cgi_bin = copy.cgi_bin;
-	this->cgi_pass = copy.cgi_pass;
-	this->index = copy.index;
-	this->autoindex = copy.autoindex;
-	this->allow_uploads = copy.allow_uploads;
-	this->client_max_body_size = copy.client_max_body_size;
+	const Server* derived = dynamic_cast<const Server*>(&other);
+	if (derived)
+	{
+		this->_port = derived->_port;
+		this->_host = derived->_host;
+		this->_fd = derived->_fd;
+		this->_address = derived->_address;
+		this->_key = derived->_key;
+		this->_locations = derived->_locations;
+	}
+	else
+		throw std::bad_cast();
 }
 
 /**
@@ -47,33 +40,39 @@ Server::Server(const Server &copy)
 Server::~Server() {}
 
 /**
- * @brief Assignment operator for the Server class.
- * @param assign The Server object to be assigned.
- * @return A reference to the assigned Server object.
+ * @brief Assignment operator overload for the Server class.
+ *
+ * This function assigns the values of another ASetting object to the current Server object.
+ * It first calls the base class assignment operator to copy the common settings.
+ * Then, it checks if the other object is actually a derived class of Server using dynamic_cast.
+ * If it is, it copies the specific Server settings such as port, host, fd, address, key, and locations.
+ * If the other object is not a derived class of Server, it throws a std::bad_cast exception.
+ *
+ * @param other The ASetting object to be assigned to the current Server object.
+ * @return Server& A reference to the current Server object after assignment.
+ * @throws std::bad_cast if the other object is not a derived class of Server.
  */
-Server &Server::operator=(const Server &assign)
+Server& Server::operator=(const ASetting& other)
 {
-	// Assign member variables
-	this->_port = assign._port;
-	this->_host = assign._host;
-	this->_fd = assign._fd;
-	this->_address = assign._address;
-	this->_key = assign._key;
-	this->_locations = assign._locations;
-	this->root = assign.root;
-	this->allow[3] = assign.allow[3];
-	this->errors = assign.errors;
-	this->dirlistTemplate = assign.dirlistTemplate;
-	this->cgi = assign.cgi;
-	this->cgi_extension = assign.cgi_extension;
-	this->cgi_bin = assign.cgi_bin;
-	this->cgi_pass = assign.cgi_pass;
-	this->index = assign.index;
-	this->autoindex = assign.autoindex;
-	this->allow_uploads = assign.allow_uploads;
-	this->client_max_body_size = assign.client_max_body_size;
+	if (this != &other)
+	{
+		ASetting::operator=(other);
+		const Server* derived = dynamic_cast<const Server*>(&other);
+		if (derived)
+		{
+			this->_port = derived->_port;
+			this->_host = derived->_host;
+			this->_fd = derived->_fd;
+			this->_address = derived->_address;
+			this->_key = derived->_key;
+			this->_locations = derived->_locations;
+		}
+		else
+			throw std::bad_cast();
+	}
 	return (*this);
 }
+
 
 /**
  * @brief Get the file descriptor of the server.
@@ -89,7 +88,7 @@ std::string Server::getHost() const
 	return(this->_host);
 }
 
-std::string Server::getPort() const
+int Server::getPort() const
 {
 	return(this->_port);
 }
@@ -137,7 +136,7 @@ void Server::addSession(std::string sessionId)
 }
 
 /**
- * @brief Add a location to the server.
+ * @brief Add a location to the server. Will overwrite without warning.
  * @param loc The location to be added.
  */
 void Server::addLocation(Location loc)
@@ -189,13 +188,17 @@ int Server::getMaxSize(std::string loc)
  */
 Location Server::findLocation(std::string uri)
 {
-	if (uri.empty() || uri == "/")
-		return (this->_locations["/"]);
+
+	// if (uri.empty() || uri == "/")
+	// 	return (this->_locations["/"]);
 	std::map<std::string, Location>::iterator it = this->_locations.begin();
 	for (; it != this->_locations.end(); it++)
 	{
 		if (it->first == uri)
+		{
+			it->second.setServer(this);
 			return (it->second);
+		}
 	}
 	size_t pos = uri.find_last_of('/');
 	if (pos != std::string::npos)
@@ -203,7 +206,7 @@ Location Server::findLocation(std::string uri)
 		uri = uri.substr(0, pos);
 		return (this->findLocation(uri));
 	}
-	return (this->_locations["/"]);
+	return (this->_locations["/"].setServer(this), this->_locations["/"]);
 }
 
 /**
@@ -225,5 +228,5 @@ bool Server::locationExists(std::string locationString)
  */
 void Server::display() const
 {
-	log(logINFO) << this;
+	log(logINFO) << *this;
 }

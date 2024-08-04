@@ -9,6 +9,28 @@ void signalhandler(int sig)
 	log(logINFO) << "SIGINT received, shutting down";
 }
 
+Config testConfig()
+{
+	Server server;
+	Config conf;
+	server.setHost("localhost");
+	server.setPort(8080);
+	server.setRoot("./default");
+	server.setClientMaxBodySize(1024);
+	server.setCgi(false);
+
+	Location rootLocation;
+	rootLocation.setRoot("default");
+	rootLocation.addAllow("GET");
+	rootLocation.setIndex("html/index.html");
+	rootLocation.setAutoindex(false);
+
+	server.addLocation(rootLocation);
+	conf._Servers["localhost:8080"] = server;
+
+	return (conf);
+}
+
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
@@ -23,8 +45,9 @@ int main(int argc, char **argv)
 	{
 		log(logINFO) << "Starting virtual server(s)";
 		Config conf(configPath);
+		Config conf2 = testConfig();
 		Webserv webserv;
-		webserv.run(conf);
+		webserv.run(conf2);
 	}
 	catch (std::exception &e)
 	{

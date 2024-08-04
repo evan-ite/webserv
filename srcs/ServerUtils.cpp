@@ -2,6 +2,14 @@
 
 void Server::setupServerSocket()
 {
+	memset(&(this->_address), 0, sizeof(this->_address));
+	this->_address.sin_port = htons(this->getPort());
+	this->_address.sin_family = AF_INET;
+	if (this->getHost() == "localhost")
+		this->_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	else
+		this->_address.sin_addr.s_addr = inet_addr(this->getHost().c_str());
+	this->_address.sin_addr.s_addr = INADDR_ANY; // Uncomment to use with docker on mac ONLY!
 	this->_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	if (this->_fd < 0)
 		throw socketError();
@@ -100,6 +108,7 @@ void* Server::handleRequestWrapper(void* arg)
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
+		log(logDEBUG) << "Received " << count << " bytes from fd: " << fd;
 		if (!server->checkContentLength(httpRequest, fd))
 		{
 			httpRequest.clear();
@@ -108,16 +117,15 @@ void* Server::handleRequestWrapper(void* arg)
 			return (NULL);
 		}
 	}
-
-	if (count == 0)
-	{
-		// Client closed the connection
-		if (httpRequest.empty())
-		{
-			close(fd);
-			log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
-		}
-	}
+	// if (count == 0)
+	// {
+	// 	// Client closed the connection
+	// 	if (httpRequest.empty())
+	// 	{
+	// 		close(fd);
+	// 		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+	// 	}
+	// }
 	// else if (count == -1)
 	// {
 	// 	if (errno != EINTR)
@@ -131,14 +139,17 @@ void* Server::handleRequestWrapper(void* arg)
 
 	if (!httpRequest.empty())
 	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		server->checkSession(request);
 		Location loc = server->findLocation(request.getPath());
+		log(logDEBUG) << "Location found: " << loc.getPath();
+		log(logDEBUG) << "root: " << loc.getRoot();
+		log(logDEBUG) << "allow[0]: " << loc.findAllow(GET);
 		Response res(request, loc);
 		std::string resString = res.makeResponse();
 		server->addSession(res.getSessionId());
-		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
+		log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
 		const char *resCStr = resString.data();
 		ssize_t sent = write(fd, resCStr, resString.size());
 		if (sent == -1)

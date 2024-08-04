@@ -8,7 +8,7 @@ SRC =	srcs/ASetting.cpp srcs/Cgi.cpp srcs/Client.cpp srcs/Config.cpp srcs/Config
 		srcs/Response.cpp srcs/ResponseUtils.cpp srcs/Server.cpp srcs/ServerUtils.cpp srcs/todo.cpp \
 		srcs/utils.cpp srcs/Webserv.cpp
 
-all: $(NAME) key
+all: $(NAME) #key
 
 $(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(OBJDIR)/srcs

@@ -56,7 +56,8 @@ void Request::parse(std::string httpRequest)
 		this->_method = DELETE;
 		this->_path = findKey(httpRequest, "DELETE ", ' ');
 	}
-	else {
+	else
+	{
 		this->_method = INVALID;
 		this->_path = "/";
 		log(logERROR) << "Invalid http method";

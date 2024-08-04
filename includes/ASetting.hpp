@@ -5,8 +5,10 @@
 class ASetting
 {
 	public:
+		ASetting();
+		ASetting(const ASetting& other);
 		virtual ~ASetting() = 0;
-
+		virtual ASetting& operator=(const ASetting& other);
 		// Setters
 		void setRoot(const std::string& root);
 		void setDirlistTemplate(const std::string& dirlistTemplate);
@@ -19,13 +21,14 @@ class ASetting
 		void setAutoindex(bool autoindex);
 		void setIndex(const std::string& index);
 		void addErrorPage(std::string error_code, std::string error_page);
-		void addAllow(std::string method);
+		virtual void addAllow(std::string method);
+		virtual bool findAllow(HttpMethod method);
 
 		// Getters
 		std::string getRoot() const;
-		std::vector<std::string> getAllow() const;
-		std::map<std::string, std::string> getErrorPages() const;
-		std::map<std::string, std::string> getErrorMessages() const;
+		// std::vector<std::string> getAllow() const;
+		// std::map<std::string, std::string> getErrorPages() const;
+		// std::map<std::string, std::string> getErrorMessages() const;
 		std::string getDirlistTemplate() const;
 		bool getCgi() const;
 		std::string getCgiExtension() const;
@@ -38,7 +41,7 @@ class ASetting
 
 	protected:
 		std::string													root;
-		bool														allow[4]; // 0 = get, 1 = post, 2 = delete
+		bool														allow[4]; // 0 = get, 1 = post, 2 = delete, 3 = invalid, 4 = set in location
 		std::string													dirlistTemplate;
 		bool														cgi;
 		std::string													cgi_extension;
