@@ -10,18 +10,6 @@
  seperator = \n
  return value is " Thu, 27 Jun 2024 12:00:00 GMT"
 */
-
-/**
- * @brief Finds the value associated with a keyword in a string.
- *
- * This function searches for a keyword in the provided string and returns the value
- * associated with it, separated by the specified separator.
- *
- * @param file_str The string to search within.
- * @param keyword The keyword to search for.
- * @param separator The character that separates the keyword and its value.
- * @return The value associated with the keyword, or an empty string if the keyword is not found.
- */
 std::string findKey(std::string file_str, std::string keyword, char separator)
 {
 	std::string::size_type start_pos = file_str.find(keyword);
@@ -246,4 +234,22 @@ std::string removeSubstr(const std::string& str, const std::string& substr)
 	}
 
 	return (result);
+}
+
+/**
+ * @brief Checks if a string ends with a given postfix.
+ * This function checks if the input string ends with the specified postfix.
+ * It returns true if the string ends with the postfix, and false otherwise.
+ * It always returns false if either of the strings is empty.
+ * @param str The input string to be checked.
+ * @param postfix The postfix to check for.
+ * @return true if the input string ends with the postfix, false otherwise.
+ */
+bool endsWith(const std::string& str, const std::string& postfix)
+{
+	if (str.empty() || postfix.empty())
+		return (false);
+	if (postfix.size() > str.size())
+		return (false);
+	return (std::equal(postfix.rbegin(), postfix.rend(), str.rbegin()));
 }

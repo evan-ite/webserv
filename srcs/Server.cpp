@@ -210,16 +210,6 @@ void Server::addSession(std::string sessionId)
 	this->_activeCookies.push_back(sesh);
 }
 
-/**
- * @brief Wrapper function to handle a client request in a separate thread.
- *
- * This function is a wrapper that handles a client request in a separate thread.
- * It reads the HTTP request, checks for chunked transfer encoding,
- * and processes the request accordingly.
- *
- * @param arg A pointer to a pair containing the server instance and the client file descriptor.
- * @return NULL
- */
 void* Server::handleRequestWrapper(void* arg)
 {
 	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
@@ -241,7 +231,8 @@ void* Server::handleRequestWrapper(void* arg)
 			isChunked = true;
 		if (isChunked && httpRequest.find("\r\n\r\n") != std::string::npos)
 			handleChunkedRequest(httpRequest, isChunked, chunkedBody);
-		else {
+		else
+		{
 			if (!server->checkContentLength(httpRequest, fd))
 			{
 				httpRequest.clear();
@@ -251,27 +242,24 @@ void* Server::handleRequestWrapper(void* arg)
 			}
 		}
 	}
-	if (count == 0)
+
+	if (count == -1)
 	{
-		// Client closed the connection
-		if (httpRequest.empty())
+		if (endsWith(httpRequest, "\r\n\r\n"))
+			log(logDEBUG) << "all data read from fd: " << fd;
+		else
 		{
+			log(logERROR) << "Error receiving data on fd: " << fd;
 			close(fd);
-			log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+			return (NULL);
 		}
 	}
-	// else if (count == -1)
-	// {
-	// 	if (errno != EINTR)
-	// 	{
-	// 		log(logERROR) << "Error receiving data on fd: " << fd;
-	// 		close(fd);
-	// 		return (NULL);
-	// 	}
-	// 	// Handle other errors or interrupts appropriately
-	// }
-
-	if (!httpRequest.empty())
+	if (httpRequest.empty() && count == 0)
+	{
+		close(fd);
+		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+	}
+	else
 	{
 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);

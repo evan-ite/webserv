@@ -50,16 +50,17 @@
 
 extern int	g_signal;
 
-std::string					findKey(std::string file_str, std::string keyword, char separator);
-std::string					splitReturnFirst(const std::string& str, const std::string& delimiter);
-std::string					readFileToString(const std::string& filename);
-std::string					checkMime(const std::string &extension);
-std::string					findType(const std::string &filename);
-std::string					getDateTime();
-std::string					toString(int value);
-std::string                 removeSubstr(const std::string& str, const std::string& substr);
-char**						vectorToCharStarStar(const std::vector<std::string>& vec);
-int							makeNonBlocking(int fd);
-std::string					generateRandomString(int length);
+std::string	findKey(std::string file_str, std::string keyword, char separator);
+std::string	splitReturnFirst(const std::string& str, const std::string& delimiter);
+std::string	readFileToString(const std::string& filename);
+std::string	checkMime(const std::string &extension);
+std::string	findType(const std::string &filename);
+std::string	getDateTime();
+std::string	toString(int value);
+std::string	removeSubstr(const std::string& str, const std::string& substr);
+char**		vectorToCharStarStar(const std::vector<std::string>& vec);
+int			makeNonBlocking(int fd);
+std::string	generateRandomString(int length);
+bool		endsWith(const std::string& str, const std::string& postfix);
 
 #endif
