@@ -2,6 +2,15 @@
 
 loglevel_e loglevel = LOGLEVEL;
 
+/**
+ * @brief Constructs a new Logger object with the specified log level.
+ *
+ * This constructor initializes the Logger object by setting the log level and formatting
+ * the log message with a timestamp and appropriate color based on the log level.
+ * The timestamp is formatted as "YYYY-MM-DD HH:MM:SS".
+ *
+ * @param _loglevel The log level for the logger (e.g., logERROR, logWARNING, logINFO, logDEBUG).
+ */
 Logger::Logger(loglevel_e _loglevel)
 {
 	std::time_t now = std::time(0);

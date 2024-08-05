@@ -10,6 +10,16 @@ Client::Client(const Client &copy)
 	this->_key = copy.getKey();
 }
 
+/**
+ * @brief Constructs a new Client object by accepting a connection on the given file descriptor.
+ *
+ * This constructor accepts a new client connection on the provided active file descriptor.
+ * It sets the client socket to non-blocking mode and stores the file descriptor.
+ * If the accept or non-blocking operations fail, it throws an acceptError exception.
+ *
+ * @param active_fd The file descriptor on which to accept the new connection.
+ * @throws acceptError if the accept or non-blocking operations fail.
+ */
 Client::Client(int active_fd)
 {
 	socklen_t len = sizeof(this->_address);

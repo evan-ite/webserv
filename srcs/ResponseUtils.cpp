@@ -1,5 +1,14 @@
 #include "../includes/settings.hpp"
 
+/**
+ * @brief Checks if the request is valid.
+ *
+ * This function validates the request by checking if the location contains double dots
+ * and if the connection header is either "keep-alive" or "close".
+ *
+ * @param request The HTTP request object.
+ * @return True if the request is valid, false otherwise.
+ */
 bool Response::isValidRequest(Request &request)
 {
 	if (request.getLoc().find("..") != std::string::npos)
@@ -24,8 +33,15 @@ bool Response::isValidRequest(Request &request)
 		return (true);
 }
 
-// check if redir contains URL scheme, if so redirect to
-// this URL
+
+/**
+ * @brief Checks if the redirection is to an external URL.
+ *
+ * This function checks if the redirection URL starts with "http" or "https".
+ * If so, it sets the response status to 302 (Found) and prepares the redirection.
+ *
+ * @return True if the redirection is to an external URL, false otherwise.
+ */
 bool Response::checkExternal()
 {
 	if (this->_loc->redir.find("http") == 0 || this->_loc->redir.find("https") == 0)
@@ -42,9 +58,15 @@ bool Response::checkExternal()
 	return (false);
 }
 
-// Function that returns the correct file path, based on the URI
-// and the root and index from the config file. Returnd empty string
-// in the case of directory listing
+/**
+ * @brief Extracts the file path from the request.
+ *
+ * This function determines the correct file path based on the URI, root, and index
+ * from the configuration file. It returns an empty string in the case of directory listing.
+ *
+ * @param request The HTTP request object.
+ * @return The extracted file path as a string.
+ */
 std::string Response::extractFilePath(Request &request)
 {
 	// Find end of the location path in the URI
@@ -81,7 +103,15 @@ std::string Response::extractFilePath(Request &request)
 }
 
 
-// Returns path to correct error page
+/**
+ * @brief Finds the error page path for a given error code.
+ *
+ * This function returns the path to the correct error page based on the error code.
+ * It first checks the location-specific error pages, then the server-wide error pages.
+ *
+ * @param errorCode The error code as a string.
+ * @return The path to the error page as a string.
+ */
 std::string Response::findError(std::string errorCode)
 {
 	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
@@ -92,7 +122,15 @@ std::string Response::findError(std::string errorCode)
 		return (_servSet->error_pages["500"]);
 }
 
-// Returns the correct status message for the given status code
+/**
+ * @brief Gets the status message for a given status code.
+ *
+ * This function returns the appropriate status message for the provided status code.
+ * If no specific message is found, it defaults to "Internal Server Error".
+ *
+ * @param statusCode The status code as a string.
+ * @return The status message as a string.
+ */
 std::string Response::getStatusMessage(std::string statusCode)
 {
 	if (_servSet->error_messages.find(statusCode) != _servSet->error_messages.end())
@@ -102,8 +140,16 @@ std::string Response::getStatusMessage(std::string statusCode)
 }
 
 
-/* Loops over all possible server locations and checks if they match the request location.
-If no match was found, the first location in the map is used as default. */
+/**
+ * @brief Finds the matching location for a given URI.
+ *
+ * This function iterates over all possible server locations and checks if they match
+ * the request location. If no match is found, the first location in the map is used as default.
+ *
+ * @param uri The request URI.
+ * @param sett The server settings object.
+ * @return The matching location object.
+ */
 Location Response::findLoc(const std::string& uri, ServerSettings &sett)
 {
 	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
@@ -128,8 +174,14 @@ Location Response::findLoc(const std::string& uri, ServerSettings &sett)
 		return (sett.locations.at("/")); // Handle the case when no match is found - we need a smarter way of just returning item 0?
 }
 
-// Check if the method is allowed in the location, argument should
-// be method in capital letters, return value is true if method is allowed
+/**
+ * @brief Checks if the HTTP method is allowed in the location.
+ *
+ * This function checks if the provided HTTP method is allowed in the current location.
+ *
+ * @param method The HTTP method in capital letters.
+ * @return True if the method is allowed, false otherwise.
+ */
 bool	Response::checkMethod(std::string method)
 {
 	Location loc = *this->_loc;
@@ -140,6 +192,15 @@ bool	Response::checkMethod(std::string method)
 	return (false);
 }
 
+/**
+ * @brief Creates files based on the request data.
+ *
+ * This function creates files in the server's root directory based on the data provided
+ * in the request. It sets the response status accordingly.
+ *
+ * @param request The HTTP request object.
+ * @param status The status code to be set based on the success or failure of file creation.
+ */
 void Response::createFiles(Request &request, int &status)
 {
 	std::string file = _servSet->root + "/" + _loc->path + "/";
@@ -180,10 +241,15 @@ void Response::createFiles(Request &request, int &status)
 		status = 201;
 }
 
-/* Iterates over the possible extensions in MIME.txt and
-checks if the argument extension is valid. If the extension
-is found the corresponding content type is returned as
-"type/subtype". If no match is found 'text/plain' will be returned. */
+/**
+ * @brief Checks if the MIME type for the given extension is valid.
+ *
+ * This function iterates over the possible extensions in MIME.txt and checks if the
+ * provided extension is valid. If found, it returns the corresponding content type.
+ *
+ * @param extension The file extension.
+ * @return The content type as "type/subtype". Defaults to "text/plain" if no match is found.
+ */
 std::string checkMime(const std::string &extension)
 {
 	std::ifstream mime(MIMEFILE);
@@ -208,9 +274,15 @@ std::string checkMime(const std::string &extension)
 	return ("text/plain");
 }
 
-/* Takes a filename as argument and checks if the extension
-is valid, if so the content type will be returned in the form
-"type/subtype". If no match is found an empty string wil be returned.*/
+/**
+ * @brief Finds the content type for a given filename.
+ *
+ * This function checks the file extension of the provided filename and returns the
+ * corresponding content type. If no match is found, it defaults to "text/plain".
+ *
+ * @param filename The name of the file.
+ * @return The content type as "type/subtype".
+ */
 std::string findType(const std::string &filename)
 {
 	std::size_t i = filename.rfind('.');

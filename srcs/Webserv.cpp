@@ -17,6 +17,14 @@ Webserv & Webserv::operator=(const Webserv &assign)
 	return (*this);
 }
 
+/**
+ * @brief Runs the main server loop.
+ *
+ * This function sets up the epoll instance, initializes the servers from the configuration,
+ * and starts handling epoll events. If no servers are configured, it logs a message and exits.
+ *
+ * @return An integer indicating the exit status.
+ */
 int	Webserv::run()
 {
 	this->setupEpoll();
@@ -36,12 +44,26 @@ int	Webserv::run()
 	return (EXIT_SUCCESS);
 }
 
+/**
+ * @brief Adds a server to the server list and registers its file descriptor with epoll.
+ *
+ * @param s The server to be added.
+ */
 void	Webserv::addServer(Server s)
 {
 	this->_servers.push_back(s);
 	this->epollAddFD(s.getFd());
 }
 
+/**
+ * @brief Adds a file descriptor to the epoll instance.
+ *
+ * This function configures the epoll instance to monitor the specified file descriptor
+ * for input events using edge-triggered mode.
+ *
+ * @param fd The file descriptor to be added.
+ * @throws epollError if the epoll_ctl call fails.
+ */
 void Webserv::epollAddFD(int fd)
 {
 	struct epoll_event event;
@@ -51,6 +73,13 @@ void Webserv::epollAddFD(int fd)
 		throw epollError();
 }
 
+/**
+ * @brief Sets up the epoll instance.
+ *
+ * This function creates an epoll instance and stores its file descriptor.
+ *
+ * @throws epollError if the epoll_create1 call fails.
+ */
 void	Webserv::setupEpoll()
 {
 	this->_epoll_fd = epoll_create1(0);
@@ -68,6 +97,14 @@ int	Webserv::getEpollFD()
 	return (this->_epoll_fd);
 }
 
+/**
+ * @brief Handles epoll events in the main server loop.
+ *
+ * This function waits for events on the epoll instance and processes them.
+ * It handles new connections and existing client requests.
+ *
+ * @throws epollError if the epoll_wait call fails.
+ */
 void Webserv::handleEpollEvents()
 {
 	struct epoll_event events[MAX_EVENTS];
