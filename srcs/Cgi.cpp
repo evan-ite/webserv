@@ -22,7 +22,7 @@ Cgi::Cgi(Request *request, ServerSettings *serverData, Location *loc)
 			break;
 		default: // neither is true
 			this->_isTrue = false;
-			return ;
+			return;
 	}
 
 	std::size_t	len = ext.length();
@@ -94,7 +94,7 @@ void	Cgi::execute(Response &response)
 		log(logERROR) << "Error forking";
 		throw CgiException("500");
 	}
-	else if (pid == 0) // Child process: execute the CGI script
+	else if (pid == 0) // Child process: execute the CGI script 
 		this->executeCgiChild(pipefd, cgiScriptPath, interpreter);
 	else
 	{
@@ -205,7 +205,7 @@ std::string Cgi::readCgiOutput(int *pipefd)
 	while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		cgiOutput.append(buffer, bytesRead);
 
-	return (cgiOutput);
+	return cgiOutput;
 }
 
 void	Cgi::createResponse(Response &response, std::string &cgiOutput)
