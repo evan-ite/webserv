@@ -55,6 +55,15 @@ const char * Server::socketError::what() const throw()
 	return "Socket Error";
 }
 
+/**
+ * @brief Sets up the server socket.
+ *
+ * This function initializes the server socket, sets socket options,
+ * makes the socket non-blocking, binds it to the specified address,
+ * and starts listening for incoming connections.
+ *
+ * @throws socketError if any socket operation fails.
+ */
 void Server::setupServerSocket()
 {
 	this->_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
@@ -71,6 +80,15 @@ void Server::setupServerSocket()
 		throw socketError();
 }
 
+/**
+ * @brief Adds a client to the server.
+ *
+ * This function creates a new Client object with the given file descriptor
+ * and adds it to the list of active clients.
+ *
+ * @param fd The file descriptor of the client to be added.
+ * @return The file descriptor of the added client.
+ */
 int	Server::addClient(int fd)
 {
 	Client c = Client(fd);
@@ -78,6 +96,15 @@ int	Server::addClient(int fd)
 	return (c.getFd());
 }
 
+/**
+ * @brief Checks if a client with the given file descriptor exists.
+ *
+ * This function iterates through the list of active clients to check
+ * if a client with the specified file descriptor exists.
+ *
+ * @param fd The file descriptor to check.
+ * @return true if a client with the given file descriptor exists, false otherwise.
+ */
 bool	Server::clientHasFD(int fd)
 {
 	std::vector<Client>::iterator it = this->_activeClients.begin();
@@ -89,7 +116,16 @@ bool	Server::clientHasFD(int fd)
 	return (0);
 }
 
-
+/**
+ * @brief Checks the Content-Length of an HTTP request.
+ *
+ * This function checks if the HTTP request contains a Content-Length header
+ * and verifies if the content length is within the allowed limit.
+ *
+ * @param httpRequest The HTTP request string.
+ * @param fd The file descriptor of the client.
+ * @return true if the content length is within the allowed limit, false otherwise.
+ */
 bool Server::checkContentLength(std::string httpRequest, int fd)
 {
 	if (httpRequest.find("\r\n\r\n") == std::string::npos)
@@ -105,6 +141,14 @@ bool Server::checkContentLength(std::string httpRequest, int fd)
 	return (1);
 }
 
+/**
+ * @brief Handles a request that is too large.
+ *
+ * This function sends a 413 Request Entity Too Large response to the client
+ * and logs an error if the send operation fails.
+ *
+ * @param fd The file descriptor of the client.
+ */
 void Server::requestTooLarge(int fd)
 {
 	Response res(413, "Request object too large", "basic", "close", "");
@@ -117,6 +161,15 @@ void Server::requestTooLarge(int fd)
 	}
 }
 
+/**
+ * @brief Checks the session of a request.
+ *
+ * This function checks if the request contains a valid session ID.
+ * If the session ID is valid and not timed out, it renews the session.
+ * Otherwise, it resets the session ID and removes the session from the active cookies.
+ *
+ * @param req The request object.
+ */
 void Server::checkSession(Request &req)
 {
 	std::string sessionId = req.getsessionId();
@@ -141,6 +194,14 @@ void Server::checkSession(Request &req)
 
 }
 
+/**
+ * @brief Adds a session to the active cookies.
+ *
+ * This function creates a new Cookie object with the given session ID
+ * and adds it to the list of active cookies.
+ *
+ * @param sessionId The session ID to be added.
+ */
 void Server::addSession(std::string sessionId)
 {
 	if (sessionId.empty())
@@ -149,61 +210,16 @@ void Server::addSession(std::string sessionId)
 	this->_activeCookies.push_back(sesh);
 }
 
-// void Server::handleRequest(int fd)
-// {
-// 	char buffer[BUFFER_SIZE];
-// 	ssize_t count;
-// 	std::string httpRequest;
-// 	log(logINFO)	<< "Server " << this->_settings.host
-// 					<< ":" << this->_settings.port
-// 					<< " is reading from fd: " << fd;
-// 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
-// 	{
-// 		httpRequest.append(buffer, count);
-// 		if (!this->checkContentLength(httpRequest, fd))
-// 		{
-// 			httpRequest.clear();
-// 			log(logDEBUG) << "Shutting downd fd: " << fd;
-// 			close(fd);
-// 			break ;
-// 		}
-// 	}
-// 	if (count == 0 && httpRequest.empty())
-// 	{
-// 		close(fd);
-// 		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
-// 	}
-// 	else if (count == -1)
-// 	{
-// 		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
-// 	}
-// 	if (!httpRequest.empty())
-// 	{
-// 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-// 		Request request(httpRequest);
-// 		this->checkSession(request);
-// 		Response res(request, this->_settings);
-// 		std::string resString = res.makeResponse();
-// 		this->addSession(res.getSessionId());
-// 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
-// 		const char *resCStr = resString.data();
-// 		ssize_t sent = write(fd, resCStr, resString.size());
-// 		if (sent == -1)
-// 		{
-// 			close(fd); // Close on write error
-// 			log(logERROR) << "Error writing to socket, FD: " << fd;
-// 		}
-// 		if (res.getConnection() == "close")
-// 		{
-// 			close(fd);
-// 			log(logINFO) << "connection on fd " << fd << " closed on client request";
-// 		}
-// 		else
-// 		{
-// 			log(logINFO) << "connection on fd " << fd << " kept alive";
-// 		}
-// 	}
-// }
+/**
+ * @brief Wrapper function to handle a client request in a separate thread.
+ *
+ * This function is a wrapper that handles a client request in a separate thread.
+ * It reads the HTTP request, checks for chunked transfer encoding,
+ * and processes the request accordingly.
+ *
+ * @param arg A pointer to a pair containing the server instance and the client file descriptor.
+ * @return NULL
+ */
 void* Server::handleRequestWrapper(void* arg)
 {
 	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
@@ -286,6 +302,14 @@ void* Server::handleRequestWrapper(void* arg)
 	return (NULL);
 }
 
+/**
+ * @brief Handles a client request.
+ *
+ * This function creates a new thread to handle a client request.
+ * It passes the server instance and the client file descriptor to the thread.
+ *
+ * @param fd The file descriptor of the client.
+ */
 void Server::handleRequest(int fd)
 {
 	pthread_t thread;
@@ -301,7 +325,17 @@ void Server::handleRequest(int fd)
 	}
 }
 
-
+/**
+ * @brief Handles a chunked HTTP request.
+ *
+ * This function processes a chunked HTTP request by reading chunks of data
+ * and appending them to the chunked body. It stops processing when the end
+ * of the chunked data is reached.
+ *
+ * @param httpRequest The HTTP request string.
+ * @param isChunked A flag indicating if the request is chunked.
+ * @param chunkedBody The body of the chunked request.
+ */
 void Server::handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody)
 {
 	size_t pos = 0;
