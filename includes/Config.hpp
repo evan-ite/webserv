@@ -22,7 +22,6 @@ class Config
 		void countBraces(std::string line, int *braceCount);
 		std::vector<std::string> getPortHost(const std::string& server, const std::string& keyword);
 		void parseMultipleServers(std::string server);
-		void loadFallback(const std::string &filename);
 		void loadServerStruct(const std::string &configString);
 		void parse(ASetting* ptr, std::string key, std::string value, std::string line);
 };

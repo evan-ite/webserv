@@ -48,8 +48,7 @@ void Request::parse(std::string httpRequest)
 	{
 		this->_method = POST;
 		this->_path = findKey(httpRequest, "POST ", ' ');
-		if (this->_contentLength != -1)
-			this->parseMultipart(httpRequest);
+		this->parseMultipart(httpRequest);
 	}
 	else if (method == "DELETE")
 	{

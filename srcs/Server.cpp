@@ -178,7 +178,7 @@ int Server::getMaxSize(std::string loc)
 	}
 	catch (const std::out_of_range &e)
 	{
-		size = this->client_max_body_size;
+		size = this->getClientMaxBodySize();
 	}
 	return (size);
 }

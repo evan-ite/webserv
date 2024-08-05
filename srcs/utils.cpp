@@ -243,25 +243,10 @@ std::ostream& operator<<(std::ostream& os, const Server& server)
 	return (os);
 }
 
-// /**
-//  * Overloaded stream insertion operator to print the details of a ASetting object.
-//  *
-//  * @param os The output stream to write the settings object details to.
-//  * @param setting The object whose details are to be printed.
-//  * @return The output stream after writing the details.
-//  */
-// std::ostream& operator<<(std::ostream& os, const ASetting& setting)
-// {
-// 	setting.print(os);
-// 	return (os);
-// }
-
 /**
  * @brief Trims leading whitespace characters from a given string.
- *
  * This function removes all leading whitespace characters from the input string
  * and returns the resulting string.
- *
  * @param str The input string from which leading whitespace will be removed.
  * @return A new string with leading whitespace removed.
  */
@@ -283,10 +268,8 @@ std::string trimLeadingWhitespace(const std::string& str)
 }
 /**
  * @brief Checks if a string starts with a given prefix.
- *
  * This function checks if the input string starts with the specified prefix.
  * It returns true if the string starts with the prefix, and false otherwise.
- *
  * @param str The input string to be checked.
  * @param prefix The prefix to check for at the beginning of the input string.
  * @return true if the input string starts with the prefix, false otherwise.

@@ -193,7 +193,7 @@ void* Server::handleRequestWrapper(void* arg)
 		Request request(httpRequest);
 		server->checkSession(request);
 		Location loc = server->findLocation(request.getPath());
-		loc.setServer(server);
+		loc.setServer(server); // only to be able to call fallback values
 		Response res(request, loc);
 		std::string resString = res.makeResponse();
 		server->addSession(res.getSessionId());
@@ -238,7 +238,5 @@ void Server::handleRequest(int fd)
 		delete args; // Free the allocated memory on failure
 	}
 	else
-	{
 		pthread_detach(thread); // Detach the thread to allow it to run independently
-	}
 }

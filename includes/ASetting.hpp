@@ -54,6 +54,4 @@ class ASetting
 		std::map<std::string, std::pair<std::string, std::string> >	errors;
 };
 
-std::ostream& operator<<(std::ostream& os, const ASetting& setting);
-
 #endif

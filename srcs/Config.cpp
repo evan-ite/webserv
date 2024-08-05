@@ -6,10 +6,12 @@ Config::Config(const std::string &filename)
 {
 	try
 	{
-		this->loadFallback(DEFAULT_CONF);
-		log(logDEBUG) << "Default config loaded";
-		log(logDEBUG) << this->_tempServer;
+		this->readServer(DEFAULT_CONF);
+		this->_Servers.clear();
+		this->_Servers["default"] = this->_tempServer;
 		this->readServer(filename);
+		// log(logDEBUG) << "DEFAULT \n" << this->_Servers.at("default");
+		// log(logDEBUG) << "size " << this->_Servers.size();
 	}
 	catch (std::exception &e)
 	{
@@ -63,17 +65,12 @@ void Config::readServer(const std::string &filename)
 			}
 		}
 	}
-	if (filename == DEFAULT_CONF && !this->_Servers.empty())
-		this->_Servers["default"] = this->_Servers.begin()->second;
 }
 
 void Config::parseMultipleServers(std::string serverString)
 {
 	std::vector<std::string> ports = this->getPortHost(serverString, "listen");
 	std::vector<std::string> hosts = this->getPortHost(serverString, "host");
-
-	//initialize _tempServer with fallback values
-	this->_tempServer = this->_Servers["default"];
 
 	// load user configuration
 	loadServerStruct(serverString);
@@ -125,24 +122,10 @@ void Config::loadServerStruct(const std::string &configString)
 		this->_tempServer.addLocation(currentLocation);
 }
 
-void Config::loadFallback(const std::string &filename)
-{
-	std::ifstream file(filename.c_str());
-	std::string line;
-	std::string server;
-
-	if (!file.is_open())
-		throw std::runtime_error("Error: could not open fallback file");
-	while (std::getline(file, line))
-		server.append(line + "\n");
-	loadServerStruct(server);
-	this->_Servers.insert(std::make_pair("default", this->_tempServer));
-}
-
 std::map<std::string, Server> Config::getServersMap(void) const
 {
 	std::map<std::string, Server> servers = this->_Servers;
 	if (servers.find("default") != servers.end())
 		servers.erase("default");
-	return servers;
+	return (servers);
 }

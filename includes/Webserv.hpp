@@ -25,10 +25,10 @@ class Webserv
 		void				epollAddFD(int fd);
 
 		Webserv(const Webserv &copy);
-		int								_epoll_fd;
-		std::vector<Server>				_servers;
-		void							setupEpoll();
-		void							handleEpollEvents();
+		int					_epoll_fd;
+		std::vector<Server>	_servers;
+		void				setupEpoll();
+		void				handleEpollEvents();
 };
 
 #endif

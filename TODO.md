@@ -83,3 +83,13 @@
 - [x] Cookiesssss
 - [x] Create python script to automate API key
 - [x] remove server_name
+
+
+
+invalid method?
+allow_uploads?
+read buffer into request object directly?
+bit shifting instead of booleans for allow[]
+
+
+/upload segfaults

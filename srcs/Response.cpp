@@ -25,7 +25,7 @@ Response::Response(Request &request, Location &loc)
 		this->_status = 200;
 		this->_type = "text/html";
 		this->_body = "";
-		// this->_nonroot = request.getPath().substr(loc.getRoot().length());
+		this->_connection = request.getConnection();
 		HttpMethod method = request.getMethod();
 		if (request.getsessionId().empty())
 			this->_sessionId = generateRandomString(12);
@@ -44,13 +44,6 @@ Response::Response(Request &request, Location &loc)
 	catch (std::exception &e)
 	{
 		this->_status = atoi(e.what());
-		// std::pair<std::string, std::string> error = loc.findError(e.what());
-		// this->_status = atoi(e.what());
-		// this->_reason = error.first;
-		// this->_type = "text/html";
-		// this->_body = readFileToString(error.second);
-		// this->_connection = "close";
-		// this->_len = _body.length();
 	}
 }
 
@@ -80,8 +73,6 @@ void	Response::getMethod(Request &request)
 	}
 	if (this->_body == "" || this->_type == "")
 		throw ResponseException("404");
-	else
-		this->_status = 200;
 }
 
 void	Response::deleteMethod(Request &request)
@@ -91,16 +82,8 @@ void	Response::deleteMethod(Request &request)
 	if (remove(file.c_str()) != 0)
 	{
 		log(logERROR) << "Failed to delete file: " << file;
-		throw ResponseException("404");
+		throw ResponseException("500");
 	}
-	// else {
-	// 	this->_status = 200;
-	// 	this->_reason = getStatusMessage("200");
-	// 	this->_type = "text/html";
-	// 	this->_connection = request.getConnection();
-	// 	this->_body = "";
-	// 	this->_len = _body.length();
-	// }
 }
 
 // Creates an html page with name fileName that lists the content of dirPath
@@ -171,6 +154,8 @@ std::string Response::makeResponse()
 {
 	std::pair<std::string, std::string> code = this->_loc.findError(this->_status);
 	std::ostringstream response;
+	if (this->_status > 302) // add error page body for other than 200 OK, 201 CREATED and 302 REDIR
+		this->_body = readFileToString(code.second);
 
 	response << HTTPVERSION << " " << this->_status << " " << code.first << "\r\n";
 	response << "Date: " << getDateTime() << "\r\n";
@@ -180,11 +165,11 @@ std::string Response::makeResponse()
 	response << "Connection: " << this->_connection << "\r\n";
 	if (!this->_sessionId.empty())
 		response << "Set-Cookie: session_id=" << this->_sessionId << "\r\n";
-	// if (!this->_redir.empty())
-	// 	response << "Location: " << this->_redir << "\r\n";
+	if (!this->_redir.empty())
+		response << "Location: " << this->_redir << "\r\n";
 	response << "\r\n";
 	std::string return_value = response.str();
-	if (this->_len)
+	if (this->_body.length())
 		return_value += this->_body + "\r\n\r\n";
 	return (return_value);
 }

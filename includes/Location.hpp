@@ -13,11 +13,11 @@ class Location : public ASetting
 		Location& operator=(const ASetting& other);
 		std::string							getPath() const;
 		std::string							getRedir() const;
-		void								setPath(std::string p);
-		void								setRedir(std::string p);
-		void								setServer(Server* s);
+		void								setPath(std::string path);
+		void								setRedir(std::string path);
+		void								setServer(Server* server);
 		void								addAllow(std::string method);
-		std::pair<std::string, std::string>	findError(std::string errorCode);
+		std::pair<std::string, std::string>	findError(std::string errorCode); // should be in base class?
 		std::pair<std::string, std::string>	findError(int errorCode);
 	private:
 		std::string	_path;

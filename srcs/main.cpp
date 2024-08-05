@@ -44,10 +44,7 @@ int main(int argc, char **argv)
 	{
 		log(logINFO) << "Starting virtual server(s)";
 		Config conf(configPath);
-		return (1);
-		// Config conf2 = testConfig();
 		Webserv webserv;
-		// webserv.run(conf2);
 		// std::map<std::string, Server> serversMap = conf.getServersMap();
 		// std::map<std::string, Server>::iterator it = serversMap.begin();
 		// for (; it != serversMap.end(); it++)
@@ -57,6 +54,7 @@ int main(int argc, char **argv)
 		// 	log(logDEBUG) << "second: \n" << it->second;
 		// 	log(logDEBUG) << "--------------------------------";
 		// }
+		// return (1);
 		webserv.run(conf);
 	}
 	catch (std::exception &e)

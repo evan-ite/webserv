@@ -30,12 +30,13 @@ bool Response::isValidRequest(Request &request)
 std::string Response::extractFilePath(Request &request)
 {
 	// Find end of the location path in the URI
-	std::size_t	i = request.getPath().find(this->_loc.getPath()) + this->_loc.getPath().length();
+	std::size_t	remainder = request.getPath().find(this->_loc.getPath()) + this->_loc.getPath().length();
 	std::string	file;
 
-	if (i < request.getPath().length())
-	{ // If URI contains a filename extract it
-		file = request.getPath().substr(i);
+	if (remainder < request.getPath().length()) // if (resuest.getPath != this._loc.getPath())
+	{
+		// If URI contains a filename extract it
+		file = request.getPath().substr(remainder);
 		if (file.find('.') == std::string::npos)
 			file += "/" + this->_loc.getIndex();
 	}
@@ -47,7 +48,8 @@ std::string Response::extractFilePath(Request &request)
 
 	std::string filePath;
 	if (this->_loc.getAutoindex())
-	{ // directory listing
+	{
+		// directory listing
 		filePath = "";
 		this->createDirlisting(this->_loc.getPath());
 	}
@@ -58,7 +60,6 @@ std::string Response::extractFilePath(Request &request)
 		else
 			filePath = this->_loc.getRoot() + "/" + file;
 	}
-
 	return (filePath);
 }
 
@@ -70,7 +71,7 @@ void Response::checkMethod(HttpMethod method, Request &request)
 	if (this->_loc.findAllow(method))
 		(this->*funcs[method])(request);
 	else
-		throw std::runtime_error("405");
+		throw ResponseException("405");
 }
 
 void Response::createFiles(Request &request, int &status)
