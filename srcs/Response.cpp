@@ -31,13 +31,13 @@ Response::Response(Request &request, Location &loc)
 			this->_sessionId = generateRandomString(12);
 		else
 			this->_sessionId = "";
-
 		if (!isValidRequest(request))
 			throw ResponseException("400");
 		else if (this->handleRedir(loc.getRedir()))
 			return ;
 		else if (this->handleCGI(request))
 			return ;
+
 		this->checkMethod(method, request);
 		log(logDEBUG) << "Response object succesfully created";
 	}

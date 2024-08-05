@@ -4,22 +4,16 @@
 Cgi::Cgi(Request &request, Location &loc)
 {
 	this->_env = NULL;
-	std::string ext;
-
-	if (loc.getCgi())
-		ext = loc.getCgiExtension();
-	else
-	{
-		this->_isTrue = false;
-		return ;
-	}
-
+	std::string ext = loc.getCgiExtension();
 	std::size_t	len = ext.length();
 
 	if (((request.getPath().length() >= len
 		&& request.getPath().substr(request.getPath().size() - len) == ext)
 		|| request.getPath().find(ext + "?") != std::string::npos))
+	{
+		this->_isTrue = true;
 		this->_loc = loc;
+	}
 	else
 		this->_isTrue = false;
 }

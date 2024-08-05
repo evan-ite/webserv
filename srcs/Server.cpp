@@ -13,6 +13,7 @@ Server::Server()
  * @brief Copy constructor for the Server class.
  * @param copy The Server object to be copied.
  */
+
 Server::Server(const ASetting& other) : ASetting(other)
 {
 	const Server* derived = dynamic_cast<const Server*>(&other);
@@ -24,6 +25,13 @@ Server::Server(const ASetting& other) : ASetting(other)
 		this->_fd = derived->_fd;
 		this->_key = derived->_key;
 		this->_locations = derived->_locations;
+
+		std::map<std::string, Location>::iterator it = this->_locations.begin();
+		for (; it != this->_locations.end(); it++)
+		{
+			it->second.setServer(this);
+		}
+
 	}
 	else
 		throw std::bad_cast();
@@ -61,6 +69,12 @@ Server& Server::operator=(const ASetting& other)
 			this->_fd = derived->_fd;
 			this->_key = derived->_key;
 			this->_locations = derived->_locations;
+
+			std::map<std::string, Location>::iterator it = this->_locations.begin();
+			for (; it != this->_locations.end(); it++)
+			{
+				it->second.setServer(this);
+			}
 		}
 		else
 			throw std::bad_cast();
@@ -171,16 +185,9 @@ void Server::setPort(int port)
  */
 int Server::getMaxSize(std::string loc)
 {
-	int size;
-	try
-	{
-		size = this->_locations.at(loc).getClientMaxBodySize();
-	}
-	catch (const std::out_of_range &e)
-	{
-		size = this->getClientMaxBodySize();
-	}
-	return (size);
+	Location location = this->findLocation(loc);
+	location.setServer(this);
+	return (location.getClientMaxBodySize());
 }
 
 /**

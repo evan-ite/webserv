@@ -159,7 +159,7 @@ bool Response::handleRedir(std::string redir)
 {
 	if (redir.empty())
 		return (false);
-	this->_status = 302;
+	this->_status = 301;
 	this->_reason = "Found";
 	this->_connection = "close";
 	this->_len = 0;
@@ -169,10 +169,13 @@ bool Response::handleRedir(std::string redir)
 
 bool Response::handleCGI(Request &request)
 {
-	if (this->_loc.getCgi())
+	if (this->_loc.getCgi() < 1)
 		return (false);
-
 	Cgi cgi(request, this->_loc);
-	cgi.execute(*this);
-	return (true);
+	if (cgi.isTrue())
+	{
+		cgi.execute(*this);
+		return (true);
+	}
+	return (false);
 }

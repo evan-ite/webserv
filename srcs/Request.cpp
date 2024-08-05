@@ -47,7 +47,7 @@ void Request::parse(std::string httpRequest)
 	else if (method == "POST")
 	{
 		this->_method = POST;
-		this->_location = findKey(httpRequest, "POST ", ' ');
+		this->_path = findKey(httpRequest, "POST ", ' ');
 		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
 		{
 			this->_contentLength = -1;

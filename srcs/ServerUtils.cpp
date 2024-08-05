@@ -75,6 +75,7 @@ bool Server::checkContentLength(std::string httpRequest, int fd)
 	if (firstSpace == std::string::npos)
 		return (1);
 	std::string location = httpRequest.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+	log(logDEBUG) << "LOCAITON VALUES" << this->findLocation(location);
 	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
 	if (cLen > this->getMaxSize(location))
 	{
