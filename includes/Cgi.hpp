@@ -42,7 +42,10 @@ class Cgi
 		void		executeCgiChild(int *pipefd, std::string cgiScriptPath, std::string interpreter);
 		void		extractCgi(std::string &cgiScriptPath, std::string &interpreter);
 		void		createResponse(Response &response, std::string &cgiOutput);
+		void		executeParent(int pid, int *pipefd, Response &response);
+		bool		checkUri(std::string ext);
 		std::string readCgiOutput(int *pipefd);
+		std::string	getExtension();
 
 };
 
