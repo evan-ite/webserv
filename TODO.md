@@ -77,7 +77,7 @@
 ## Extra
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
-- [ ] Chunked requests
+- [x] Chunked requests
 - [x] Siege
 - [x] http redirects
 - [ ] Check forbidden functions
