@@ -172,7 +172,6 @@ std::ostream& operator<<(std::ostream& os, const Location& location)
 	os << " Allow:" << std::endl;
 	for (std::vector<std::string>::const_iterator it = location.allow.begin(); it != location.allow.end(); ++it)
 		os << "  - " << *it << std::endl;
-	os << " Allow Uploads: " << (location.allow_uploads ? "true" : "false") << std::endl;
 	os << " Error Pages: " << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = location.loc_error_pages.begin(); it != location.loc_error_pages.end(); ++it)
 		os << " " << it->first << ": " << it->second << std::endl;

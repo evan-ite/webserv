@@ -93,8 +93,6 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		removeCharacter(error_page, '"');
 		currentLocation->loc_error_pages[error_code] = error_page;
 	}
-	else if (key == "allow_uploads")
-		currentLocation->allow_uploads = (value == "on");
 	else if (key == "autoindex")
 		currentLocation->autoindex = (value == "on");
 	else if (key == "return")

@@ -13,7 +13,6 @@ struct Location
 	std::string	cgi_bin;
 	std::string	cgi_pass;
 	bool		autoindex;
-	bool 		allow_uploads;
 
 	std::map<std::string, std::string>	loc_error_pages;
 	std::vector<std::string>			allow;

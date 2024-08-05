@@ -14,6 +14,7 @@ Server::Server(const Server &copy)
 Server::Server(std::string key, ServerSettings settings)
 {
 	this->_settings = settings;
+	log(logDEBUG) << this->_settings.host;
 	this->_key = key;
 	memset(&(this->_address), 0, sizeof(this->_address));
 	this->_address.sin_port = htons(this->_settings.port);
@@ -48,11 +49,11 @@ int Server::getFd() const
 
 const char * Server::clientError::what() const throw()
 {
-	return "Client Error";
+	return ("Client Error");
 }
 const char * Server::socketError::what() const throw()
 {
-	return "Socket Error";
+	return ("Socket error");
 }
 
 void Server::setupServerSocket()
