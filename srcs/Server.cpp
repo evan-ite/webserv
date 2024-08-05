@@ -257,7 +257,7 @@ void* Server::handleRequestWrapper(void* arg)
 
 	if (!httpRequest.empty())
 	{
-		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		server->checkSession(request);
 		Response res(request, server->_settings);

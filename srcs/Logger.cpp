@@ -10,17 +10,17 @@ Logger::Logger(loglevel_e _loglevel)
 	std::strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", localtm);
 	switch (_loglevel)
 	{
-		case logERROR:
-			_buffer << ANSI_RED;
-			break;
-		case logWARNING:
-			_buffer << ANSI_YELLOW;
+		case logDEBUG:
+			_buffer << ANSI_BLUE;
 			break;
 		case logINFO:
 			_buffer << ANSI_GREEN;
 			break;
-		case logDEBUG:
-			_buffer << ANSI_BLUE;
+		case logWARNING:
+			_buffer << ANSI_YELLOW;
+			break;
+		case logERROR:
+			_buffer << ANSI_RED;
 			break;
 		default:
 			break;
