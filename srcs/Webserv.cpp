@@ -139,11 +139,16 @@ const char * Webserv::configError::what() const throw()
 {
 	return ("Config Error");
 }
+
 const char * Webserv::internalError::what() const throw()
 {
 	return ("Webserv Error");
 }
+
 const char * Webserv::epollError::what() const throw()
 {
-	return ("Epoll Error");
+	if (g_signal)
+		return ("Epoll Error");
+	else
+		return ("SIGINT received, shutting down");
 }
