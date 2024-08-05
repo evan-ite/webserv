@@ -27,7 +27,7 @@ class Server : public ASetting
 		Location	findLocation(const std::string& uri) const;
 		bool		locationExists(std::string uri);
 		void		setupServerSocket();
-		void		printLocations(std::ostream& os);
+		void		printLocations(std::ostream& os) const;
 		// exceptions
 		class clientError : public std::exception
 		{
@@ -37,6 +37,9 @@ class Server : public ASetting
 		{
 			virtual const char* what() const throw();
 		};
+
+		std::map <std::string, Location>	_locations;
+	
 	private:
 		int									_port;
 		int									_fd;
@@ -44,7 +47,6 @@ class Server : public ASetting
 		std::string							_key;
 		std::vector <Client>				_activeClients;
 		std::vector <Cookie>				_activeCookies;
-		std::map <std::string, Location>	_locations;
 		bool								checkContentLength(std::string httpRequest, int fd);
 		void								requestTooLarge(int fd);
 		void 								checkSession(Request &req);

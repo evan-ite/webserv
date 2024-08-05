@@ -236,10 +236,9 @@ std::ostream& operator<<(std::ostream& os, const Server& server)
 	os << "Server Port: " << server.getPort() << "\n";
 	os << "Server FD: " << server.getFd() << "\n";
 	server.print(os);
-	Location loc = server.findLocation("/");
-	os << loc;
-	// os << server.findLocation("/");
-	// server.printLocations(os);
+	// Location loc = server.findLocation("/");
+	// os << loc;
+	server.printLocations(os);
 	return (os);
 }
 

@@ -8,7 +8,8 @@
 Location::Location(const std::string& path)
 {
 	this->_path = path;
-	this->allow[4] = false;
+	// this->allow[4] = false;
+	this->allow[0] = this->allow[1] = this->allow[2] = this->allow[3] = this->allow[4] = 0;
 	this->cgi = -1;
 	this->autoindex = -1;
 	this->allow_uploads = -1;

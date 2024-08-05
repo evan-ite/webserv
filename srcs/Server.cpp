@@ -238,27 +238,10 @@ bool Server::locationExists(std::string locationString)
 }
 
 
-void Server::printLocations(std::ostream& os)
+void Server::printLocations(std::ostream& os) const
 {
-	std::map<std::string, Location>::iterator it = this->_locations.begin();
+	std::map<std::string, Location>::const_iterator it = this->_locations.begin();
 	for (; it != this->_locations.end(); it++)
-	{
-		try
-		{
-			os << it->second;
-		}
-		catch (std::bad_cast& e)
-		{
-			os << "Bad cast exception: " << e.what() << std::endl;
-		}
-	}
+		os << it->second;
 }
 
-// void Server::printLocations(std::ostream& os) const
-// {
-// 	std::map<std::string, Location>::const_iterator it = this->_locations.begin();
-// 	for (; it != this->_locations.end(); it++)
-// 	{
-// 		os << it->second;
-// 	}
-// }
