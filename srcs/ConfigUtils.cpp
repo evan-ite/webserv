@@ -172,8 +172,6 @@ void Config::parse(ASetting* ptr, std::string key, std::string value, std::strin
 		removeCharacter(error_page, '"');
 		ptr->addErrorPage(error_code, error_page);
 	}
-	else if (key == "allow_uploads")
-		ptr->setAllowUploads((value == "on"));
 	else if (key == "autoindex")
 		ptr->setAutoindex((value == "on"));
 	else if (key == "allow")

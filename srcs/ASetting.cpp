@@ -11,7 +11,6 @@ ASetting::ASetting()
 	this->cgi_pass.clear();
 	this->index.clear();
 	this->autoindex = -1;
-	this->allow_uploads = -1;
 	this->client_max_body_size = -1;
 	this->server = NULL;
 }
@@ -35,7 +34,6 @@ ASetting::ASetting(const ASetting& other)
 	this->cgi_pass = other.cgi_pass;
 	this->index = other.index;
 	this->autoindex = other.autoindex;
-	this->allow_uploads = other.allow_uploads;
 	this->client_max_body_size = other.client_max_body_size;
 	this->errors = other.errors;
 	this->server = other.server;
@@ -65,7 +63,6 @@ ASetting& ASetting::operator=(const ASetting& other)
 		this->cgi_pass = other.cgi_pass;
 		this->index = other.index;
 		this->autoindex = other.autoindex;
-		this->allow_uploads = other.allow_uploads;
 		this->client_max_body_size = other.client_max_body_size;
 		this->errors = other.errors;
 		this->server = other.server;
@@ -143,15 +140,6 @@ void ASetting::setAutoindex(bool autoindex)
 void ASetting::setIndex(const std::string& index)
 {
 	this->index = index;
-}
-
-/**
- * @brief Setter for the allow_uploads flag.
- * @param allow_uploads The allow_uploads flag value.
- */
-void ASetting::setAllowUploads(bool allow_uploads)
-{
-	this->allow_uploads = allow_uploads;
 }
 
 /**
@@ -249,17 +237,6 @@ int ASetting::getAutoindex() const
 	if (this->autoindex == -1)
 		return (this->server->getAutoindex());
 	return (this->autoindex);
-}
-
-/**
- * @brief Getter for the allow_uploads flag.
- * @return The allow_uploads flag value.
- */
-int ASetting::getAllowUploads() const
-{
-	if (this->allow_uploads == -1)
-		return (this->server->getAllowUploads());
-	return (this->allow_uploads);
 }
 
 /**
@@ -361,7 +338,6 @@ void ASetting::print(std::ostream& os) const
 	os << "CGI Pass: " << cgi_pass << "\n";
 	os << "Index: " << index << "\n";
 	os << "Autoindex: " << (autoindex ? "true" : "false") << "\n";
-	os << "Allow Uploads: " << (allow_uploads ? "true" : "false") << "\n";
 	os << "Client Max Body Size: " << client_max_body_size << "\n";
 	os << "Error Pages: \n";
 	for (std::map<std::string, std::pair<std::string, std::string> >::const_iterator it = errors.begin(); it != errors.end(); ++it) {

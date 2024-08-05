@@ -18,7 +18,6 @@ class ASetting
 		void			setCgiExtension(const std::string& cgi_extension);
 		void			setCgiBin(const std::string& cgi_bin);
 		void			setCgiPass(const std::string& cgi_pass);
-		void			setAllowUploads(bool allow_uploads);
 		void			setClientMaxBodySize(int client_max_body_size);
 		void			setAutoindex(bool autoindex);
 		void			setIndex(const std::string& index);
@@ -49,7 +48,6 @@ class ASetting
 		std::string													cgi_pass;
 		std::string													index;
 		int															autoindex;
-		int															allow_uploads;
 		int															client_max_body_size;
 		std::map<std::string, std::pair<std::string, std::string> >	errors;
 };

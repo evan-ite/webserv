@@ -88,7 +88,6 @@
 
 
 invalid method?
-allow_uploads?
 read buffer into request object directly?
 bit shifting instead of booleans for allow[]
 

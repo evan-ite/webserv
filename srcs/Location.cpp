@@ -11,7 +11,6 @@ Location::Location(const std::string& path)
 	this->allow[4] = false;
 	this->cgi = -1;
 	this->autoindex = -1;
-	this->allow_uploads = -1;
 	this->client_max_body_size = -1;
 }
 
