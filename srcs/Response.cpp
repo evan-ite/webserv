@@ -19,6 +19,15 @@ Response::Response(int	status,
 	this->_servSet = NULL;
 }
 
+/**
+ * @brief Constructs a Response object based on the given request and server settings.
+ *
+ * This constructor initializes the Response object by determining the appropriate location,
+ * handling redirections, setting up CGI if necessary, and processing the HTTP method (GET, POST, DELETE).
+ *
+ * @param request The HTTP request object.
+ * @param serverData The server settings object.
+ */
 Response::Response(Request &request, ServerSettings &serverData)
 {
 	try
@@ -74,6 +83,14 @@ Response::Response(Request &request, ServerSettings &serverData)
 	}
 }
 
+/**
+ * @brief Handles the POST HTTP method.
+ *
+ * This function processes a POST request by creating files based on the request data.
+ * It sets the response status and headers accordingly.
+ *
+ * @param request The HTTP request object.
+ */
 void	Response::postMethod(Request &request)
 {
 	int status = 0;
@@ -95,6 +112,14 @@ void	Response::postMethod(Request &request)
 	}
 }
 
+/**
+ * @brief Handles the GET HTTP method.
+ *
+ * This function processes a GET request by extracting the file path from the request,
+ * reading the file content, and setting the response status and headers.
+ *
+ * @param request The HTTP request object.
+ */
 void	Response::getMethod(Request &request)
 {
 	std::string filePath = this->extractFilePath(request);
@@ -117,6 +142,14 @@ void	Response::getMethod(Request &request)
 		throw ResponseException("404");
 }
 
+/**
+ * @brief Handles the DELETE HTTP method.
+ *
+ * This function processes a DELETE request by removing the specified file and setting
+ * the response status and headers.
+ *
+ * @param request The HTTP request object.
+ */
 void	Response::deleteMethod(Request &request)
 {
 	std::string file = _servSet->root + request.getLoc();
@@ -136,7 +169,14 @@ void	Response::deleteMethod(Request &request)
 	}
 }
 
-// Creates an html page with name fileName that lists the content of dirPath
+/**
+ * @brief Creates an HTML page listing the contents of a directory.
+ *
+ * This function generates an HTML page that lists the contents of the specified directory
+ * using a template.
+ *
+ * @param dirPath The path to the directory.
+ */
 void	Response::createDirlisting(std::string dirPath)
 {
 	std::string htmlTemplate = this->_dirlistTemplate;
@@ -154,8 +194,15 @@ void	Response::createDirlisting(std::string dirPath)
 
 }
 
-// Function that loops through directory and subdirectories and
-// creates html list of the content
+/**
+ * @brief Loops through a directory and its subdirectories to create an HTML list of the contents.
+ *
+ * This function recursively traverses the specified directory and its subdirectories,
+ * generating an HTML list of the contents.
+ *
+ * @param dirPath The path to the directory.
+ * @return A string containing the HTML list of the directory contents.
+ */
 std::string	Response::loopDir(std::string dirPath)
 {
 	std::ostringstream html;
@@ -200,6 +247,14 @@ std::string	Response::loopDir(std::string dirPath)
 	return (html.str());
 }
 
+/**
+ * @brief Generates the HTTP response string.
+ *
+ * This function constructs the HTTP response string by combining the status line, headers,
+ * and body.
+ *
+ * @return The complete HTTP response as a string.
+ */
 std::string Response::makeResponse()
 {
 	std::ostringstream response;

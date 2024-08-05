@@ -24,6 +24,15 @@ Config &Config::operator=(const Config &rhs)
 	return (*this);
 }
 
+/**
+ * @brief Parses the server configuration from a file.
+ *
+ * This function attempts to load the server configuration from the specified file.
+ * If an error occurs during the process, it logs the error message.
+ * Initially, it loads a fallback configuration before reading the actual server configuration.
+ *
+ * @param filename The name of the configuration file to be parsed.
+ */
 void Config::parseConfig(const std::string &filename)
 {
 	try
@@ -37,6 +46,14 @@ void Config::parseConfig(const std::string &filename)
 	}
 }
 
+/**
+ * @brief Reads the server configuration from a file.
+ *
+ * It looks for server configuration blocks and processes them.
+ *
+ * @param filename The name of the file to read the server configuration from.
+ * @throws std::runtime_error If the file cannot be opened.
+ */
 void Config::readServer(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());
@@ -67,6 +84,15 @@ void Config::readServer(const std::string &filename)
 	}
 }
 
+/**
+ * @brief Parses multiple server configurations from a single server block.
+ *
+ * This function extracts the ports and hosts from the server block and initializes
+ * the temporary server configuration with fallback values. It then loads the user
+ * configuration and creates new server settings for each combination of host and port.
+ *
+ * @param server The server block configuration as a string.
+ */
 void Config::parseMultipleServers(std::string server)
 {
 	std::vector<std::string> ports = getPorts(server);
@@ -93,6 +119,15 @@ void Config::parseMultipleServers(std::string server)
 	}
 }
 
+/**
+ * @brief Loads the server configuration from a configuration string.
+ *
+ * It parses the configuration string line by line, extracting key-value pairs
+ * and handling location blocks. It updates the temporary server configuration with the
+ * parsed values.
+ *
+ * @param configString The server configuration as a string.
+ */
 void Config::loadServerStruct(const std::string &configString)
 {
 	std::istringstream configStream(configString);
@@ -120,6 +155,16 @@ void Config::loadServerStruct(const std::string &configString)
 		this->_tempServer.locations[currentLocation.path] = currentLocation;
 }
 
+/**
+ * @brief Loads the fallback server configuration from a file.
+ *
+ * This function reads the fallback configuration file and loads its contents into the
+ * temporary server configuration. It then sets the fallback server configuration and
+ * generates status messages.
+ *
+ * @param filename The name of the fallback configuration file.
+ * @throws std::runtime_error If the file cannot be opened.
+ */
 void Config::loadFallback(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());

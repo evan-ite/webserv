@@ -1,6 +1,14 @@
 #include "../includes/settings.hpp"
 
-
+/**
+ * @brief Counts the number of opening and closing braces in a line.
+ *
+ * This function updates the brace count based on the number of opening and closing
+ * braces found in the given line.
+ *
+ * @param line The line to count braces in.
+ * @param braceCount Pointer to the brace count to be updated.
+ */
 void Config::countBraces(std::string line, int *braceCount)
 {
 	size_t openBraces = std::count(line.begin(), line.end(), '{');
@@ -8,6 +16,18 @@ void Config::countBraces(std::string line, int *braceCount)
 	*braceCount += openBraces - closeBraces;
 }
 
+/**
+ * @brief Determines if the current line is a location block.
+ *
+ * This function checks if the current line indicates the start or end of a location block
+ * and updates the parsing state accordingly.
+ *
+ * @param line The current line being parsed.
+ * @param parsingLocation Pointer to the parsing state.
+ * @param currentLocation Pointer to the current location being parsed.
+ * @param value The value extracted from the line.
+ * @return True if the line is a location block, false otherwise.
+ */
 bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value)
 {
 	if (line.find("}") != std::string::npos && *parsingLocation)
@@ -28,7 +48,16 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 	return (false);
 }
 
-
+/**
+ * @brief Extracts port numbers from the server configuration string.
+ *
+ * This function searches for occurrences of the keyword "listen" in the provided
+ * server configuration string and extracts the port numbers that follow it.
+ * The port numbers are expected to be separated by spaces and terminated by a semicolon.
+ *
+ * @param server The server configuration string.
+ * @return A vector of strings containing the extracted port numbers.
+ */
 std::vector<std::string> Config::getPorts(std::string server)
 {
 	std::vector<std::string> ports;
@@ -51,6 +80,16 @@ std::vector<std::string> Config::getPorts(std::string server)
 	return (ports);
 }
 
+/**
+ * @brief Extracts host addresses from the server configuration string.
+ *
+ * This function searches for occurrences of the keyword "host" in the provided
+ * server configuration string and extracts the host addresses that follow it.
+ * The host addresses are expected to be separated by spaces and terminated by a semicolon.
+ *
+ * @param server The server configuration string.
+ * @return A vector of strings containing the extracted host addresses.
+ */
 std::vector<std::string> Config::getHosts(std::string server)
 {
 	std::vector<std::string> hosts;
@@ -73,6 +112,17 @@ std::vector<std::string> Config::getHosts(std::string server)
 	return (hosts);
 }
 
+/**
+ * @brief Parses a location configuration line.
+ *
+ * This function parses a single line of the location configuration and updates the
+ * current location with the parsed key-value pair.
+ *
+ * @param currentLocation Pointer to the current location being parsed.
+ * @param key The key extracted from the line.
+ * @param value The value extracted from the line.
+ * @param line The original line being parsed.
+ */
 void Config::parseLocation(Location *currentLocation, std::string key, std::string value, std::string line)
 {
 	if (key == "root")
@@ -128,6 +178,16 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		currentLocation->cgi_pass = value;
 }
 
+/**
+ * @brief Parses a server configuration line.
+ *
+ * This function parses a single line of the server configuration and updates the
+ * temporary server with the parsed key-value pair.
+ *
+ * @param key The key extracted from the line.
+ * @param value The value extracted from the line.
+ * @param line The original line being parsed.
+ */
 void Config::parseServer(std::string key, std::string value, std::string line)
 {
 	if (key == "root")
@@ -196,6 +256,13 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 	}
 }
 
+/**
+ * @brief Generates status messages for the server configuration.
+ *
+ * This function generates status messages and load them into the server configuration.
+ *
+ * @param server The server configuration to generate status messages for.
+ */
 void Config::makeStatusMessages(ServerSettings &server)
 {
 	server.error_messages["400"] = "Bad Request";
@@ -210,6 +277,14 @@ void Config::makeStatusMessages(ServerSettings &server)
 	server.error_messages["204"] = "No Content";
 }
 
+/**
+ * @brief Removes a specific character from a string.
+ *
+ * This function removes all occurrences of the specified character from the given string.
+ *
+ * @param str The string to remove the character from.
+ * @param ch The character to be removed.
+ */
 void Config::removeCharacter(std::string& str, char charToRemove)
 {
 	for (std::string::size_type i = 0; i < str.size(); )

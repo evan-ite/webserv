@@ -36,6 +36,15 @@ Request & Request::operator=(const Request &assign)
 	return (*this);
 }
 
+/**
+ * @brief Parses the HTTP request and extracts relevant information.
+ *
+ * This function determines the HTTP method (GET, POST, DELETE, etc.), extracts the location,
+ * and processes headers such as User-Agent, Host, Connection, Transfer-Encoding, Content-Length,
+ * Content-Type, and Cookie. It also handles multipart data and chunked transfer encoding.
+ *
+ * @param httpRequest The HTTP request as a string.
+ */
 void Request::parse(std::string httpRequest)
 {
 	std::string	method = splitReturnFirst(httpRequest, " ");
@@ -85,7 +94,15 @@ void Request::parse(std::string httpRequest)
 		this->_contentType = "application/octet-stream";
 }
 
-
+/**
+ * @brief Finds the boundary string in a multipart HTTP request.
+ *
+ * This function searches for the boundary string used to separate parts in a multipart
+ * HTTP request.
+ *
+ * @param httpRequest The HTTP request as a string.
+ * @return The boundary string prefixed with "--", or an empty string if not found.
+ */
 std::string Request::findBoundary(const std::string& httpRequest)
 {
 	size_t pos = httpRequest.find("boundary=");
@@ -95,6 +112,14 @@ std::string Request::findBoundary(const std::string& httpRequest)
 	return ("--" + httpRequest.substr(pos, endPos - pos));
 }
 
+/**
+ * @brief Parses a single part of a multipart HTTP request.
+ *
+ * This function extracts headers and content from a single part of a multipart HTTP request.
+ * If a filename is found in the headers, it stores the filename and content as a pair.
+ *
+ * @param part A single part of the multipart HTTP request as a string.
+ */
 void Request::parsePart(const std::string& part)
 {
 	std::string::size_type headerEndPos = part.find("\r\n\r\n");
@@ -113,6 +138,14 @@ void Request::parsePart(const std::string& part)
 	}
 }
 
+/**
+ * @brief Parses a multipart HTTP request.
+ *
+ * This function processes a multipart HTTP request by finding the boundary string and
+ * extracting each part. It calls parsePart() for each part found.
+ *
+ * @param httpRequest The HTTP request as a string.
+ */
 void Request::parseMultipart(const std::string& httpRequest)
 {
 	std::string boundary = findBoundary(httpRequest);
@@ -142,6 +175,14 @@ void Request::parseMultipart(const std::string& httpRequest)
 	}
 }
 
+/**
+ * @brief Generates a unique name based on the current timestamp.
+ *
+ * This function creates a unique name string using the current local time formatted as
+ * "YYYY-MM-DD-HH-MM-SS".
+ *
+ * @return The generated name as a string.
+ */
 std::string Request::makeName()
 {
 	//generate a name based on the time stamp
@@ -157,6 +198,12 @@ std::string Request::makeName()
 	return (str);
 }
 
+/**
+ * @brief Prints the file data stored in the request.
+ *
+ * This function logs each pair of file data stored in the request. If there is no file data,
+ * the function returns immediately.
+ */
 void Request::printFileData()
 {
 	if (this->_fileData.empty())
