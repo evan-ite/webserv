@@ -153,13 +153,18 @@ void* Server::handleRequestWrapper(void* arg)
 	char buffer[BUFFER_SIZE];
 	ssize_t count;
 	std::string httpRequest;
+	std::string chunkedBody;
+	bool isChunked = false;
 	log(logINFO) << "Server is reading from fd: " << fd;
 
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
 		httpRequest.append(buffer, count);
-		log(logDEBUG) << "Received " << count << " bytes from fd: " << fd;
-		if (!server->checkContentLength(httpRequest, fd))
+		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+			isChunked = true;
+		if (isChunked && httpRequest.find("\r\n\r\n") != std::string::npos)
+			handleChunkedRequest(httpRequest, isChunked, chunkedBody);
+		else if (!server->checkContentLength(httpRequest, fd))
 		{
 			httpRequest.clear();
 			log(logDEBUG) << "Shutting down fd: " << fd;
@@ -239,4 +244,52 @@ void Server::handleRequest(int fd)
 	}
 	else
 		pthread_detach(thread); // Detach the thread to allow it to run independently
+}
+
+
+
+void Server::handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody)
+{
+	size_t pos = 0;
+	std::string chunkSize;
+	std::string chunk;
+	// save header in chunkedBody
+	if (chunkedBody.empty())
+	{
+		pos = httpRequest.find("\r\n\r\n");
+		if (pos != std::string::npos)
+		{
+			chunkedBody = httpRequest.substr(0, pos + 4);
+			httpRequest.erase(0, pos + 4);
+		}
+	}
+	while ((pos = httpRequest.find("\r\n")) != std::string::npos)
+	{
+		chunkSize = httpRequest.substr(0, pos);
+		httpRequest.erase(0, pos + 2);
+		if (chunkSize.empty())
+		{
+			isChunked = false;
+			break;
+		}
+		size_t size = 0;
+		std::istringstream iss(chunkSize);
+		iss >> std::hex >> size;
+		if (iss.fail() || size == 0)
+		{
+			isChunked = false;
+			break;
+		}
+		if (httpRequest.length() < size)
+			break;
+		chunk = httpRequest.substr(0, size);
+		httpRequest.erase(0, size + 2);
+		if (!chunk.empty())
+			chunkedBody += chunk;
+	}
+	if (!isChunked)
+	{
+		httpRequest = chunkedBody;
+		chunkedBody.clear();
+	}
 }

@@ -169,13 +169,10 @@ bool Response::handleRedir(std::string redir)
 
 bool Response::handleCGI(Request &request)
 {
-	Cgi cgi(request, this->_loc);
-	if (cgi.isTrue())
-	{
-		cgi.execute(*this);
-		return (true);
-	}
-	else
+	if (this->_loc.getCgi())
 		return (false);
 
+	Cgi cgi(request, this->_loc);
+	cgi.execute(*this);
+	return (true);
 }
