@@ -40,6 +40,6 @@ Logger::Logger(loglevel_e _loglevel)
  */
 Logger::~Logger()
 {
-	_buffer << std::endl;
-	std::cout << _buffer.str();
+	this->_buffer << std::endl;
+	std::cerr << this->_buffer.str();
 }

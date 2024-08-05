@@ -37,9 +37,9 @@ class Cgi
 		bool			_isTrue;
 		char			**_env;
 
-		char		**createEnv(std::string const &cgiPath, std::string const &cgiFile);
-		void		executeCgiChild(int *pipefd, std::string cgiScriptPath);
-		void		extractCgi(std::string &cgiFile, std::string &cgiScriptPath);
+		char		**createEnv(std::string const &cgiPath);
+		void		executeCgiChild(int *pipefd, std::string cgiScriptPath, std::string interpreter);
+		void		extractCgi(std::string &cgiScriptPath, std::string &interpreter);
 		void		createResponse(Response &response, std::string &cgiOutput);
 		std::string readCgiOutput(int *pipefd);
 

@@ -128,7 +128,7 @@ void Webserv::handleEpollEvents()
  */
 const char * Webserv::configError::what() const throw()
 {
-	return ("Config did something weird");
+	return ("Config Error");
 }
 
 /**
@@ -137,7 +137,7 @@ const char * Webserv::configError::what() const throw()
  */
 const char * Webserv::internalError::what() const throw()
 {
-	return ("Webserv did something weird");
+	return ("Webserv Error");
 }
 
 /**

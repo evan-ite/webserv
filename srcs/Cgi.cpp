@@ -55,11 +55,14 @@ void	Cgi::execute(Response &response)
 		return ;
 
 	log(logINFO) << "Creating html dynamically with CGI";
-
-	std::string cgiFile;
 	std::string cgiScriptPath;
-	this->extractCgi(cgiFile, cgiScriptPath);
-	this->_env = createEnv(cgiScriptPath, cgiFile);
+	std::string interpreter;
+	this->extractCgi(cgiScriptPath, interpreter);
+	if (interpreter.empty()) {
+		log(logERROR) << "CGI interpreter not defined";
+		throw CgiException("400");
+	}
+	this->_env = createEnv(cgiScriptPath);
 
 	// Prepare to capture the CGI script's output
 	int pipefd[2];
@@ -75,7 +78,7 @@ void	Cgi::execute(Response &response)
 		throw CgiException("500");
 	}
 	else if (pid == 0) // Child process: execute the CGI script
-		this->executeCgiChild(pipefd, cgiScriptPath);
+		this->executeCgiChild(pipefd, cgiScriptPath, interpreter);
 	else
 	{
 		int status;
@@ -96,7 +99,7 @@ void	Cgi::execute(Response &response)
 	}
 }
 
-void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
+void	Cgi::executeCgiChild(int *pipefd, std::string cgiPath, std::string interpreter)
 {
 	Request request = this->_request;
 	// If POST, write the data to the pipe
@@ -108,15 +111,16 @@ void	Cgi::executeCgiChild(int *pipefd, std::string cgiScriptPath)
 	dup2(pipefd[1], STDOUT_FILENO);
 	close(pipefd[1]);
 
-	char *args[] = { strdup(cgiScriptPath.c_str()), NULL };
-	execve(cgiScriptPath.c_str(), args, this->_env);
+	log(logDEBUG) << "executing cgi script: '" << interpreter << " " << cgiPath << "'";
+	char *args[] = { strdup(interpreter.c_str()), strdup(cgiPath.c_str()), NULL };
+	execve(interpreter.c_str(), args, this->_env);
 
 	log(logERROR) << "Error executing cgi script: " << strerror(errno) ;
 	throw CgiException("500");
 }
 
 /* Create an environment for the CGI script */
-char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
+char ** Cgi::createEnv(std::string const &cgiPath)
 {
 	Request 					request = this->_request;
 	std::vector<std::string>	envVec;
@@ -138,23 +142,23 @@ char ** Cgi::createEnv(std::string const &cgiPath, std::string const &cgiFile)
 	envVec.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	envVec.push_back("REQUEST_URI=" + request.getPath());
 	envVec.push_back("HTTP_COOKIE=" + request.getsessionId());
-	envVec.push_back("SCRIPT_NAME=" + cgiPath);
-	envVec.push_back("SCRIPT_FILENAME=" + cgiFile);
+	envVec.push_back("SCRIPT_NAME=" + request.getPath()); // rel path
+	envVec.push_back("SCRIPT_FILENAME=" + cgiPath); // path incl root
 	envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	envVec.push_back("SERVER_SOFTWARE=Webserv/1.0");
-	// do we really need to pass port and host? I removed it, but can add if we REALLY need it
 	return (vectorToCharStarStar(envVec));
 }
 
  /* Determine the path to the CGI script based on the request, location and server.
 Store the found strings in the arguments passed by reference. */
-void Cgi::extractCgi(std::string &cgiFile, std::string &cgiScriptPath)
+void Cgi::extractCgi(std::string &cgiScriptPath, std::string &interpreter)
 {
 	Request request = this->_request;
 	std::size_t	i = request.getPath().rfind("/");
 	std::size_t	j = request.getPath().rfind(this->_loc.getCgiExtension());
-	cgiFile = request.getPath().substr(i, j - i + this->_loc.getCgiExtension().length());
+	std::string cgiFile = request.getPath().substr(i, j - i + this->_loc.getCgiExtension().length());
 	cgiScriptPath = this->_loc.getRoot() + this->_loc.getCgiBin() + cgiFile;
+	interpreter = this->_loc.getCgiPass();
 }
 
 /* Read the output of the CGI script from the pipe

@@ -38,6 +38,7 @@ class Request
 		std::string findBoundary(const std::string& httpRequest);
 		void parsePart(const std::string& part);
 		void parseMultipart(const std::string& httpRequest);
+		std::string makeName();
 
 		std::string											_path;
 		HttpMethod											_method;

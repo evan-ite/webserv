@@ -101,7 +101,7 @@ int Server::getPort() const
  */
 const char *Server::clientError::what() const throw()
 {
-	return "Client did something weird";
+	return "Client Error";
 }
 
 /**
@@ -110,7 +110,7 @@ const char *Server::clientError::what() const throw()
  */
 const char *Server::socketError::what() const throw()
 {
-	return "Socket did something weird";
+	return "Socket Error";
 }
 
 /**

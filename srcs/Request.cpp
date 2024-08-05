@@ -47,8 +47,15 @@ void Request::parse(std::string httpRequest)
 	else if (method == "POST")
 	{
 		this->_method = POST;
-		this->_path = findKey(httpRequest, "POST ", ' ');
-		this->parseMultipart(httpRequest);
+		this->_location = findKey(httpRequest, "POST ", ' ');
+		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+		{
+			this->_contentLength = -1;
+			this->_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
+			_fileData.push_back(std::make_pair(makeName(), this->_body));
+		}
+		else if (this->_contentLength != -1)
+			this->parseMultipart(httpRequest);
 	}
 	else if (method == "DELETE")
 	{
@@ -134,6 +141,21 @@ void Request::parseMultipart(const std::string& httpRequest)
 		else if (inPart)
 			part += line + "\n";
 	}
+}
+
+std::string Request::makeName()
+{
+	//generate a name based on the time stamp
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	strftime(buffer,80,"%Y-%m-%d-%H-%M-%S",timeinfo);
+	std::string str(buffer);
+	return (str);
 }
 
 void Request::printFileData()

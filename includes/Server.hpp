@@ -50,6 +50,7 @@ class Server : public ASetting
 		void 								checkSession(Request &req);
 		void 								addSession(std::string sessionId);
 		static void*						handleRequestWrapper(void* arg);
+		static void							handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody);
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& server);
