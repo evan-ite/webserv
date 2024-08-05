@@ -210,16 +210,61 @@ void Server::addSession(std::string sessionId)
 	this->_activeCookies.push_back(sesh);
 }
 
-/**
- * @brief Wrapper function to handle a client request in a separate thread.
- *
- * This function is a wrapper that handles a client request in a separate thread.
- * It reads the HTTP request, checks for chunked transfer encoding,
- * and processes the request accordingly.
- *
- * @param arg A pointer to a pair containing the server instance and the client file descriptor.
- * @return NULL
- */
+// void Server::handleRequest(int fd)
+// {
+// 	char buffer[BUFFER_SIZE];
+// 	ssize_t count;
+// 	std::string httpRequest;
+// 	log(logINFO)	<< "Server " << this->_settings.host
+// 					<< ":" << this->_settings.port
+// 					<< " is reading from fd: " << fd;
+// 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
+// 	{
+// 		httpRequest.append(buffer, count);
+// 		if (!this->checkContentLength(httpRequest, fd))
+// 		{
+// 			httpRequest.clear();
+// 			log(logDEBUG) << "Shutting downd fd: " << fd;
+// 			close(fd);
+// 			break ;
+// 		}
+// 	}
+// 	if (count == 0 && httpRequest.empty())
+// 	{
+// 		close(fd);
+// 		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
+// 	}
+// 	else if (count == -1)
+// 	{
+// 		log(logINFO) << httpRequest.length() << " bytes received on fd: " << fd;
+// 	}
+// 	if (!httpRequest.empty())
+// 	{
+// 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+// 		Request request(httpRequest);
+// 		this->checkSession(request);
+// 		Response res(request, this->_settings);
+// 		std::string resString = res.makeResponse();
+// 		this->addSession(res.getSessionId());
+// 		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 1000);
+// 		const char *resCStr = resString.data();
+// 		ssize_t sent = write(fd, resCStr, resString.size());
+// 		if (sent == -1)
+// 		{
+// 			close(fd); // Close on write error
+// 			log(logERROR) << "Error writing to socket, FD: " << fd;
+// 		}
+// 		if (res.getConnection() == "close")
+// 		{
+// 			close(fd);
+// 			log(logINFO) << "connection on fd " << fd << " closed on client request";
+// 		}
+// 		else
+// 		{
+// 			log(logINFO) << "connection on fd " << fd << " kept alive";
+// 		}
+// 	}
+// }
 void* Server::handleRequestWrapper(void* arg)
 {
 	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
@@ -251,26 +296,29 @@ void* Server::handleRequestWrapper(void* arg)
 			}
 		}
 	}
-
-	if (count == -1)
+	if (count == 0)
 	{
-		if (endsWith(httpRequest, "\r\n\r\n"))
-			log(logDEBUG) << "all data read from fd: " << fd;
-		else
+		// Client closed the connection
+		if (httpRequest.empty())
 		{
-			log(logERROR) << "Error receiving data on fd: " << fd;
 			close(fd);
-			return (NULL);
+			log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
 		}
 	}
-	else if (httpRequest.empty() && count == 0)
+	// else if (count == -1)
+	// {
+	// 	if (errno != EINTR)
+	// 	{
+	// 		log(logERROR) << "Error receiving data on fd: " << fd;
+	// 		close(fd);
+	// 		return (NULL);
+	// 	}
+	// 	// Handle other errors or interrupts appropriately
+	// }
+
+	if (!httpRequest.empty())
 	{
-		close(fd);
-		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
-	}
-	else
-	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
+		log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
 		Request request(httpRequest);
 		server->checkSession(request);
 		Response res(request, server->_settings);

@@ -77,10 +77,10 @@
 ## Extra
 - [x] Implement time out limits set through header (or conf file?)
 - [x] Create beautiful html <333
-- [x] Chunked requests
+- [ ] Chunked requests
 - [x] Siege
 - [x] http redirects
-- [x] Check forbidden functions
+- [ ] Check forbidden functions
 - [x] Cookiesssss
 - [x] Create python script to automate API key
 - [x] remove server_name

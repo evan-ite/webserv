@@ -6,6 +6,7 @@ void signalhandler(int sig)
 {
 	if (sig == SIGINT)
 		g_signal = 0;
+	log(logINFO) << "SIGINT received, shutting down";
 }
 
 int main(int argc, char **argv)
