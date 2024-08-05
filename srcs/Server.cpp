@@ -210,6 +210,16 @@ void Server::addSession(std::string sessionId)
 	this->_activeCookies.push_back(sesh);
 }
 
+/**
+ * @brief Wrapper function to handle a client request in a separate thread.
+ *
+ * This function is a wrapper that handles a client request in a separate thread.
+ * It reads the HTTP request, checks for chunked transfer encoding,
+ * and processes the request accordingly.
+ *
+ * @param arg A pointer to a pair containing the server instance and the client file descriptor.
+ * @return NULL
+ */
 void* Server::handleRequestWrapper(void* arg)
 {
 	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);

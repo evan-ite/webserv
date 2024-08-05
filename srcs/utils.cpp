@@ -1,15 +1,16 @@
 #include "../includes/settings.hpp"
 
-/*
- file_str = "HTTP/1.1 200 OK
-			Date: Thu, 27 Jun 2024 12:00:00 GMT
-			Content-Type: text/html; charset=UTF-8
-			Content-Length: 1256
-			Connection: keep-alive "
- keyword = Date:
- seperator = \n
- return value is " Thu, 27 Jun 2024 12:00:00 GMT"
-*/
+/**
+ * @brief Finds the value associated with a keyword in a string.
+ *
+ * This function searches for a keyword in the provided string and returns the value
+ * associated with it, separated by the specified separator.
+ *
+ * @param file_str The string to search within.
+ * @param keyword The keyword to search for.
+ * @param separator The character that separates the keyword and its value.
+ * @return The value associated with the keyword, or an empty string if the keyword is not found.
+ */
 std::string findKey(std::string file_str, std::string keyword, char separator)
 {
 	std::string::size_type start_pos = file_str.find(keyword);
