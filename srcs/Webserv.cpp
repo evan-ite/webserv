@@ -108,5 +108,8 @@ const char * Webserv::internalError::what() const throw()
 }
 const char * Webserv::epollError::what() const throw()
 {
-	return ("Epoll Error");
+	if (g_signal)
+		return ("Epoll Error");
+	else
+		return ("SIGINT received, shutting down");
 }

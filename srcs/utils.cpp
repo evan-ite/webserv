@@ -183,3 +183,21 @@ std::string removeSubstr(const std::string& str, const std::string& substr)
 
 	return (result);
 }
+
+/**
+ * @brief Checks if a string ends with a given postfix.
+ * This function checks if the input string ends with the specified postfix.
+ * It returns true if the string ends with the postfix, and false otherwise.
+ * It always returns false if either of the strings is empty.
+ * @param str The input string to be checked.
+ * @param postfix The postfix to check for.
+ * @return true if the input string ends with the postfix, false otherwise.
+ */
+bool endsWith(const std::string& str, const std::string& postfix)
+{
+	if (str.empty() || postfix.empty())
+		return (false);
+	if (postfix.size() > str.size())
+		return (false);
+	return (std::equal(postfix.rbegin(), postfix.rend(), str.rbegin()));
+}

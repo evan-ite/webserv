@@ -61,5 +61,5 @@ std::string                 removeSubstr(const std::string& str, const std::stri
 char**						vectorToCharStarStar(const std::vector<std::string>& vec);
 int							makeNonBlocking(int fd);
 std::string					generateRandomString(int length);
-
+bool						endsWith(const std::string& str, const std::string& postfix);
 #endif
