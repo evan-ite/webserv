@@ -150,7 +150,7 @@ void	Cgi::executeParent(int pid, int *pipefd, Response &response)
 {
 	int status;
 	waitpid(pid, &status, 0);
-	if (!WIFEXITED(status) && WEXITSTATUS(status))
+	if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
 		throw CgiException("500");
 	log(logDEBUG) << "Back in parent process";
 	close(pipefd[1]);
@@ -166,7 +166,8 @@ void	Cgi::executeParent(int pid, int *pipefd, Response &response)
 /**
  * executeCgiChild Method
  *
- * Executes the CGI script in the child process.
+ * Executes the CGI script in the child process. A timeout is set with
+ * alarm() to prevent infinite execution
  *
  * @param pipefd Pointer to an array of two integers representing the pipe file descriptors.
  * @param cgiPath String containing the path to the CGI script.
@@ -181,6 +182,7 @@ void	Cgi::executeParent(int pid, int *pipefd, Response &response)
 void	Cgi::executeCgiChild(int *pipefd, std::string cgiPath, std::string interpreter)
 {
 	Request *request = this->_request;
+	alarm(CGI_TIMEOUT);
 
 	if (request->getMethod() == POST)
 		write(pipefd[1], request->getBody().data(), request->getBody().size());

@@ -253,17 +253,17 @@ void* Server::handleRequestWrapper(void* arg)
 		}
 	}
 
-	if (count == -1)
-	{
-		if (endsWith(httpRequest, "\r\n\r\n"))
-			log(logDEBUG) << "all data read from fd: " << fd;
-		else
-		{
-			log(logERROR) << "Error receiving data on fd: " << fd;
-			close(fd);
-			return (NULL);
-		}
-	}
+	// if (count == -1)
+	// {
+	// 	if (endsWith(httpRequest, "\r\n\r\n"))
+	// 		log(logDEBUG) << "all data read from fd: " << fd;
+	// 	else
+	// 	{
+	// 		log(logERROR) << "Error receiving data on fd: " << fd;
+	// 		close(fd);
+	// 		return (NULL);
+	// 	}
+	// }
 	if (httpRequest.empty() && count == 0)
 	{
 		close(fd);

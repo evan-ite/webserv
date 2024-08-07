@@ -67,6 +67,9 @@ void Config::readServer(const std::string &filename)
 
 	while (std::getline(file, line))
 	{
+		std::size_t comment;
+		if ((comment = line.find("#")) != std::string::npos)
+			line = line.substr(0, comment);
 		if (line.find("server") != std::string::npos)
 			parseServer = true;
 		if (parseServer)
@@ -174,8 +177,12 @@ void Config::loadFallback(const std::string &filename)
 	if (!file.is_open())
 		throw std::runtime_error("Error: could not open fallback file");
 
-	while (std::getline(file, line))
+	while (std::getline(file, line)) {
+		std::size_t comment;
+		if ((comment = line.find("#")) != std::string::npos)
+			line = line.substr(0, comment);
 		server.append(line + "\n");
+	}
 	loadServerStruct(server);
 	this->_fallBackServer = this->_tempServer;
 	makeStatusMessages(_fallBackServer);
