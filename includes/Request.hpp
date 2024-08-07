@@ -13,6 +13,7 @@ enum HttpMethod
 class Request
 {
 	public:
+		Request();
 		Request(std::string httpRequest);
 		Request(const Request &copy);
 		~Request();
@@ -37,10 +38,10 @@ class Request
 		std::string		getsessionId();
 		void			resetSessionId();
 		std::vector<std::pair<std::string, std::string> >	getFileData();
-
+		bool			appendString(std::string &str, size_t len);
+		bool			validate();
 
 	private:
-		Request();
 		void parse(std::string httpRequest);
 		void printFileData();
 		std::string findBoundary(const std::string& httpRequest);
@@ -49,10 +50,12 @@ class Request
 		std::string makeName();
 
 		std::string											_location;
+		std::string											_rawString;
 		HttpMethod											_method;
 		std::string											_body;
 		std::string											_contentType;
 		int													_contentLength;
+		int													_status;
 		std::string											_host;
 		std::string											_userAgent;
 		std::string											_connection;

@@ -5,7 +5,12 @@ Request::Request(std::string httpRequest)
 	this->parse(httpRequest);
 }
 
-Request::Request() {}
+Request::Request()
+{
+	this->_method = INVALID;
+	this->_contentLength = -1;
+	this->_status = -1;
+}
 
 Request::Request(const Request &copy)
 {
@@ -36,6 +41,27 @@ Request & Request::operator=(const Request &assign)
 	return (*this);
 }
 
+
+/**
+ * STATIC HELPERFUNCTION
+ * @brief Extracts the body from an HTTP request.
+ * This function takes an HTTP request as input and extracts the body from it.
+ * The body is separated from the headers by a double newline ("\r\n\r\n").
+ * If no body is found, an empty string is returned.
+ *
+ * @param httpRequest The HTTP request from which to extract the body.
+ * @return The extracted body as a string.
+ */
+static std::string extractBodyFromHttpRequest(const std::string& httpRequest)
+{
+	size_t bodyStart = httpRequest.find("\r\n\r\n");
+	if (bodyStart == std::string::npos)
+		return ("");
+
+	std::string body = httpRequest.substr(bodyStart + 4); // Skip the CRLF
+	return (body);
+}
+
 /**
  * @brief Parses the HTTP request and extracts relevant information.
  *
@@ -48,11 +74,13 @@ Request & Request::operator=(const Request &assign)
 void Request::parse(std::string httpRequest)
 {
 	std::string	method = splitReturnFirst(httpRequest, " ");
+	this->_transferEncoding = findKey(httpRequest, "Transfer-Encoding: ", '\r');
 	if (method == "GET")
 	{
 		this->_method = GET;
 		this->_location = findKey(httpRequest, "GET ", ' ');
 	}
+
 	else if (method == "POST")
 	{
 		this->_method = POST;
@@ -66,22 +94,26 @@ void Request::parse(std::string httpRequest)
 		else if (this->_contentLength != -1)
 			this->parseMultipart(httpRequest);
 	}
+
 	else if (method == "DELETE")
 	{
 		this->_method = DELETE;
 		this->_location = findKey(httpRequest, "DELETE ", ' ');
 	}
-	else {
+
+	else
+	{
 		this->_method = INVALID;
 		this->_location = "/";
+		this->_status = 400;
 		log(logERROR) << "Invalid http method";
 	}
+
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
 	this->_host = findKey(httpRequest, "Host:", '\r');
 	this->_connection = findKey(httpRequest, "Connection: ", '\r');
 	if (this->_connection != "close")
 		this->_connection = "keep-alive";
-	this->_transferEncoding = findKey(httpRequest, "Transfer-Encoding: ", '\r');
 	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
 	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
 	this->_sessionId = findKey(httpRequest,"Cookie: ", '\r');
@@ -90,8 +122,12 @@ void Request::parse(std::string httpRequest)
 		ssize_t pos = this->_sessionId.find('=');
 		this->_sessionId = this->_sessionId.substr(1 + pos);
 	}
+
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
+	this->_body = extractBodyFromHttpRequest(httpRequest);
+	if (status == -1 && !this->_body.empty())
+		this->_status = 0; // 0 signals to the appendStr function that some reading into the body has been done, maybe more is coming.
 }
 
 /**
@@ -213,6 +249,48 @@ void Request::printFileData()
 	{
 		log(logDEBUG) << "Pair " << i+1 << ": (" << _fileData[i].first << ", " << _fileData[i].second << ")\n";
 	}
+}
+
+/**
+ * Appends a string to the raw request string and checks if the request is complete.
+ * @param str The string to append to the raw request string.
+ * @param count The number of characters to append from the string.
+ * @return True if the request is complete and valid, false otherwise.
+ */
+bool Request::appendString(std::string &str, size_t count)
+{
+	if(this->_status != -1)
+		this->_body.append(str, count);
+	else
+	{
+		this->_rawString.append(str, count);
+		if (this->_rawString.find("\r\n\r\n") != std::string::npos)
+		{
+			this->parse(this->_rawString);
+			return (this->validate());
+		}
+	}
+	return (true);
+}
+
+bool Request::validate()
+{
+	if (this->_method == INVALID)
+	{
+		log(logERROR) << "Invalid http method";
+		return (false);
+	}
+	if (this->_location.empty())
+	{
+		log(logERROR) << "Invalid location";
+		return (false);
+	}
+	if (this->_contentLength < 0)
+	{
+		log(logERROR) << "Invalid content length";
+		return (false);
+	}
+	return (true);
 }
 
 std::string		Request::getLoc()
