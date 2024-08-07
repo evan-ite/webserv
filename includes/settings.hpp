@@ -32,7 +32,7 @@
 # define CONNECTION_TIMEOUT 1 // in sec
 # define HTTPVERSION "HTTP/1.1" // are we using this?
 # define MIMEFILE "utils/MIME.txt"
-# define LOGLEVEL logINFO
+# define LOGLEVEL logDEBUG
 # define DEFAULT_CONF "./default/conf/default.conf"
 # define TEMPLATE   "./content/html/template2.html"
 # define COOKIE_LIFETIME 300 // in seconds

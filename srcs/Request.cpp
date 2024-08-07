@@ -85,13 +85,13 @@ void Request::parse(std::string httpRequest)
 	{
 		this->_method = POST;
 		this->_location = findKey(httpRequest, "POST ", ' ');
-		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+		if (this->getEncoding() == "chunked")
 		{
 			this->_contentLength = -1;
 			this->_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
 			_fileData.push_back(std::make_pair(makeName(), this->_body));
 		}
-		else if (this->_contentLength != -1)
+		else
 			this->parseMultipart(httpRequest);
 	}
 
@@ -106,7 +106,6 @@ void Request::parse(std::string httpRequest)
 		this->_method = INVALID;
 		this->_location = "/";
 		this->_status = 400;
-		log(logERROR) << "Invalid http method";
 	}
 
 	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
@@ -126,7 +125,7 @@ void Request::parse(std::string httpRequest)
 	if (this->_contentType.empty())
 		this->_contentType = "application/octet-stream";
 	this->_body = extractBodyFromHttpRequest(httpRequest);
-	if (status == -1 && !this->_body.empty())
+	if (this->_status == -1 && !this->_body.empty())
 		this->_status = 0; // 0 signals to the appendStr function that some reading into the body has been done, maybe more is coming.
 }
 
@@ -251,46 +250,30 @@ void Request::printFileData()
 	}
 }
 
-/**
- * Appends a string to the raw request string and checks if the request is complete.
- * @param str The string to append to the raw request string.
- * @param count The number of characters to append from the string.
- * @return True if the request is complete and valid, false otherwise.
- */
-bool Request::appendString(std::string &str, size_t count)
-{
-	if(this->_status != -1)
-		this->_body.append(str, count);
-	else
-	{
-		this->_rawString.append(str, count);
-		if (this->_rawString.find("\r\n\r\n") != std::string::npos)
-		{
-			this->parse(this->_rawString);
-			return (this->validate());
-		}
-	}
-	return (true);
-}
 
-bool Request::validate()
+int Request::validate(int maxLen)
 {
 	if (this->_method == INVALID)
 	{
 		log(logERROR) << "Invalid http method";
-		return (false);
+		return (-1);
 	}
 	if (this->_location.empty())
 	{
 		log(logERROR) << "Invalid location";
-		return (false);
+		return (-1);
 	}
 	if (this->_contentLength < 0)
 	{
 		log(logERROR) << "Invalid content length";
-		return (false);
+		return (-1);
 	}
-	return (true);
+	if (this->getContentLen() / 1024 > maxLen)
+	{
+		log(logERROR) << "Content body too large";
+		return (-413);
+	}
+	return (1);
 }
 
 std::string		Request::getLoc()
@@ -307,6 +290,16 @@ void 	Request::setLoc(std::string &location)
 std::string		Request::getContentType()
 {
 	return (this->_contentType);
+}
+
+std::string		Request::getEncoding()
+{
+	return (this->_transferEncoding);
+}
+
+std::string		Request::getRawString()
+{
+	return (this->_rawString);
 }
 
 HttpMethod		Request::getMethod()

@@ -126,18 +126,21 @@ bool	Server::clientHasFD(int fd)
  * @param fd The file descriptor of the client.
  * @return true if the content length is within the allowed limit, false otherwise.
  */
-bool Server::checkContentLength(Request request, int fd)
-{
-	if (request.getContentLen() == -1)
-		return (true);
-	int cLen = (request.getContentLen() / 1024); // convert to kbyte
-	if (cLen > this->_settings.client_max_body_size)
-	{
-		this->requestTooLarge(fd);
-		return (false);
-	}
-	return (true);
-}
+// bool Server::checkContentLength(std::string httpRequest, int fd, bool& tooLarge)
+// {
+// 	if (httpRequest.find("\r\n\r\n") == std::string::npos)
+// 		return (1);
+// 	if (httpRequest.find("Content-Length") == std::string::npos)
+// 		return (1);
+// 	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
+// 	if (cLen > this->_settings.client_max_body_size)
+// 	{
+// 		this->requestTooLarge(fd);
+// 		tooLarge = true;
+// 		return (0);
+// 	}
+// 	return (1);
+// }
 
 /**
  * @brief Handles a request that is too large.
@@ -150,6 +153,7 @@ bool Server::checkContentLength(Request request, int fd)
 void Server::requestTooLarge(int fd)
 {
 	Response res(413, "Request object too large", "basic", "close", "");
+	log(logINFO) << "Request body is too large";
 	std::string response = res.makeResponse();
 	const char* resCString = response.c_str();
 	ssize_t result = send(fd, resCString, strlen(resCString), 0);
@@ -226,31 +230,44 @@ void* Server::handleRequestWrapper(void* arg)
 	delete args;
 
 	char buffer[BUFFER_SIZE];
+	memset(buffer, 0, BUFFER_SIZE);
 	ssize_t count;
 	std::string httpRequest;
 	std::string chunkedBody;
 	bool isChunked = false;
 	log(logINFO) << "Server is reading from fd: " << fd;
 
-	Request request;
 	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
 	{
-
-		request.appendString(buffer, count);
-		if(request._transferEncoding == "chunked")
-			handleChunkedRequest(request._rawString, isChunked, chunkedBody);
-		if (!server->checkContentLength(request, fd))
-		{
-			httpRequest.clear();
-			log(logDEBUG) << "Shutting down fd: " << fd;
-			close(fd);
-			return (NULL);
-		}
+		httpRequest.append(buffer, count);
+		if (static_cast<int>(httpRequest.size()) > server->_settings.client_max_body_size * 1024)
+			break ;
+		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+			isChunked = true;
+		if (isChunked && httpRequest.find("\r\n\r\n") != std::string::npos)
+			handleChunkedRequest(httpRequest, isChunked, chunkedBody);
+		// else
+		// {
+		// 	if (!server->checkContentLength(httpRequest, fd))
+		// 	{
+		// 		httpRequest.clear();
+		// 		log(logDEBUG) << "Shutting down fd: " << fd;
+		// 		close (fd);
+		// 		return (NULL);
+		// 	}
+		// }
 	}
 
+	Request request(httpRequest);
+	int val = request.validate(server->_settings.client_max_body_size);
+	if (val == -413)
+	{
+		server->requestTooLarge(fd);
+		return (NULL);
+	}
 	if (count == -1)
 	{
-		if (endsWith(httpRequest, "\r\n\r\n"))
+		if (val == 1)
 			log(logDEBUG) << "all data read from fd: " << fd;
 		else
 		{
@@ -267,7 +284,7 @@ void* Server::handleRequestWrapper(void* arg)
 	else
 	{
 		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-		Request request(httpRequest);
+		// Request request(httpRequest);
 		server->checkSession(request);
 		Response res(request, server->_settings);
 		std::string resString = res.makeResponse();
@@ -329,7 +346,7 @@ void Server::handleRequest(int fd)
  * @param isChunked A flag indicating if the request is chunked.
  * @param chunkedBody The body of the chunked request.
  */
-void Server::handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody)
+void Server::handleChunkedRequest(std::string httpRequest, bool &isChunked, std::string &chunkedBody)
 {
 	size_t pos = 0;
 	std::string chunkSize;

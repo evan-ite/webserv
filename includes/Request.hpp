@@ -33,13 +33,14 @@ class Request
 		HttpMethod		getMethod();
 		int				getContentLen();
 		std::string		getBody();
+		std::string		getEncoding();
+		std::string		getRawString();
 		std::string		getConnection();
 		void			setConnection(std::string connection);
 		std::string		getsessionId();
 		void			resetSessionId();
 		std::vector<std::pair<std::string, std::string> >	getFileData();
-		bool			appendString(std::string &str, size_t len);
-		bool			validate();
+		int			validate(int maxLen);
 
 	private:
 		void parse(std::string httpRequest);
@@ -49,6 +50,7 @@ class Request
 		void parseMultipart(const std::string& httpRequest);
 		std::string makeName();
 
+		std::string											_transferEncoding;
 		std::string											_location;
 		std::string											_rawString;
 		HttpMethod											_method;
@@ -59,7 +61,6 @@ class Request
 		std::string											_host;
 		std::string											_userAgent;
 		std::string											_connection;
-		std::string											_transferEncoding;
 		std::string											_sessionId;
 		std::vector<std::pair<std::string, std::string> >	_fileData;
 };

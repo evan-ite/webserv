@@ -34,12 +34,12 @@ class Server
 		std::string				_key;
 		std::vector <Client>	_activeClients;
 		std::vector <Cookie>	_activeCookies;
-		bool					checkContentLength(std::string httpRequest, int fd);
+		bool					checkContentLength(std::string httpRequest, int fd, bool& tooLarge);
 		void					requestTooLarge(int fd);
 		void 					checkSession(Request &req);
 		void 					addSession(std::string sessionId);
 		static void*			handleRequestWrapper(void* arg);
-		static void				handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody);
+		static void				handleChunkedRequest(std::string httpRequest, bool &isChunked, std::string &chunkedBody);
 };
 
 #endif
