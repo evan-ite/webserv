@@ -63,13 +63,9 @@
 	```sh
 	mv temp.env .env
 	```
-	To execute some of the CGI script you need acces to the 42 Network API:  [https://api.intra.42.fr/apidoc]. Read the documentation to retrieve your Client ID and Secret, enter both in `.env` in the root of this directory. Now you can retrieve your API Key as follows
-	```sh
-	./utils/getApiToken.sh
-	```
-	Copy your key from `utils/api_token.txt` and paste in `.env`.
+	To execute some of the CGI script you need acces to the 42 Network API:  [https://api.intra.42.fr/apidoc]. Read the documentation to retrieve your Client ID and Secret, enter both in `.env` in the root of this directory. Now you your API key will automatically be fetching when copmiling the project.
 
-4. **Build the Project:**
+4. **Compile the Project:**
 
 	```sh
 	make
@@ -85,9 +81,15 @@ Add your html and configuration to the content directory. To run the server with
 
 If no configuration file is provided, the server will use a default configuration defined in default/conf/default.conf.
 
+Our example website is also available in `content/` and can be launched with:
+
+```sh
+make run
+```
+
 ## Configuration
 
-The server's behavior is controlled by a configuration file, inspired by NGINX configuration files. For undefined settings the default settings from fallback.conf will be used. Below is a sample configuration:
+The server's behavior is controlled by a configuration file, inspired by NGINX configuration files. For undefined settings the default settings from default.conf will be used. Below is a sample configuration:
 
 ```conf
 server {

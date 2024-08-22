@@ -1,6 +1,6 @@
 import http.client
 
-conn = http.client.HTTPConnection("localhost", 8480)
+conn = http.client.HTTPConnection("localhost", 8080)
 
 # Construct headers for chunked transfer encoding
 headers = {

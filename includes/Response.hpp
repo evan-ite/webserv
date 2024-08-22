@@ -3,31 +3,20 @@
 
 # include "settings.hpp"
 
-class Response
+class Response : public AHeader
 {
 	public:
-		// Constructors
-		Response(Request &request, ServerSettings &confData);
-		Response(int	status,
-				std::string	reason,
-				std::string	type,
-				std::string	connection,
-				std::string	body);
+		Response();
+		Response(Request &request);
+		Response(const char *errStatus, Location &loc);
 
-		// Destructor
 		~Response();
 
-		// Operators
-		Response & operator=(const Response &assign);
+		// getters and setters
+		void	setReason(std::string reason);
 
-		std::string makeResponse();
-		void		setStatus(int status);
-		void		setReason(std::string reason);
-		void		setType(std::string type);
-		void		setBody(std::string body);
-		void		setConnection(std::string connection);
-		std::string	getConnection();
-		std::string	getSessionId();
+		// funcs
+		std::string	getResponse();
 
 		class ResponseException : public std::exception {
 			private:
@@ -41,34 +30,26 @@ class Response
 		};
 
 	private:
-		Response(const Response &copy);
-		Response();
-		void		postMethod(Request &request);
-		void		createFiles(Request &request, int &status);
+		// vars
+		std::string		_reason;
+		std::string		_redir;
+		std::string		_dirlistTemplate;
+		Location 		*_loc;
+
+		//funcs
+		void		checkMethod(HttpMethod method, Request &request);
 		void		getMethod(Request &request);
+		void		postMethod(Request &request);
 		void		deleteMethod(Request &request);
-		Location	findLoc(const std::string& uri, ServerSettings &serverData);
-		bool		checkMethod(std::string method);
+
+		bool		handleRedir(std::string redir);
+		bool		handleCGI(Request &request);
+		void		createFiles(std::vector<std::pair<std::string, std::string> > &fileData, std::string &file);
+		bool		checkCGI(Request &request);
 		void		createDirlisting(std::string dirPath);
 		std::string	loopDir(std::string dirPath);
-		std::string findError(std::string errorCode);
-		std::string	getStatusMessage(std::string errorCode);
-		std::string extractFilePath(Request &request);
-		bool		isValidRequest(Request &request);
-		bool		checkExternal();
-		// To create response
-		int			_status;
-		std::string	_reason;
-		std::string	_type;
-		std::size_t	_len;
-		std::string	_connection;
-		std::string	_sessionId;
-		std::string	_body;
-		std::string _redir;
-		std::string _dirlistTemplate;
-		// Utils
-		Location 		*_loc;
-		ServerSettings	*_servSet;
+		std::string	extractFilePath(bool addIndex);
+
 };
 
 

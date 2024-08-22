@@ -1,115 +1,166 @@
 #include "../includes/settings.hpp"
 
-Request::Request(std::string httpRequest)
-{
-	this->parse(httpRequest);
-}
+Request::Request(): _foundHeader(false) {}
 
-Request::Request() {}
-
-Request::Request(const Request &copy)
-{
-	this->_method = copy._method;
-	this->_host = copy._host;
-	this->_contentLength = copy._contentLength;
-	this->_location = copy._location;
-	this->_userAgent = copy._userAgent;
-	this->_connection = copy._connection;
-	this->_fileData = copy._fileData;
-	this->_body = copy._body;
-}
+Request::Request(Location &location): _foundHeader(false), _location(location) {}
 
 Request::~Request() {}
 
-Request & Request::operator=(const Request &assign)
+/**
+ * @brief Appends buffer data to the request and processes the header if found.
+ *
+ * Appends data from the buffer to the raw request string. If the header hasn't been found yet,
+ * it searches for the end of the header ("\r\n\r\n"), parses it, and appends the body.
+ * If the header is already found, it appends data directly to the body.
+ *
+ * @param buffer The buffer containing the data to append.
+ * @param bytes_read The number of bytes read from the buffer.
+ * @return true if data was successfully appended and processed, false otherwise.
+ */
+bool	Request::appendBuffer(char *buffer, int bytes_read)
 {
-	if (this == &assign)
-		return (*this);
-	this->_method = assign._method;
-	this->_host = assign._host;
-	this->_contentLength = assign._contentLength;
-	this->_location = assign._location;
-	this->_userAgent = assign._userAgent;
-	this->_connection = assign._connection;
-	this->_fileData = assign._fileData;
-	this->_body = assign._body;
-	return (*this);
+	std::string::size_type end_pos = std::string::npos;
+
+	_rawReq.append(buffer, bytes_read);
+	// log(logDEBUG) << "raw request ------------\n" << _rawReq;
+	if (!_foundHeader)
+	{
+		if ((end_pos = _rawReq.find("\r\n\r\n")) == std::string::npos)
+			return (false);
+		parseHeader(_rawReq.substr(0, end_pos));
+		_foundHeader = true;
+		_body.append(_rawReq, end_pos + 4, _rawReq.size() - (end_pos + 4));
+	}
+	else
+		_body.append(buffer, bytes_read);
+
+	if (isBodyComplete())
+	{
+		parseBody();
+		return (true);
+	}
+	return (false);
 }
 
 /**
- * @brief Parses the HTTP request and extracts relevant information.
+ * @brief Parses the HTTP header and extracts relevant information.
  *
- * This function determines the HTTP method (GET, POST, DELETE, etc.), extracts the location,
- * and processes headers such as User-Agent, Host, Connection, Transfer-Encoding, Content-Length,
- * Content-Type, and Cookie. It also handles multipart data and chunked transfer encoding.
+ * This function assigns the HTTP method and URI, and extracts various header fields
+ * such as Content-Type, Content-Length, Connection, Cookie, Transfer-Encoding, and boundary.
+ * It also handles special cases for chunked transfer encoding and default content type.
  *
- * @param httpRequest The HTTP request as a string.
+ * @param header The HTTP header as a string.
  */
-void Request::parse(std::string httpRequest)
+void Request::parseHeader(std::string header)
 {
-	std::string	method = splitReturnFirst(httpRequest, " ");
+	assignMethodAndUri(header);
+	_contentType = findKey(header, "Content-Type: ", ';');
+	_contentLength = atoi(findKey(header, "Content-Length: ", '\r').c_str());
+	_connection = findKey(header, "Connection: ", '\r');
+	_sessionId = findKey(header, "Cookie: ", '\r');
+	_transferEncoding = findKey(header, "Transfer-Encoding: ", '\r');
+	_boundary = findKey(header, "boundary=", '\r');
+	_serverName = findKey(header, "Host: ", '\r');
+	size_t colon = _serverName.find(":");
+	if (colon != std::string::npos)
+		_serverName = _serverName.substr(0, colon);
+	if (_transferEncoding == "chunked")
+		_contentLength = -1;
+	if (_contentType.empty())
+		_contentType = "application/octet-stream";
+	if (!(_sessionId.empty())) {
+		ssize_t pos = _sessionId.find('=');
+		_sessionId = _sessionId.substr(1 + pos);
+	}
+}
+
+/**
+ * @brief Assigns the HTTP method and URI from the header.
+ *
+ * This function extracts the HTTP method (GET, POST, DELETE) and URI from the header.
+ * If the method is invalid, it sets the method to INVALID and the URI to "/".
+ *
+ * @param header The HTTP header as a string.
+ */
+void Request::assignMethodAndUri(std::string header)
+{
+	std::string	method = splitReturnFirst(header, " ");
 	if (method == "GET")
 	{
-		this->_method = GET;
-		this->_location = findKey(httpRequest, "GET ", ' ');
+		_method = GET;
+		_uri = findKey(header, "GET ", ' ');
 	}
 	else if (method == "POST")
 	{
-		this->_method = POST;
-		this->_location = findKey(httpRequest, "POST ", ' ');
-		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
-		{
-			this->_contentLength = -1;
-			this->_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
-			_fileData.push_back(std::make_pair(makeName(), this->_body));
-		}
-		else if (this->_contentLength != -1)
-			this->parseMultipart(httpRequest);
+		_method = POST;
+		_uri = findKey(header, "POST ", ' ');
 	}
 	else if (method == "DELETE")
 	{
-		this->_method = DELETE;
-		this->_location = findKey(httpRequest, "DELETE ", ' ');
+		_method = DELETE;
+		_uri = findKey(header, "DELETE ", ' ');
 	}
 	else {
-		this->_method = INVALID;
-		this->_location = "/";
+		_method = INVALID;
+		_uri = "/";
 		log(logERROR) << "Invalid http method";
 	}
-	this->_userAgent = findKey(httpRequest, "User-Agent:", '\r');
-	this->_host = findKey(httpRequest, "Host:", '\r');
-	this->_connection = findKey(httpRequest, "Connection: ", '\r');
-	if (this->_connection != "close")
-		this->_connection = "keep-alive";
-	this->_transferEncoding = findKey(httpRequest, "Transfer-Encoding: ", '\r');
-	this->_contentLength = atoi(findKey(httpRequest, "Content-Length:", '\r').c_str());
-	this->_contentType = findKey(httpRequest,"Content-Type: ", '\r');
-	this->_sessionId = findKey(httpRequest,"Cookie: ", '\r');
-	if (!(this->_sessionId.empty()))
-	{
-		ssize_t pos = this->_sessionId.find('=');
-		this->_sessionId = this->_sessionId.substr(1 + pos);
-	}
-	if (this->_contentType.empty())
-		this->_contentType = "application/octet-stream";
 }
 
 /**
- * @brief Finds the boundary string in a multipart HTTP request.
+ * @brief Parses the HTTP body based on the method and content type.
  *
- * This function searches for the boundary string used to separate parts in a multipart
- * HTTP request.
+ * This function handles the parsing of the HTTP body for POST requests.
+ * It supports multipart/form-data and chunked transfer encoding.
  *
- * @param httpRequest The HTTP request as a string.
- * @return The boundary string prefixed with "--", or an empty string if not found.
+ * If the body is empty or the method is not POST, the function returns immediately.
  */
-std::string Request::findBoundary(const std::string& httpRequest)
+void Request::parseBody()
 {
-	size_t pos = httpRequest.find("boundary=");
-	if (pos == std::string::npos) return "";
-	pos += 9; // Length of "boundary="
-	size_t endPos = httpRequest.find("\r", pos);
-	return ("--" + httpRequest.substr(pos, endPos - pos));
+	if (_body.empty())
+		return ;
+	if (_method == POST)
+	{
+		if (_contentType.find("multipart/form-data") != std::string::npos) {
+			parseMultipart();
+		}
+		else if (_transferEncoding == "chunked")
+		{
+			unchunkBody();
+			_fileData.push_back(std::make_pair(makeName(), _body));
+		}
+	}
+}
+
+/**
+ * @brief Parses a multipart HTTP request.
+ *
+ * This function processes a multipart HTTP request by finding the boundary string and
+ * extracting each part. It calls parsePart() for each part found.
+ */
+void Request::parseMultipart()
+{
+	if (_boundary.empty())
+		return ;
+	std::istringstream stream(_body);
+	std::string line;
+	bool inPart = false;
+	std::string part;
+
+	while (std::getline(stream, line))
+	{
+		if (line.find(_boundary) != std::string::npos)
+		{
+			if (inPart)
+			{
+				parsePart(part);
+				part.clear();
+			}
+			inPart = !inPart;
+		}
+		else if (inPart)
+			part += line + "\n";
+	}
 }
 
 /**
@@ -125,55 +176,19 @@ void Request::parsePart(const std::string& part)
 	std::string::size_type headerEndPos = part.find("\r\n\r\n");
 	if (headerEndPos == std::string::npos) return ;
 
-	std::string headers = part.substr(0, headerEndPos);
+	std::string header = part.substr(0, headerEndPos);
 	std::string content = part.substr(headerEndPos + 4); // Skip the CRLF
 
-	size_t filenamePos = headers.find("filename=\"");
+	size_t filenamePos = header.find("filename=\"");
 	if (filenamePos != std::string::npos)
 	{
 		filenamePos += 10; // Length of "filename=\""
-		size_t filenameEndPos = headers.find("\"", filenamePos);
-		std::string filename = headers.substr(filenamePos, filenameEndPos - filenamePos);
+		size_t filenameEndPos = header.find("\"", filenamePos);
+		std::string filename = header.substr(filenamePos, filenameEndPos - filenamePos);
 		_fileData.push_back(std::make_pair(filename, content));
 	}
 }
 
-/**
- * @brief Parses a multipart HTTP request.
- *
- * This function processes a multipart HTTP request by finding the boundary string and
- * extracting each part. It calls parsePart() for each part found.
- *
- * @param httpRequest The HTTP request as a string.
- */
-void Request::parseMultipart(const std::string& httpRequest)
-{
-	std::string boundary = findBoundary(httpRequest);
-	if (boundary.empty())
-	{
-		_body = httpRequest.substr(httpRequest.find("\r\n\r\n") + 4);
-		return ;
-	}
-	std::istringstream stream(httpRequest);
-	std::string line;
-	bool inPart = false;
-	std::string part;
-
-	while (std::getline(stream, line))
-	{
-		if (line.find(boundary) != std::string::npos)
-		{
-			if (inPart)
-			{
-				parsePart(part);
-				part.clear();
-			}
-			inPart = !inPart;
-		}
-		else if (inPart)
-			part += line + "\n";
-	}
-}
 
 /**
  * @brief Generates a unique name based on the current timestamp.
@@ -185,7 +200,6 @@ void Request::parseMultipart(const std::string& httpRequest)
  */
 std::string Request::makeName()
 {
-	//generate a name based on the time stamp
 	time_t rawtime;
 	struct tm * timeinfo;
 	char buffer[80];
@@ -199,75 +213,188 @@ std::string Request::makeName()
 }
 
 /**
- * @brief Prints the file data stored in the request.
+ * @brief Unchunks the HTTP body.
  *
- * This function logs each pair of file data stored in the request. If there is no file data,
- * the function returns immediately.
+ * This function processes the chunked transfer encoding of the HTTP body.
+ * It reads each chunk size, extracts the corresponding chunk data, and
+ * assembles the complete body by removing the chunked encoding.
  */
-void Request::printFileData()
+void	Request::unchunkBody()
 {
-	if (this->_fileData.empty())
-		return ;
+	std::string::size_type pos = 0;
+	std::string::size_type next_pos = 0;
+	std::string chunk_size;
+	std::string newBody;
 
-	for (size_t i = 0; i < _fileData.size(); ++i)
+	while (pos < _body.size())
 	{
-		log(logDEBUG) << "Pair " << i+1 << ": (" << _fileData[i].first << ", " << _fileData[i].second << ")\n";
+		next_pos = _body.find("\r\n", pos);
+		if (next_pos == std::string::npos)
+			break;
+
+		chunk_size = _body.substr(pos, next_pos - pos);
+		size_t size = 0;
+		std::istringstream iss(chunk_size);
+		iss >> std::hex >> size;
+		if (iss.fail())
+			break;
+		if (size == 0)
+		{
+			pos = _body.find("\r\n", pos);
+			if (pos != std::string::npos)
+				pos += 2;
+			continue;
+		}
+
+		pos = next_pos + 2;
+		next_pos = pos + size;
+		if (next_pos > _body.size())
+			break;
+
+		newBody.append(_body, pos, size);
+		pos = next_pos + 2;
+	}
+	_body = newBody;
+}
+
+/**
+ * @brief Validates the HTTP request.
+ *
+ * This function checks various aspects of the HTTP request to ensure it is valid.
+ * It verifies the allowed methods, URI, connection header, content length, and
+ * presence of content for POST requests. If any validation fails, it sets the
+ * appropriate status code and throws a RequestException.
+ *
+ * @throws RequestException if the request is invalid.
+ */
+void Request::isValidRequest()
+{
+	if (!_location.findAllow(_method))
+	{
+		log(logERROR) << "Invalid request: method not allowed.";
+		_status = 405;
+		throw RequestException("405");
+	}
+	if (_uri.find("..") != std::string::npos)
+	{
+		log(logERROR) << "Invalid request: path contains double dots.";
+		_status = 400;
+		throw RequestException("400");
+	}
+	if (_connection != "keep-alive" && _connection != "close")
+	{
+		if (_connection.empty())
+			_connection = "keep-alive";
+		else
+		{
+			log(logERROR) << "Invalid request: connection header is invalid.";
+			_status = 400;
+			throw RequestException("400");
+		}
+	}
+	if (_contentLength / 1024 > _location.getClientMaxBodySize())
+	{
+		log(logERROR) << "Invalid request: content length exceeds client_max_body_size.";
+		_status = 413;
+		throw RequestException("413");
+	}
+	if (_method == POST && _contentLength <= 0 && _transferEncoding != "chunked")
+	{
+		log(logERROR) << "Invalid request: no content found.";
+		_status = 400;
+		throw RequestException("400");
+	}
+	if (!_location.getServerName().empty() && (_serverName.empty() || _serverName != _location.getServerName()))
+	{
+		log(logERROR) << "Invalid request: Server name does not match";
+		_status = 400;
+		throw RequestException("400");
 	}
 }
 
-std::string		Request::getLoc()
+void Request::checkLength()
 {
-	return (this->_location);
+	if (_foundHeader && _contentLength / 1024 > _location.getClientMaxBodySize())
+	{
+		log(logERROR) << "Invalid request: content length exceeds client_max_body_size.";
+		_status = 413;
+		throw RequestException("413");
+	}
 }
 
-void 	Request::setLoc(std::string &location)
+/**
+ * @brief Sets the location for the request.
+ * This function sets the location for the request to the specified location object.
+ * @param location The location object to set.
+ */
+void Request::setLocation(Location& location)
 {
-	this->_location = location;
+	_location =	location;
 }
 
-
-std::string		Request::getContentType()
+/**
+ * @brief Returns the location associated with the request.
+ * @return A reference to the Location object associated with the request.
+ */
+Location& Request::getLocation()
 {
-	return (this->_contentType);
+	return (_location);
 }
 
-HttpMethod		Request::getMethod()
+/**
+ * @brief Prints the HTTP request details.
+ *
+ * This function assembles the details of the HTTP request into a formatted string.
+ * It includes the method, URI, content type, content length, connection, session ID,
+ * transfer encoding, body, boundary, and file data.
+ *
+ * @return std::ostream& The formatted request details.
+ */
+std::string  Request::printRequest()
 {
-	return (this->_method);
-}
+	std::ostringstream oss;
+	oss << "Method: " << _method << std::endl;
+	oss << "URI: " << _uri << std::endl;
+	oss << "Content-Type: " << _contentType << std::endl;
+	oss << "Content-Length: " << _contentLength << std::endl;
+	oss << "Connection: " << _connection << std::endl;
+	oss << "Session ID: " << _sessionId << std::endl;
+	oss << "Transfer-Encoding: " << _transferEncoding << std::endl;
+	//oss << "Body: " << _body << std::endl;
+	oss << "Boundary: " << _boundary << std::endl;
+	oss << "File data: " << std::endl;
 
-int				Request::getContentLen()
-{
-	return (this->_contentLength);
-}
-
-std::string		Request::getBody()
-{
-	return (this->_body);
+	for (std::vector<std::pair<std::string, std::string> >::iterator it = _fileData.begin(); it != _fileData.end(); ++it)
+	{
+		oss << "Filename: " << it->first << std::endl;
+		//oss << "Content: " << it->second << std::endl;
+	}
+	return (oss.str());
 }
 
 std::vector<std::pair<std::string, std::string> >	Request::getFileData()
 {
-	return (this->_fileData);
+	return (_fileData);
 }
 
-std::string		Request::getConnection()
+bool Request::isBodyComplete()
 {
-	return (this->_connection);
-}
+	if (_contentType == "multipart/form-data" ) {
+		size_t firstBoundaryPos = _body.find_first_of(_boundary);
+		size_t lastBoundaryPos = _body.rfind(_boundary);
 
-void			Request::setConnection(std::string connection)
-{
-	this->_connection = connection;
-}
-
-
-std::string		Request::getsessionId()
-{
-	return (this->_sessionId);
-}
-
-void			Request::resetSessionId()
-{
-	this->_sessionId = "";
+		if (firstBoundaryPos == std::string::npos || lastBoundaryPos == std::string::npos)
+			return false;
+		if (firstBoundaryPos == lastBoundaryPos)
+			return false;
+		if (_body.substr(lastBoundaryPos + _boundary.length(), 2) != "--")
+			return false;
+		return (true);
+	}
+	else if (_transferEncoding == "chunked" && _body.find("\r\n0\r\n") != std::string::npos)
+		return (true);
+	else if (_transferEncoding != "chunked" && _contentType != "multipart/form-data" && _contentLength == static_cast<int>(_body.size()))
+		return (true);
+	else
+		return (false);
 }

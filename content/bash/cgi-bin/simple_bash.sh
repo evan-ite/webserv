@@ -5,6 +5,7 @@ declare -A FORM_FIELDS
 
 for pair in "${KEY_VALUE_PAIRS[@]}"; do
     IFS="=" read -r key value <<< "$pair"
+    value=$(echo "$value" | sed 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g' | xargs -0 printf "%b")
     FORM_FIELDS["$key"]="$value"
 done
 

@@ -1,381 +1,232 @@
 #include "../includes/settings.hpp"
-// Constructors
-Server::Server() {}
 
-Server::Server(const Server &copy)
+/**
+ * @brief Default constructor for the Server class.
+ */
+Server::Server()
 {
-	this->_activeClients = copy._activeClients;
-	this->_address = copy._address;
-	this->_fd = copy._fd;
-	this->_key = copy._key;
-	this->_settings = copy._settings;
+	_fd = -1;
 }
 
-Server::Server(std::string key, ServerSettings settings)
-{
-	this->_settings = settings;
-	this->_key = key;
-	memset(&(this->_address), 0, sizeof(this->_address));
-	this->_address.sin_port = htons(this->_settings.port);
-	this->_address.sin_family = AF_INET;
-	if (this->_settings.host == "localhost")
-		this->_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	else
-		this->_address.sin_addr.s_addr = inet_addr(this->_settings.host.c_str());
-	this->setupServerSocket();
-}
-
-// Destructor
+/**
+ * @brief Destructor for the Server class.
+ */
 Server::~Server() {}
 
-
-// Operators
-Server & Server::operator=(const Server &assign)
+/**
+ * @brief Assignment operator overload for the Server class.
+ *
+ * This function assigns the values of another ASetting object to the current Server object.
+ * It first calls the base class assignment operator to copy the common settings.
+ * Then, it checks if the other object is actually a derived class of Server using dynamic_cast.
+ * If it is, it copies the specific Server settings such as port, host, fd, address, key, and locations.
+ * If the other object is not a derived class of Server, it throws a std::bad_cast exception.
+ *
+ * @param other The ASetting object to be assigned to the current Server object.
+ * @return Server& A reference to the current Server object after assignment.
+ * @throws std::bad_cast if the other object is not a derived class of Server.
+ */
+Server& Server::operator=(const ASetting& other)
 {
-	this->_activeClients = assign._activeClients;
-	this->_address = assign._address;
-	this->_fd = assign._fd;
-	this->_key = assign._key;
-	this->_settings = assign._settings;
+	if (this != &other)
+	{
+		ASetting::operator=(other);
+		const Server* derived = dynamic_cast<const Server*>(&other);
+		if (derived)
+		{
+			this->_server = NULL;
+			this->_port = derived->_port;
+			this->_host = derived->_host;
+			this->_fd = derived->_fd;
+			this->_locations = derived->_locations;
+
+			std::map<std::string, Location>::iterator it = this->_locations.begin();
+			for (; it != this->_locations.end(); it++)
+			{
+				it->second.setServer(this);
+			}
+		}
+		else
+			throw std::bad_cast();
+	}
 	return (*this);
 }
 
-// Getters / Setters
-int Server::getFd() const
-{
-	return (this->_fd);
-}
-
-const char * Server::clientError::what() const throw()
-{
-	return "Client Error";
-}
-const char * Server::socketError::what() const throw()
-{
-	return "Socket Error";
-}
-
 /**
- * @brief Sets up the server socket.
- *
- * This function initializes the server socket, sets socket options,
- * makes the socket non-blocking, binds it to the specified address,
+ * @brief Sets up the server socket for the Server class.
+ * This function creates a socket, sets socket options, binds the socket to the specified address and port,
  * and starts listening for incoming connections.
- *
- * @throws socketError if any socket operation fails.
+ * @throws socketError if any error occurs during socket creation, option setting, binding, or listening.
  */
 void Server::setupServerSocket()
 {
-	this->_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-	if (this->_fd < 0)
+	struct sockaddr_in addr;
+	int opt = 1;
+
+	_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (_fd == -1)
 		throw socketError();
-	const int enable = 1;
-	if (setsockopt(this->_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+
+	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		throw socketError();
-	if (!makeNonBlocking(this->_fd))
+
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(_port);
+	addr.sin_addr.s_addr = inet_addr(_host.c_str());
+	if (_host == "localhost")
+		addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+	if (bind(_fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == -1)
 		throw socketError();
-	if (bind(this->_fd, reinterpret_cast<struct sockaddr*>(&_address), sizeof(this->_address)) < 0)
-		throw socketError();
-	if (listen(this->_fd, 128) < 0)
+
+	if (listen(_fd, 10) == -1)
 		throw socketError();
 }
 
 /**
- * @brief Adds a client to the server.
+ * @brief Finds the best matching Location object for a given URI.
  *
- * This function creates a new Client object with the given file descriptor
- * and adds it to the list of active clients.
+ * This function searches through the server's location map to find the most specific
+ * location that matches the given URI. It iterates through the map of locations and
+ * compares each location's key with the URI. If an exact match is not found, it progressively
+ * shortens the URI by removing the last segment (after the last '/') and checks again.
+ * If no match is found after all iterations, it returns the default location associated
+ * with the root path ("/").
  *
- * @param fd The file descriptor of the client to be added.
- * @return The file descriptor of the added client.
+ * @param uriRef The URI for which to find the matching Location.
+ * @return A reference to the best matching Location object.
+ * @throws std::out_of_range if the root location ("/") is not found in the map.
  */
-int	Server::addClient(int fd)
+Location& Server::findLocation(const std::string& uriRef)
 {
-	Client c = Client(fd);
-	this->_activeClients.push_back(c);
-	return (c.getFd());
-}
-
-/**
- * @brief Checks if a client with the given file descriptor exists.
- *
- * This function iterates through the list of active clients to check
- * if a client with the specified file descriptor exists.
- *
- * @param fd The file descriptor to check.
- * @return true if a client with the given file descriptor exists, false otherwise.
- */
-bool	Server::clientHasFD(int fd)
-{
-	std::vector<Client>::iterator it = this->_activeClients.begin();
-	for (; it != this->_activeClients.end(); it++)
+	Location *loc = &_locations.at("/");
+	std::map<std::string, Location>::iterator it = _locations.begin();
+	for (; it != _locations.end(); it++)
 	{
-		if (it->getFd() == fd)
-			return (1);
-	}
-	return (0);
-}
-
-/**
- * @brief Checks the Content-Length of an HTTP request.
- *
- * This function checks if the HTTP request contains a Content-Length header
- * and verifies if the content length is within the allowed limit.
- *
- * @param httpRequest The HTTP request string.
- * @param fd The file descriptor of the client.
- * @return true if the content length is within the allowed limit, false otherwise.
- */
-bool Server::checkContentLength(std::string httpRequest, int fd)
-{
-	if (httpRequest.find("\r\n\r\n") == std::string::npos)
-		return (1);
-	if (httpRequest.find("Content-Length") == std::string::npos)
-		return (1);
-	int cLen = (atoi((findKey(httpRequest, "Content-Length:", '\n').c_str())) / 1024); // convert to kbyte
-	if (cLen > this->_settings.client_max_body_size)
-	{
-		this->requestTooLarge(fd);
-		return (0);
-	}
-	return (1);
-}
-
-/**
- * @brief Handles a request that is too large.
- *
- * This function sends a 413 Request Entity Too Large response to the client
- * and logs an error if the send operation fails.
- *
- * @param fd The file descriptor of the client.
- */
-void Server::requestTooLarge(int fd)
-{
-	Response res(413, "Request object too large", "basic", "close", "");
-	std::string response = res.makeResponse();
-	const char* resCString = response.c_str();
-	ssize_t result = send(fd, resCString, strlen(resCString), 0);
-	if (result == -1)
-	{
-		log(logERROR) << "send error";
-	}
-}
-
-/**
- * @brief Checks the session of a request.
- *
- * This function checks if the request contains a valid session ID.
- * If the session ID is valid and not timed out, it renews the session.
- * Otherwise, it resets the session ID and removes the session from the active cookies.
- *
- * @param req The request object.
- */
-void Server::checkSession(Request &req)
-{
-	std::string sessionId = req.getsessionId();
-	if (sessionId.empty())
-		return ;
-	std::vector<Cookie>::iterator it = this->_activeCookies.begin();
-	for (; it != this->_activeCookies.end(); it++)
-	{
-		if (sessionId == it->getSessionId())
+		std::string uri = uriRef;
+		std::string location = it->first;
+		while(!uri.empty())
 		{
-			if (it->getTimeOut())
-				log(logINFO) << "Session renewed";
+			if (uri == location)
+			{
+				loc = &it->second;
+				break;
+			}
 			else
-			{
-				req.resetSessionId();
-				it = this->_activeCookies.erase(it);
-				log(logINFO) << "Session reset";
-			}
-			break;
+				uri = uri.substr(0, uri.find_last_of('/'));
 		}
 	}
-
+	return (*loc);
 }
 
 /**
- * @brief Adds a session to the active cookies.
+ * @brief Checks if a given location string exists in the server's locations map.
  *
- * This function creates a new Cookie object with the given session ID
- * and adds it to the list of active cookies.
- *
- * @param sessionId The session ID to be added.
+ * @param locationString The location string to check.
+ * @return `true` if the location string exists, `false` otherwise.
  */
-void Server::addSession(std::string sessionId)
+bool Server::locationExists(std::string locationString)
 {
-	if (sessionId.empty())
-		return ;
-	Cookie sesh(sessionId);
-	this->_activeCookies.push_back(sesh);
+	if (this->_locations.find(locationString) != this->_locations.end())
+		return (true);
+	return (false);
 }
 
 /**
- * @brief Wrapper function to handle a client request in a separate thread.
- *
- * This function is a wrapper that handles a client request in a separate thread.
- * It reads the HTTP request, checks for chunked transfer encoding,
- * and processes the request accordingly.
- *
- * @param arg A pointer to a pair containing the server instance and the client file descriptor.
- * @return NULL
+ * @brief Add a location to the server. Will overwrite without warning.
+ * @param loc The location to be added.
  */
-void* Server::handleRequestWrapper(void* arg)
+void Server::addLocation(Location loc)
 {
-	std::pair<Server*, int>* args = reinterpret_cast<std::pair<Server*, int>*>(arg);
-	Server* server = args->first;
-	int fd = args->second;
-	delete args;
-
-	char buffer[BUFFER_SIZE];
-	ssize_t count;
-	std::string httpRequest;
-	std::string chunkedBody;
-	bool isChunked = false;
-	log(logINFO) << "Server is reading from fd: " << fd;
-
-	while ((count = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
-	{
-		httpRequest.append(buffer, count);
-		if (httpRequest.find("Transfer-Encoding: chunked") != std::string::npos)
-			isChunked = true;
-		if (isChunked && httpRequest.find("\r\n\r\n") != std::string::npos)
-			handleChunkedRequest(httpRequest, isChunked, chunkedBody);
-		else
-		{
-			if (!server->checkContentLength(httpRequest, fd))
-			{
-				httpRequest.clear();
-				log(logDEBUG) << "Shutting down fd: " << fd;
-				close(fd);
-				return (NULL);
-			}
-		}
-	}
-
-	// if (count == -1)
-	// {
-	// 	if (endsWith(httpRequest, "\r\n\r\n"))
-	// 		log(logDEBUG) << "all data read from fd: " << fd;
-	// 	else
-	// 	{
-	// 		log(logERROR) << "Error receiving data on fd: " << fd;
-	// 		close(fd);
-	// 		return (NULL);
-	// 	}
-	// }
-	if (httpRequest.empty() && count == 0)
-	{
-		close(fd);
-		log(logERROR) << "Empty request on FD: " << fd << " - connection closed";
-	}
-	else
-	{
-		// log(logDEBUG) << "\n--- REQUEST ---\n" << httpRequest.substr(0, 1000);
-		Request request(httpRequest);
-		server->checkSession(request);
-		Response res(request, server->_settings);
-		std::string resString = res.makeResponse();
-		server->addSession(res.getSessionId());
-		// log(logDEBUG) << "\n--- RESPONSE ---\n" << resString.substr(0, 100);
-		const char *resCStr = resString.data();
-		ssize_t sent = write(fd, resCStr, resString.size());
-		if (sent == -1)
-		{
-			log(logERROR) << "Error writing to socket, FD: " << fd;
-			close(fd);
-			return (NULL);
-		}
-
-		if (res.getConnection() == "close")
-		{
-			close(fd);
-			log(logINFO) << "Connection on fd " << fd << " closed on client request";
-		}
-		else
-		{
-			log(logINFO) << "Connection on fd " << fd << " kept alive";
-		}
-	}
-	return (NULL);
+	_locations[loc.getPath()] = loc;
 }
 
 /**
- * @brief Handles a client request.
- *
- * This function creates a new thread to handle a client request.
- * It passes the server instance and the client file descriptor to the thread.
- *
- * @param fd The file descriptor of the client.
+ * @brief Set the host of the server.
+ * @param host The host to be set.
  */
-void Server::handleRequest(int fd)
+void Server::setHost(std::string host)
 {
-	pthread_t thread;
-	std::pair<Server*, int>* args = new std::pair<Server*, int>(this, fd);
-	if (pthread_create(&thread, NULL, this->handleRequestWrapper, args) != 0)
-	{
-		log(logERROR) << "Failed to create thread for fd: " << fd;
-		delete args; // Free the allocated memory on failure
-	}
-	else
-	{
-		pthread_detach(thread); // Detach the thread to allow it to run independently
-	}
+	_host = host;
 }
 
 /**
- * @brief Handles a chunked HTTP request.
- *
- * This function processes a chunked HTTP request by reading chunks of data
- * and appending them to the chunked body. It stops processing when the end
- * of the chunked data is reached.
- *
- * @param httpRequest The HTTP request string.
- * @param isChunked A flag indicating if the request is chunked.
- * @param chunkedBody The body of the chunked request.
+ * @brief Set the port of the server.
+ * @param port The port to be set.
  */
-void Server::handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody)
+void Server::setPort(int port)
 {
-	size_t pos = 0;
-	std::string chunkSize;
-	std::string chunk;
-	// save header in chunkedBody
-	if (chunkedBody.empty())
-	{
-		pos = httpRequest.find("\r\n\r\n");
-		if (pos != std::string::npos)
-		{
-			chunkedBody = httpRequest.substr(0, pos + 4);
-			httpRequest.erase(0, pos + 4);
-		}
-	}
-	while ((pos = httpRequest.find("\r\n")) != std::string::npos)
-	{
-		chunkSize = httpRequest.substr(0, pos);
-		httpRequest.erase(0, pos + 2);
-		if (chunkSize.empty())
-		{
-			isChunked = false;
-			break;
-		}
-		size_t size = 0;
-		std::istringstream iss(chunkSize);
-		iss >> std::hex >> size;
-		if (iss.fail() || size == 0)
-		{
-			isChunked = false;
-			break;
-		}
-		if (httpRequest.length() < size)
-			break;
-		chunk = httpRequest.substr(0, size);
-		httpRequest.erase(0, size + 2);
-		if (!chunk.empty())
-			chunkedBody += chunk;
-	}
-	if (!isChunked)
-	{
-		httpRequest = chunkedBody;
-		chunkedBody.clear();
-	}
+	_port = port;
+}
+
+/**
+ * @brief Set the server name.
+ * @param sn The server name.
+ */
+void Server::setServerName(std::string sn)
+{
+	_serverName = sn;
+}
+
+/**
+ * @brief Get the host of the server.
+ * @return The host of the server.
+ */
+std::string Server::getHost() const
+{
+	return(this->_host);
+}
+
+/**
+ * @brief Get the host of the server.
+ * @return The host of the server.
+ */
+std::string Server::getServerName() const
+{
+	return(this->_serverName);
+}
+
+/**
+ * @brief Get the port of the server.
+ * @return The port of the server.
+ */
+int Server::getPort() const
+{
+	return(this->_port);
+}
+
+/**
+ * @brief Get the file descriptor of the server.
+ * @return The file descriptor of the server.
+ */
+int Server::getFd() const
+{
+	return (_fd);
+}
+
+/**
+ * @brief Get the error message for a socket error.
+ * @return The error message for a socket error.
+ */
+const char* Server::socketError::what() const throw()
+{
+	return ("Socket Error");
+}
+
+/**
+ * @brief Get the error message for a Location error.
+ * @return The error message for a Location error.
+ */
+const char* Server::LocationError::what() const throw()
+{
+	return ("Location Error");
+}
+
+/**
+ * @brief Get the Location map.
+ * @return The Location map.
+ */
+std::map<std::string, Location> Server::getLocations() const
+{
+	return (_locations);
 }

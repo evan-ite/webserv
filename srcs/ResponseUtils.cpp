@@ -1,217 +1,77 @@
 #include "../includes/settings.hpp"
 
 /**
- * @brief Checks if the request is valid.
+ * @brief Handles HTTP redirection by setting the appropriate response headers.
  *
- * This function validates the request by checking if the location contains double dots
- * and if the connection header is either "keep-alive" or "close".
+ * This function processes a redirection by setting the response status to 301 (Moved Permanently),
+ * the reason phrase to "Found", the connection header to "close", and the content length to 0.
+ * It also sets the redirection URL (_redir) to the provided redir parameter. If the redir parameter
+ * is empty, the function returns false, indicating that no redirection is needed.
  *
- * @param request The HTTP request object.
- * @return True if the request is valid, false otherwise.
+ * @param redir The URL to which the request should be redirected.
+ * @return true if redirection is handled, false if the redir parameter is empty.
  */
-bool Response::isValidRequest(Request &request)
+bool Response::handleRedir(std::string redir)
 {
-	if (request.getLoc().find("..") != std::string::npos)
+	if (redir.empty())
+		return (false);
+	this->_status = 301;
+	this->_reason = "Found";
+	this->_connection = "close";
+	this->_contentLength = 0;
+	this->_redir = redir;
+	return (true);
+}
+
+/**
+ * @brief Handles the execution of a CGI script if the request matches the CGI configuration.
+ *
+ * This function checks if CGI is enabled for the current location and if a CGI extension
+ * is defined. If CGI is not enabled or no CGI extension is defined, it logs an error and
+ * returns false. If the request URI matches the CGI extension, it creates a Cgi object
+ * and executes the CGI script. If the CGI script is executed, it returns true. Otherwise,
+ * it returns false.
+ *
+ * @param request The HTTP request to be checked and potentially processed by a CGI script.
+ * @return true if the CGI script is executed, false otherwise.
+ */
+bool Response::handleCGI(Request &request)
+{
+	if (_loc->getCgi() < 1)
+		return (false);
+
+	std::string ext = _loc->getCgiExtension();
+	if (ext.empty())
 	{
-		log(logERROR) << "Invalid request: path contains double dots.";
+		log(logERROR) << "No CGI extension defined";
 		return (false);
 	}
-	if (request.getConnection() != "keep-alive" && request.getConnection() != "close")
+	if (this->checkCGI(request))
 	{
-		if (request.getConnection().empty())
-		{
-			request.setConnection("keep-alive");
-			return (true);
-		}
-		else
-		{
-			log(logERROR) << "Invalid request: connection header is invalid:";
-			return (false);
-		}
-	}
-	else
-		return (true);
-}
-
-
-/**
- * @brief Checks if the redirection is to an external URL.
- *
- * This function checks if the redirection URL starts with "http" or "https".
- * If so, it sets the response status to 302 (Found) and prepares the redirection.
- *
- * @return True if the redirection is to an external URL, false otherwise.
- */
-bool Response::checkExternal()
-{
-	if (this->_loc->redir.find("http") == 0 || this->_loc->redir.find("https") == 0)
-	{
-		this->_status = 302;
-		this->_reason = "Found";
-		this->_connection = "close";
-		this->_redir = this->_loc->redir;
-		this->_len = 0;
-
+		Cgi cgi(request, _loc);
+		cgi.execute(*this);
 		return (true);
 	}
-
-	return (false);
-}
-
-/**
- * @brief Extracts the file path from the request.
- *
- * This function determines the correct file path based on the URI, root, and index
- * from the configuration file. It returns an empty string in the case of directory listing.
- *
- * @param request The HTTP request object.
- * @return The extracted file path as a string.
- */
-std::string Response::extractFilePath(Request &request)
-{
-	// Find end of the location path in the URI
-	std::size_t	i = request.getLoc().find(this->_loc->path) + this->_loc->path.length();
-	std::string	file;
-
-	if (i < request.getLoc().length())
-	{ // If URI contains a filename extract it
-		file = request.getLoc().substr(i);
-		if (file.find('.') == std::string::npos)
-			file += "/" + _loc->index;
-	}
-	else // Else use index file
-		file = _loc->index;
-
-	if (file[0] && file[0] == '/')
-		file = file.substr(1);
-
-	std::string filePath;
-	if (_loc->autoindex)
-	{ // directory listing
-		filePath = "";
-		this->createDirlisting(_loc->path);
-	}
 	else
-	{
-		if (file.find(this->_loc->root) != std::string::npos)
-			filePath = file;
-		else
-			filePath = this->_loc->root + "/" + file;
-	}
-
-	return (filePath);
-}
-
-
-/**
- * @brief Finds the error page path for a given error code.
- *
- * This function returns the path to the correct error page based on the error code.
- * It first checks the location-specific error pages, then the server-wide error pages.
- *
- * @param errorCode The error code as a string.
- * @return The path to the error page as a string.
- */
-std::string Response::findError(std::string errorCode)
-{
-	if (_loc->loc_error_pages.find(errorCode) != _loc->loc_error_pages.end())
-		return (_loc->root + "/" + _loc->loc_error_pages[errorCode]);
-	else if (_servSet->error_pages.find(errorCode) != _servSet->error_pages.end())
-		return (_servSet->error_pages[errorCode]);
-	else
-		return (_servSet->error_pages["500"]);
+		return (false);
 }
 
 /**
- * @brief Gets the status message for a given status code.
+ * @brief Creates files with specified content from a vector of filename-content pairs.
  *
- * This function returns the appropriate status message for the provided status code.
- * If no specific message is found, it defaults to "Internal Server Error".
+ * This function takes a vector of pairs, where each pair consists of a filename and its
+ * corresponding content. It attempts to create and write to each file in the specified
+ * directory. If any file operation fails (either opening or writing), it logs an error
+ * message and sets a failure flag. After processing all files, if any failure occurred,
+ * it throws a ResponseException with a "500" status code. If all files are created
+ * successfully, it sets the response status to 201.
  *
- * @param statusCode The status code as a string.
- * @return The status message as a string.
+ * @param fileData A vector of pairs, where each pair contains a filename and its content.
+ * @param file The directory path where the files should be created.
+ * @throws ResponseException if any file operation fails.
  */
-std::string Response::getStatusMessage(std::string statusCode)
+void Response::createFiles(std::vector<std::pair<std::string, std::string> > &fileData, std::string &file)
 {
-	if (_servSet->error_messages.find(statusCode) != _servSet->error_messages.end())
-		return (_servSet->error_messages[statusCode]);
-	else
-		return ("Internal Server Error");
-}
-
-
-/**
- * @brief Finds the matching location for a given URI.
- *
- * This function iterates over all possible server locations and checks if they match
- * the request location. If no match is found, the first location in the map is used as default.
- *
- * @param uri The request URI.
- * @param sett The server settings object.
- * @return The matching location object.
- */
-Location Response::findLoc(const std::string& uri, ServerSettings &sett)
-{
-	std::map<std::string, Location>::const_iterator it = (sett.locations).begin();
-	for (; it != sett.locations.end(); ++it)
-	{
-		if (it->first == uri)
-		{
-			Location loc = it->second;
-			return (loc);
-		}
-	}
-
-	size_t lastSlash = uri.find_last_of('/');
-	if (lastSlash == 0)
-		return (sett.locations["/"]);
-	else if (lastSlash != std::string::npos)
-	{
-		std::string shortUri = uri.substr(0, lastSlash);
-		return (this->findLoc(shortUri, sett));
-	}
-	else
-		return (sett.locations.at("/")); // Handle the case when no match is found - we need a smarter way of just returning item 0?
-}
-
-/**
- * @brief Checks if the HTTP method is allowed in the location.
- *
- * This function checks if the provided HTTP method is allowed in the current location.
- *
- * @param method The HTTP method in capital letters.
- * @return True if the method is allowed, false otherwise.
- */
-bool	Response::checkMethod(std::string method)
-{
-	Location loc = *this->_loc;
-	std::vector<std::string>::iterator it = std::find(loc.allow.begin(), loc.allow.end(), method);
-
-	if (it != loc.allow.end())
-		return (true);
-	return (false);
-}
-
-/**
- * @brief Creates files based on the request data.
- *
- * This function creates files in the server's root directory based on the data provided
- * in the request. It sets the response status accordingly.
- *
- * @param request The HTTP request object.
- * @param status The status code to be set based on the success or failure of file creation.
- */
-void Response::createFiles(Request &request, int &status)
-{
-	std::string file = _servSet->root + "/" + _loc->path + "/";
-	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
-
-	if (fileData.empty())
-	{
-		log(logERROR) << "Bad request: no files to create";
-		status = 400;
-		return ;
-	}
 	bool anyFailure = false;
 	for (size_t i = 0; i < fileData.size(); ++i)
 	{
@@ -236,9 +96,48 @@ void Response::createFiles(Request &request, int &status)
 		file.close();
 	}
 	if (anyFailure)
-		status = 500;
+		throw ResponseException("500");
 	else
-		status = 201;
+		_status = 201;
+}
+
+/**
+ * @brief Extracts the file path from the request URI based on the location configuration.
+ *
+ * This function determines the file path to be used for the request by extracting
+ * the relevant portion of the URI and appending it to the root directory specified
+ * in the location configuration. If the extracted file path does not contain a file
+ * extension and the addIndex flag is true, it appends the index file specified in the
+ * location configuration. The function ensures that the resulting file path is relative
+ * to the root directory.
+ *
+ * @param addIndex A boolean flag indicating whether to append the index file if no file extension is found.
+ * @return A std::string representing the extracted file path.
+ */
+std::string Response::extractFilePath(bool addIndex)
+{
+	std::size_t	endLoc = _uri.find(_loc->getPath()) + _loc->getPath().length();
+	std::string filePath;
+	std::string	file;
+
+	if (endLoc < _uri.length())
+	{
+		file = _uri.substr(endLoc);
+		if (addIndex && file.find('.') == std::string::npos)
+			file += "/" + _loc->getIndex();
+	}
+	else if (addIndex)
+		file = _loc->getIndex();
+
+	if (file[0] && file[0] == '/')
+		file = file.substr(1);
+
+	if (file.find(_loc->getRoot()) != std::string::npos)
+		filePath = file;
+	else
+		filePath = this->_loc->getRoot() + "/" + file;
+
+	return (filePath);
 }
 
 /**
@@ -271,7 +170,7 @@ std::string checkMime(const std::string &extension)
 		}
 	}
 	mime.close();
-	return ("text/plain");
+	return ("text/html");
 }
 
 /**
@@ -291,4 +190,126 @@ std::string findType(const std::string &filename)
 	std::string extension = filename.substr(i + 1);
 
 	return checkMime(extension);
+}
+
+/**
+ * @brief Checks if the request URI matches the CGI extension.
+ *
+ * This function determines whether the requested URI should be handled by a CGI script
+ * based on the extension specified in the location configuration. It checks if the URI
+ * ends with the CGI extension or contains the CGI extension followed by a query string.
+ *
+ * @param request The HTTP request to be checked.
+ * @return true if the URI matches the CGI extension, false otherwise.
+ */
+bool	Response::checkCGI(Request &request)
+{
+	std::string ext = _loc->getCgiExtension();
+	std::size_t	lenExt = ext.length();
+	int			finalChars = request.getUri().size() - lenExt;
+
+	if (request.getUri().length() >= lenExt && request.getUri().substr(finalChars) == ext)
+		return true;
+	else if (request.getUri().find(ext + "?") != std::string::npos)
+		return true;
+	else
+		return false;
+}
+
+/**
+ * @brief Creates an HTML directory listing using a template file.
+ *
+ * This function generates an HTML directory listing for the specified directory path
+ * by using a template file. It reads the template file, replaces the placeholder "INSERT"
+ * with the actual directory listing generated by the loopDir function, and replaces the
+ * placeholder "PATH" with the location path. The resulting HTML content is then set as
+ * the response body. If the template file cannot be opened, it logs an error and throws
+ * a ResponseException with a "500" status code.
+ *
+ * @param dirPath The path of the directory to be listed.
+ * @throws ResponseException if the template file cannot be opened.
+ */
+void	Response::createDirlisting(std::string dirPath)
+{
+	std::string templateFile = _loc->getDirlistTemplate();
+
+	std::ifstream templateStream(templateFile.c_str());
+	if (!templateStream.is_open())
+	{
+		log(logERROR) << "Error opening template file: " << templateFile;
+		throw ResponseException("500");
+	}
+	std::stringstream buffer;
+	buffer << templateStream.rdbuf();
+	templateStream.close();
+	std::string templateContent = buffer.str();
+
+	std::string insertList = this->loopDir(dirPath);
+
+	std::size_t insertPos = templateContent.find("INSERT");
+	if (insertPos != std::string::npos)
+		templateContent.replace(insertPos, 6, insertList);
+
+	std::size_t pathPos = templateContent.find("PATH");
+
+	if (pathPos != std::string::npos)
+		templateContent.replace(pathPos, 4, _loc->getPath());
+
+	this->setBody(templateContent);
+
+}
+
+/**
+ * @brief Generates an HTML directory listing for the specified directory path.
+ *
+ * This function recursively traverses the directory specified by dirPath and generates
+ * an HTML unordered list (<ul>) containing the names of files and subdirectories. If the
+ * DELETE method is allowed for the current location, a delete button is added next to each
+ * file and directory name. The function handles errors by logging them and throwing a
+ * ResponseException with a "500" status code.
+ *
+ * @param dirPath The path of the directory to be listed.
+ * @return A std::string containing the HTML representation of the directory listing.
+ * @throws ResponseException if the directory cannot be opened or closed.
+ */
+std::string	Response::loopDir(std::string dirPath)
+{
+	std::ostringstream html;
+
+	struct dirent	*entry;
+	DIR		*dir = opendir(dirPath.c_str());
+	if (dir == NULL)
+	{
+		log(logERROR) << "Error opening directory: " << dirPath;
+		throw ResponseException("500");
+	}
+
+	html << "<ul>";
+	while ((entry = readdir(dir)) != NULL)
+	{
+		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+		{
+			html << "<li> " << entry->d_name;
+			if (_loc->findAllow(DELETE))
+			{
+				html << "<button onclick=\"deleteFile('"
+				<< entry->d_name
+				<< "')\">Delete</button>";
+			}
+			html << "</li>";
+			if (entry->d_type == DT_DIR)
+			{
+				std::string	subPath = dirPath + "/" + entry->d_name;
+				html << this->loopDir(subPath);
+			}
+		}
+	}
+	html << "</ul>";
+
+	if (closedir(dir) != 0)
+	{
+		log(logERROR) << "Error closing directory: " << dirPath;
+		throw ResponseException("500");
+	}
+	return (html.str());
 }

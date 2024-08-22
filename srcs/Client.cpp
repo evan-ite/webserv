@@ -1,82 +1,116 @@
 #include "../includes/settings.hpp"
 
-// Constructors
-Client::Client() {}
-
-Client::Client(const Client &copy)
+Client::Client(Server &server, int fd) : _server(server)
 {
-	this->_address = copy._address;
-	this->_fd = copy.getFd();
-	this->_key = copy.getKey();
+	_fd = fd;
+	_req = NULL;
+	_resp = NULL;
+}
+
+
+Client::~Client()
+{
+	this->resetClient();
+	close(_fd);
 }
 
 /**
- * @brief Constructs a new Client object by accepting a connection on the given file descriptor.
+ * @brief Receives data from the client socket and processes it.
  *
- * This constructor accepts a new client connection on the provided active file descriptor.
- * It sets the client socket to non-blocking mode and stores the file descriptor.
- * If the accept or non-blocking operations fail, it throws an acceptError exception.
+ * This function receives data from the client socket and processes it to construct a request object.
+ * If the request object is not yet constructed, it creates an initial empty request.
+ * The received data is appended to the request buffer.
+ * If the received data is empty or an error occurs during receiving, the function returns false.
+ * If the received data is successfully appended to the request buffer, the function checks if the URI is not empty.
+ * If the URI is not empty, it sets the location of the request by finding the corresponding location in the server.
+ * If an exception occurs during the processing of the received data, an error response is sent.
  *
- * @param active_fd The file descriptor on which to accept the new connection.
- * @throws acceptError if the accept or non-blocking operations fail.
+ * @return true if the data is successfully received and processed, false otherwise.
  */
-Client::Client(int active_fd)
+int	Client::receive()
 {
-	socklen_t len = sizeof(this->_address);
-	int fd = accept(active_fd, (struct sockaddr*)&(this->_address), &len);
-	if (fd < 0)
-		throw acceptError();
-	if (!makeNonBlocking(fd))
-		throw acceptError();
-	this->setFd(fd);
-}
+	log(logDEBUG) << "Receiving on fd " << _fd;
+	if (!_req)
+		_req = new Request();
+	char buffer[BUFFER_SIZE + 1];
+	memset(buffer, 0, BUFFER_SIZE + 1);
+	int receivedBytes = recv(_fd, buffer, BUFFER_SIZE, 0);
 
-// Destructor
-Client::~Client() {}
+	if (receivedBytes == -1)
+	// needs better handling
+		return (-1);
+	else if (receivedBytes == 0)
+		return (-1);
 
-// Operators
-Client& Client::operator=(const Client& assign)
-{
-	if (this != &assign)
+	try
 	{
-		this->_key = assign._key;
-		this->_fd = assign._fd;
-		this->_address = assign._address;
+		bool complete  = _req->appendBuffer(buffer, receivedBytes);
+		if (!_req->getUri().empty())
+			_req->setLocation(_server.findLocation(_req->getUri()));
+		_req->getLocation().setServer(&_server);
+		_req->checkLength();
+		if (complete) {
+			// log(logDEBUG) << "Request complete: \n" << _req->printRequest();
+			_req->isValidRequest();
+			_resp = new Response(*_req);
+			return (1);
+		}
 	}
-	return (*this);
+	catch(const std::exception& e)
+	{
+		// send error response
+		log(logDEBUG) << "Error in http request";
+		_resp = new Response(e.what(), _req->getLocation());
+		return (1);
+	}
+	return (0);
 }
 
-// Getters / Setters
+/**
+ * Sends the response stored in the `_resp` member variable to the client.
+ * If the response has not been set, or if the send buffer is empty, this function does nothing.
+ * The response is sent in chunks of size `BUFFER_SIZE` or less.
+ *
+ * @throws Client::clientError if an error occurs while sending the response.
+ */
+int Client::ft_send()
+{
+	if (!_resp)
+		return (0);
+	else if (_sendbuffer.empty())
+		_sendbuffer = _resp->getResponse();
 
-int Client::getFd() const
-{
-	return (this->_fd);
-}
-void Client::setFd(int fd)
-{
-	this->_fd = fd;
-}
-
-std::string Client::getKey() const
-{
-	return (this->_key);
-}
-void Client::setKey(std::string key)
-{
-	this->_key = key;
-}
-
-void Client::setAddress(struct sockaddr_in addr)
-{
-	this->_address = addr;
+	// send response
+	int sendSize = std::min(static_cast<int>(_sendbuffer.size()), BUFFER_SIZE);
+	int s = send(_fd, _sendbuffer.c_str(), sendSize, MSG_DONTWAIT);
+	if (s == -1)
+	{
+		log(logERROR) << "Client send failed";
+		return (-1);
+	}
+	_sendbuffer.erase(0, sendSize);
+	if (_sendbuffer.empty())
+	{
+		if (_resp->getConnection() == "close")
+		{
+			log(logDEBUG) << "Connection closed on client request";
+			return (-1);
+		}
+		return (1);
+	}
+	return (0);
 }
 
-const char * Client::acceptError::what() const throw()
+void Client::resetClient()
 {
-	return ("Accepting failed");
+	delete (_req);
+	delete (_resp);
+	_req = NULL;
+	_resp = NULL;
+	_sendbuffer.clear();
 }
 
-bool operator==(const Client& lhs, const Client& rhs)
+const char * Client::clientError::what() const throw()
 {
-	return (lhs.getKey() == rhs.getKey()) && (lhs.getFd() == rhs.getFd());
+	return ("Client error");
 }

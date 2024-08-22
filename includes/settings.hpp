@@ -14,7 +14,7 @@
 # include <map>
 # include <vector>
 # include <signal.h>
-# include <sys/epoll.h>
+# include <poll.h>
 # include <unistd.h>
 # include <fcntl.h>
 # include <sys/socket.h>
@@ -25,29 +25,53 @@
 # include <cctype>
 # include <sys/wait.h>
 # include <dirent.h>
-# include <pthread.h>
+# include <typeinfo>
+
+// Error descriptions
+# define E400 "Bad Request"
+# define E403 "Forbidden"
+# define E404 "Not Found"
+# define E405 "Method Not Allowed"
+# define E413 "Request Entity Too Large"
+# define E415 "Unsupported Media Type"
+# define E500 "Internal Server Error"
+# define E200 "OK"
+# define E201 "Created"
+# define E204 "No Content"
+
 // defines
-# define MAX_EVENTS 1024
-# define BUFFER_SIZE 1024 //read buffer size for sockets
+# define MAX_EVENTS 4096
+# define BUFFER_SIZE 2048 //read buffer size for sockets
 # define CONNECTION_TIMEOUT 1 // in sec
-# define HTTPVERSION "HTTP/1.1" // are we using this?
+# define HTTPVERSION "HTTP/1.1"
 # define MIMEFILE "utils/MIME.txt"
-# define LOGLEVEL logDEBUG
+# define LOGLEVEL logINFO
 # define DEFAULT_CONF "./default/conf/default.conf"
-# define TEMPLATE   "./content/html/template2.html"
-# define COOKIE_LIFETIME 300 // in seconds
 # define CGI_TIMEOUT 2 // in seconds
+# define COOKIE_LIFETIME 300 // in seconds
+
+// enums
+enum HttpMethod
+{
+	GET,
+	POST,
+	DELETE,
+	INVALID
+};
+
 // local header files
-# include "Config.hpp"
+# include "ASetting.hpp"
+# include "AHeader.hpp"
 # include "Cookie.hpp"
 # include "Client.hpp"
+# include "Location.hpp"
 # include "Request.hpp"
 # include "Server.hpp"
+# include "Config.hpp"
 # include "Logger.hpp"
 # include "Response.hpp"
 # include "Webserv.hpp"
 # include "Cgi.hpp"
-# include "htmlTemplates.hpp"
 
 extern int	g_signal;
 
@@ -58,10 +82,11 @@ std::string	checkMime(const std::string &extension);
 std::string	findType(const std::string &filename);
 std::string	getDateTime();
 std::string	toString(int value);
-std::string	removeSubstr(const std::string& str, const std::string& substr);
 char**		vectorToCharStarStar(const std::vector<std::string>& vec);
 int			makeNonBlocking(int fd);
 std::string	generateRandomString(int length);
-bool		endsWith(const std::string& str, const std::string& postfix);
+void		removeCharacter(std::string& str, char charToRemove);
+std::string	trimLeadingWhitespace(const std::string& str);
+bool		startsWith(const std::string& str, const std::string& prefix);
 
 #endif

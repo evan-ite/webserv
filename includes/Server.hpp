@@ -2,44 +2,47 @@
 # define SERVER_HPP
 # include "settings.hpp"
 
-class Server
+class Server : public ASetting
 {
 	public:
 		// Constructors
-		Server(std::string key, ServerSettings settings);
-		Server(const Server &copy);
+		Server();
 		// Destructor
 		~Server();
 		// Operators
-		Server & operator=(const Server &assign);
+		Server& operator=(const ASetting& other);
 		// Getters / Setters
-		int					getFd() const;
-		bool				clientHasFD(int fd);
-		int					addClient(int fd);
-		void				handleRequest(int fd);
-		class clientError : public std::exception
-		{
-			virtual const char* what() const throw();
-		};
+		void								setHost(std::string host);
+		void								setServerName(std::string sname);
+		void								setPort(int port);
+		int									getFd() const;
+		void								addLocation(Location loc);
+		std::string							getHost() const;
+		std::string							getServerName() const;
+		int									getPort() const;
+		std::map <std::string, Location>	getLocations() const;
+		// funcs
+		Location&	findLocation(const std::string& uri);
+		bool		locationExists(std::string uri);
+		void		setupServerSocket();
+
+		// exceptions
 		class socketError : public std::exception
 		{
 			virtual const char* what() const throw();
 		};
+		class LocationError : public std::exception
+		{
+			virtual const char* what() const throw();
+		};
 	private:
-		Server();
-		void					setupServerSocket();
-		int						_fd;
-		ServerSettings			_settings;
-		struct sockaddr_in		_address;
-		std::string				_key;
-		std::vector <Client>	_activeClients;
-		std::vector <Cookie>	_activeCookies;
-		bool					checkContentLength(std::string httpRequest, int fd);
-		void					requestTooLarge(int fd);
-		void 					checkSession(Request &req);
-		void 					addSession(std::string sessionId);
-		static void*			handleRequestWrapper(void* arg);
-		static void				handleChunkedRequest(std::string &httpRequest, bool &isChunked, std::string &chunkedBody);
+		int									_port;
+		int									_fd;
+		std::string							_serverName;
+		std::string							_host;
+		std::map <std::string, Location>	_locations;
 };
+
+std::ostream& operator<<(std::ostream& os, const Server& server);
 
 #endif

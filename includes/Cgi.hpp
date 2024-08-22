@@ -5,47 +5,34 @@
 class Cgi
 {
 	public:
-		// Constructors
-		Cgi(Request *request, ServerSettings *serverData, Location *loc);
-
-		// Destructor
+		Cgi(Request &request, Location *loc);
 		~Cgi();
 
-		// Operators
-		Cgi & operator=(const Cgi &assign);
-
+		// funcs
 		void	execute(Response &response);
-		bool	isTrue();
+		bool	isTrue(); // let's move this out of the class and only call it if we know that it's a CGI request
 
-		class CgiException : public std::exception {
+		class CgiException : public std::exception
+		{
 			private:
 				std::string _erCode;
 			public:
 				CgiException(const std::string& erCode) : _erCode(erCode) {}
 				~CgiException() throw() {}
-
-				const char* what() const throw()
-				{ return _erCode.c_str();}
+				const char* what() const throw() {return (_erCode.c_str());}
 		};
 
 	private:
-		Cgi();
-		Cgi(const Cgi &copy);
-
-		Request 		*_request;
-		ServerSettings	*_serverData;
+		Request 		_request;
 		Location		*_loc;
-		bool			_isTrue;
 		char			**_env;
 
 		char		**createEnv(std::string const &cgiPath);
 		void		executeCgiChild(int *pipefd, std::string cgiScriptPath, std::string interpreter);
+		void		executeParent(int pid, int *pipefd, Response &response);
 		void		extractCgi(std::string &cgiScriptPath, std::string &interpreter);
 		void		createResponse(Response &response, std::string &cgiOutput);
-		void		executeParent(int pid, int *pipefd, Response &response);
-		bool		checkUri(std::string ext);
-		std::string readCgiOutput(int *pipefd);
-		std::string	getExtension();
+		std::string	readCgiOutput(int *pipefd);
 
 };
 

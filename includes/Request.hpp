@@ -2,63 +2,52 @@
 # define REQUEST_HPP
 # include "settings.hpp"
 
-enum HttpMethod
-{
-	GET,
-	POST,
-	DELETE,
-	INVALID
-};
-
-class Request
+class Request : public AHeader
 {
 	public:
-		Request(std::string httpRequest);
-		Request(const Request &copy);
+		Request();
+		Request(Location &location);
 		~Request();
-		Request & operator=(const Request &assign);
-		class invalidMethod : public std::exception
-		{
+
+		// getters & setters
+		std::vector<std::pair<std::string, std::string> >	getFileData();
+		void												setLocation(Location& location);
+		Location&											getLocation();
+
+		// funcs
+		bool			appendBuffer(char *buffer, int bytes_read);
+		void			isValidRequest();
+		std::string		printRequest();
+		void			checkLength();
+
+
+		class RequestException : public std::exception {
+		private:
+			std::string _erCode;
 		public:
+			RequestException(const std::string& erCode) : _erCode(erCode) {}
+			~RequestException() throw() {}
+
 			const char* what() const throw()
-			{
-				return ("Invalid HTTP method.");
-			}
+			{ return _erCode.c_str();}
 		};
 
-		std::string 	getLoc();
-		void		 	setLoc(std::string &location);
-		std::string		getContentType();
-		HttpMethod		getMethod();
-		int				getContentLen();
-		std::string		getBody();
-		std::string		getConnection();
-		void			setConnection(std::string connection);
-		std::string		getsessionId();
-		void			resetSessionId();
-		std::vector<std::pair<std::string, std::string> >	getFileData();
-
-
 	private:
-		Request();
-		void parse(std::string httpRequest);
-		void printFileData();
-		std::string findBoundary(const std::string& httpRequest);
-		void parsePart(const std::string& part);
-		void parseMultipart(const std::string& httpRequest);
-		std::string makeName();
+		void			parseBody();
+		bool			isBodyComplete();
+		void			unchunkBody();
+		void			parseHeader(std::string header);
+		void			assignMethodAndUri(std::string method);
+		void			parsePart(const std::string& part);
+		void			parseMultipart();
+		std::string		makeName();
 
-		std::string											_location;
-		HttpMethod											_method;
-		std::string											_body;
-		std::string											_contentType;
-		int													_contentLength;
-		std::string											_host;
-		std::string											_userAgent;
-		std::string											_connection;
-		std::string											_transferEncoding;
-		std::string											_sessionId;
+		bool												_foundHeader;
+		Location											_location;
+		std::string											_boundary;
+		std::string											_rawReq;
 		std::vector<std::pair<std::string, std::string> >	_fileData;
 };
 
 #endif
+

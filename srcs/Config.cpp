@@ -1,44 +1,17 @@
-#include "../includes/settings.hpp"
+#include "../includes/Config.hpp"
 
 Config::Config(void) {}
 
 Config::Config(const std::string &filename)
 {
-	this->parseConfig(filename);
-}
-
-Config::Config(const Config &src)
-{
-	*this = src;
-}
-
-Config::~Config(void) {}
-
-Config &Config::operator=(const Config &rhs)
-{
-	if (this != &rhs)
-	{
-		this->_Servers = rhs._Servers;
-		this->_fallBackServer = rhs._fallBackServer;
-	}
-	return (*this);
-}
-
-/**
- * @brief Parses the server configuration from a file.
- *
- * This function attempts to load the server configuration from the specified file.
- * If an error occurs during the process, it logs the error message.
- * Initially, it loads a fallback configuration before reading the actual server configuration.
- *
- * @param filename The name of the configuration file to be parsed.
- */
-void Config::parseConfig(const std::string &filename)
-{
 	try
 	{
-		loadFallback(DEFAULT_CONF);
-		readServer(filename);
+		if (filename == DEFAULT_CONF)
+			readServer(filename, false);
+		else {
+			readServer(DEFAULT_CONF, true);
+			readServer(filename, false);
+		}
 	}
 	catch (std::exception &e)
 	{
@@ -46,15 +19,33 @@ void Config::parseConfig(const std::string &filename)
 	}
 }
 
+Config::Config(const Config &src) {*this = src;}
+
+Config::~Config(void) {}
+
+Config &Config::operator=(const Config &rhs)
+{
+	if (this != &rhs) {
+		_Servers = rhs._Servers;
+		_fallBack = rhs._fallBack;
+	}
+	return (*this);
+}
+
 /**
- * @brief Reads the server configuration from a file.
+ * @brief Reads and parses server configuration from a file.
  *
- * It looks for server configuration blocks and processes them.
+ * This function reads a server configuration from the specified file and parses it.
+ * It handles comments, empty lines, and server blocks. If the server block is the default,
+ * it loads the server structure and sets it as the fallback server. Otherwise, it parses
+ * multiple servers.
  *
- * @param filename The name of the file to read the server configuration from.
+ * @param filename The name of the configuration file to read.
+ * @param isFallBack A boolean indicating whether the server block is the default server.
+ *
  * @throws std::runtime_error If the file cannot be opened.
  */
-void Config::readServer(const std::string &filename)
+void Config::readServer(const std::string &filename , bool isFallBack)
 {
 	std::ifstream file(filename.c_str());
 	bool parseServer = false;
@@ -67,17 +58,20 @@ void Config::readServer(const std::string &filename)
 
 	while (std::getline(file, line))
 	{
-		std::size_t comment;
-		if ((comment = line.find("#")) != std::string::npos)
-			line = line.substr(0, comment);
-		if (line.find("server") != std::string::npos)
+		line = trimLeadingWhitespace(line);
+		if (startsWith(line, "#") || line.empty())
+			continue;	// skip comments and empty lines
+		if (startsWith(line, "server"))
 			parseServer = true;
 		if (parseServer)
 		{
 			server.append(line + "\n");
 			countBraces(line, &braceCount);
-
-			if (braceCount == 0 && parseServer)
+			if (braceCount == 0 && isFallBack){
+				loadServerStruct(server);
+				_fallBack = _tempServer;
+			}
+			else if (braceCount == 0 && parseServer)
 			{
 				parseMultipleServers(server);
 				server.clear();
@@ -96,28 +90,31 @@ void Config::readServer(const std::string &filename)
  *
  * @param server The server block configuration as a string.
  */
-void Config::parseMultipleServers(std::string server)
+void Config::parseMultipleServers(std::string serverString)
 {
-	std::vector<std::string> ports = getPorts(server);
-	std::vector<std::string> hosts = getHosts(server);
+	std::vector<std::string> ports = getPortHost(serverString, "listen");
+	std::vector<std::string> hosts = getPortHost(serverString, "host");
 
-	//initialize _tempServer with fallback values
-	this->_tempServer = this->_fallBackServer;
-	loadServerStruct(server); // load user configuration
+	_tempServer = _fallBack;
+	loadServerStruct(serverString); // load user configuration
 	for (size_t i = 0; i < hosts.size(); ++i)
 	{
 		for (size_t j = 0; j < ports.size(); ++j)
 		{
-			ServerSettings newServer = this->_tempServer;
+			Server newServer = _tempServer;
 
-			newServer.host = hosts[i];
+			newServer.setHost(hosts[i]);
+			int port;
 			std::istringstream iss(ports[j]);
-			iss >> newServer.port;
+			iss >> port;
+			if (iss.fail())
+				throw std::runtime_error("Error: invalid port value");
+			newServer.setPort(port);
 
-			std::string key = hosts[i] + ":" + ports[j];
-			this->_Servers.insert(std::make_pair(key, newServer));
+			std::string key = hosts[i] + ":" + toString(port);
+			_Servers.insert(std::make_pair(key, newServer));
 
-			log(logINFO) << "Config for server " << key << " loaded";
+			log(logDEBUG) << "Config for server " << key << " loaded";
 		}
 	}
 }
@@ -150,111 +147,14 @@ void Config::loadServerStruct(const std::string &configString)
 		if (locationMode(line, &parsingLocation, &currentLocation, value))
 			continue;
 		if (!parsingLocation)
-			parseServer(key, value, line);
+			parse(_tempServer, key, value, line);
 		else
-			parseLocation(&currentLocation, key, value, line);
+			parse(currentLocation, key, value, line);
+		parseUnique(currentLocation, parsingLocation, key, value, line);
 	}
 	if (parsingLocation)
-		this->_tempServer.locations[currentLocation.path] = currentLocation;
+		_tempServer.addLocation(currentLocation);
 }
 
-/**
- * @brief Loads the fallback server configuration from a file.
- *
- * This function reads the fallback configuration file and loads its contents into the
- * temporary server configuration. It then sets the fallback server configuration and
- * generates status messages.
- *
- * @param filename The name of the fallback configuration file.
- * @throws std::runtime_error If the file cannot be opened.
- */
-void Config::loadFallback(const std::string &filename)
-{
-	std::ifstream file(filename.c_str());
-	std::string line;
-	std::string server;
+std::map<std::string, Server> Config::getServersMap(void) const {return (_Servers);}
 
-	if (!file.is_open())
-		throw std::runtime_error("Error: could not open fallback file");
-
-	while (std::getline(file, line)) {
-		std::size_t comment;
-		if ((comment = line.find("#")) != std::string::npos)
-			line = line.substr(0, comment);
-		server.append(line + "\n");
-	}
-	loadServerStruct(server);
-	this->_fallBackServer = this->_tempServer;
-	makeStatusMessages(_fallBackServer);
-}
-
-/* ============================== Getters =============================== */
-ServerSettings Config::getServer(std::string serverIP) const //Throws an exception (std::out_of_range) if the key doesn't exist in the map.
-{
-	return (this->_Servers.at(serverIP));
-}
-
-std::map<std::string, ServerSettings> Config::getServersMap(void) const
-{
-	return (this->_Servers);
-}
-
-//################################################ Testing functions ################################################
-void Config::printServers(void) const
-{
-	for (std::map<std::string, ServerSettings>::const_iterator serverPair = _Servers.begin(); \
-		serverPair != _Servers.end(); ++serverPair)
-	{
-		std::cout << serverPair->second << std::endl;
-	}
-}
-
-void Config::printFallback(void) const
-{
-	std::cout << this->_fallBackServer << std::endl;
-}
-
-std::ostream& operator<<(std::ostream& os, const Location& location)
-{
-	os << " Path: " << location.path << std::endl;
-	os << " Root: " << location.root << std::endl;
-	os << " Index: " << location.index << std::endl;
-	os << " Redirection: " << location.redir << std::endl;
-	os << " Autoindex: " << (location.autoindex ? "true" : "false") << std::endl;
-	os << " Allow:" << std::endl;
-	for (std::vector<std::string>::const_iterator it = location.allow.begin(); it != location.allow.end(); ++it)
-		os << "  - " << *it << std::endl;
-	os << " Error Pages: " << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = location.loc_error_pages.begin(); it != location.loc_error_pages.end(); ++it)
-		os << " " << it->first << ": " << it->second << std::endl;
-	return (os);
-}
-
-std::ostream& operator<<(std::ostream& os, const ServerSettings& server)
-{
-	os << "================ Server ===================" << std::endl;
-	os << "Root: " << server.root << std::endl;
-	os << "Host: " << server.host << std::endl;
-	os << "Port: " << server.port << std::endl;
-	os << "Client Max Body Size: " << server.client_max_body_size << std::endl;
-	os << "Client Body In File Only: " << (server.client_body_in_file_only ? "true" : "false") << std::endl;
-	os << "Client Body Buffer Size: " << server.client_body_buffer_size << std::endl;
-	os << "Client Body Timeout: " << server.client_body_timeout << std::endl;
-	os << "CGI: " << (server.cgi ? "true" : "false") << std::endl;
-	os << "CGI Extension: " << server.cgi_extension << std::endl;
-	os << "CGI Bin: " << server.cgi_bin << std::endl;
-	os << "Dir List Template: " << server.dirlistTemplate.size() << std::endl;
-
-	os << "Error Pages:" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); ++it)
-	{
-		os << " " << it->first << ": " << it->second << std::endl;
-	}
-
-	os << "Locations:" << std::endl;
-	for (std::map<std::string, Location>::const_iterator it = server.locations.begin(); it != server.locations.end(); ++it)
-	{
-		os << "============ Location " << it->first << " ==============="<< std::endl << it->second;
-	}
-	return (os);
-}

@@ -1,343 +1,211 @@
 #include "../includes/settings.hpp"
 
-// Constructors
-Response::Response() {}
+Response::Response(): _loc(NULL) {}
 
-Response::Response(int	status,
-		std::string	reason,
-		std::string	type,
-		std::string	connection,
-		std::string	body)
+Response::~Response() {}
+
+/**
+ * @brief Constructs a Response object for handling errors.
+ *
+ * This constructor initializes a Response object using the provided error status and location.
+ *
+ * @param errStatus The error status code as a string.
+ * @param loc The Location object used to find error details.
+ */
+Response::Response(const char *errStatus, Location &loc)
 {
-	this->_status = status;
-	this->_reason = reason;
-	this->_type = type;
-	this->_len = body.size();
-	this->_connection = connection;
-	this->_body = body;
-	this->_loc = NULL;
-	this->_servSet = NULL;
+	_loc = &loc;
+	_status = atoi(errStatus);
 }
 
 /**
- * @brief Constructs a Response object based on the given request and server settings.
+ * @brief Constructs a Response object based on the given Request and Location.
  *
- * This constructor initializes the Response object by determining the appropriate location,
- * handling redirections, setting up CGI if necessary, and processing the HTTP method (GET, POST, DELETE).
+ * Initializes a Response object by processing the provided Request and Location.
+ * Handles redirection, CGI execution or GET, POST and DELETE methods.
+ * On exception, creates error response.
  *
- * @param request The HTTP request object.
- * @param serverData The server settings object.
+ * @param request The Request object containing the client's request details.
+ * @param loc The Location object used to find configuration and error details.
  */
-Response::Response(Request &request, ServerSettings &serverData)
+Response::Response(Request &request)
 {
 	try
 	{
-		this->_loc = new Location;
-		*this->_loc = findLoc(request.getLoc(), serverData);
-		if (serverData.dirlistTemplate.empty())
-			this->_dirlistTemplate = DIRLIST;
-		else
-			this->_dirlistTemplate = serverData.dirlistTemplate;
-		if (!this->_loc->redir.empty())
-		{
-			// Handle external and internal redirection
-			if (this->checkExternal())
-				return ;
-			std::string newLoc = removeSubstr(request.getLoc(), this->_loc->path);
-			request.setLoc(newLoc);
-			*this->_loc = findLoc(this->_loc->redir, serverData);
-		}
-		this->_servSet = &serverData;
-		if (request.getsessionId().empty())
-			this->_sessionId = generateRandomString(12);
-		else
-			this->_sessionId = "";
-		Cgi cgi(&request, &serverData, this->_loc);
 		HttpMethod method = request.getMethod();
-
-		if (!isValidRequest(request))
-			throw ResponseException("400");
-		else if (cgi.isTrue())
-			cgi.execute(*this);
-		else if (method == POST && this->checkMethod("POST"))
-			postMethod(request);
-		else if (method == GET && this->checkMethod("GET"))
-			getMethod(request);
-		else if (method == DELETE && this->checkMethod("DELETE"))
-			deleteMethod(request);
-		else
-			throw ResponseException("405");
-
+		_uri = request.getUri();
+		_loc = &request.getLocation();
+		_status = 200;
+		_reason = "OK";
+		_contentType = "text/html";
+		_connection = request.getConnection();
+		if (request.getSessionId().empty())
+				this->_sessionId = generateRandomString(12);
+		if (this->handleRedir(_loc->getRedir()))
+			return ;
+		else if (this->handleCGI(request))
+			return ;
+		this->checkMethod(method, request);
 		log(logDEBUG) << "Response object succesfully created";
 	}
-	catch (std::exception &e)
+	catch(std::exception& e)
 	{
-		// Handle other methods or send a 405 Method Not Allowed response
-		this->_status = atoi(e.what());
-		// this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
-		this->_reason = getStatusMessage(e.what()); // function to get matchin reason for err code
-		this->_type = "text/html";
-		this->_body = readFileToString(findError(e.what()));
-		this->_connection = "close";
-		this->_len = _body.length();
+		_status = atoi(e.what());
 	}
 }
 
 /**
- * @brief Handles the POST HTTP method.
+ * @brief Checks if the given HTTP method is allowed and calls the corresponding method.
  *
- * This function processes a POST request by creating files based on the request data.
- * It sets the response status and headers accordingly.
+ * This function checks the HTTP method of a request.
+ * If the method is allowed, it calls the corresponding handler function.
+ * If the method is not allowed, it throws a ResponseException with a "405" status code.
  *
- * @param request The HTTP request object.
+ * @param method The HTTP method to check (GET, POST, DELETE).
+ * @param request The request object to be processed.
+ * @throws ResponseException if the method is not allowed.
+ */
+void Response::checkMethod(HttpMethod method, Request &request)
+{
+	void (Response::*funcs[3])(Request &) = {&Response::getMethod, &Response::postMethod, &Response::deleteMethod};
+
+	if (_loc->findAllow(method))
+		(this->*funcs[method])(request);
+	else
+		throw ResponseException("405");
+}
+
+/**
+ * @brief Handles the HTTP POST method by creating files from the request data.
+ *
+ * This function processes an HTTP POST request by extracting file data from the request
+ * and creating the specified files in the directory determined by the location's root
+ * and path. If no file data is provided in the request, it logs an error and throws a
+ * ResponseException with a "400" status code. Otherwise, it calls the createFiles function
+ * to create the files.
+ *
+ * @param request The HTTP request containing the file data to be processed.
+ * @throws ResponseException if no file data is provided or if file creation fails.
  */
 void	Response::postMethod(Request &request)
 {
-	int status = 0;
-	createFiles(request, status);
-	switch (status)
+	(void)request;
+	std::string file = _loc->getRoot() + "/";
+	std::vector<std::pair<std::string, std::string> > fileData = request.getFileData();
+
+	if (fileData.empty())
 	{
-		case 201:
-			this->_status = 201;
-			this->_reason = getStatusMessage("201");
-			this->_type = "text/html";
-			this->_connection = request.getConnection();
-			this->_body = "";
-			this->_len = _body.length();
-			break;
-		case 500:
-			throw ResponseException("500");
-		case 400:
-			throw ResponseException("400");
+		log(logERROR) << "Bad request: no files to create";
+		throw ResponseException("400");
 	}
+
+	this->createFiles(fileData, file);
 }
 
 /**
- * @brief Handles the GET HTTP method.
+ * @brief Handles the HTTP GET method by serving the requested file or generating a directory listing.
  *
- * This function processes a GET request by extracting the file path from the request,
- * reading the file content, and setting the response status and headers.
+ * This function processes an HTTP GET request by first checking if autoindexing is enabled
+ * for the current location. If autoindexing is enabled, it generates a directory listing
+ * and returns immediately. If autoindexing is not enabled, it extracts the file path from
+ * the request URI and reads the content of the file into the response body. The content type
+ * of the file is also determined and set in the response. If the file path is empty, or if
+ * the file content or content type cannot be determined, it throws a ResponseException with
+ * the appropriate status code.
  *
- * @param request The HTTP request object.
+ * @param request The HTTP request to be processed.
+ * @throws ResponseException if the file path is empty, or if the file content or content type cannot be determined.
  */
 void	Response::getMethod(Request &request)
 {
-	std::string filePath = this->extractFilePath(request);
-
-	this->_status = 200;
-	if (!filePath.empty())
+	(void)request;
+	if (_loc->getAutoindex() == 1)
 	{
-		this->_body = readFileToString(filePath);
-		this->_type = findType(filePath);
+		this->createDirlisting(_loc->getRoot());
+		return ;
 	}
-	else
-		this->_type = "text/html";
-	this->_len = _body.length();
-	this->_reason = getStatusMessage("200");
 
-	this->_connection = request.getConnection();
+	std::string filePath = this->extractFilePath(true);
+	if (filePath.empty())
+		throw ResponseException("500");
 
-	// Check if body is empty or type was not found
-	if (this->_body == "" || this->_type == "")
+	this->_body = readFileToString(filePath);
+	this->_contentType = findType(filePath);
+
+	if (this->_body == "" || this->_contentType == "")
 		throw ResponseException("404");
 }
 
 /**
- * @brief Handles the DELETE HTTP method.
+ * @brief Handles the HTTP DELETE method by deleting the specified file.
  *
- * This function processes a DELETE request by removing the specified file and setting
- * the response status and headers.
+ * This function processes an HTTP DELETE request by extracting the file path
+ * from the request URI. It then attempts to delete the file using the remove
+ * function. If the file deletion fails, it logs an error message and throws
+ * a ResponseException with a "500" status code.
  *
- * @param request The HTTP request object.
+ * @param request The HTTP request containing the file path to be deleted.
+ * @throws ResponseException if the file deletion fails.
  */
 void	Response::deleteMethod(Request &request)
 {
-	std::string file = _servSet->root + request.getLoc();
+	(void)request;
+
+	std::string file = this->extractFilePath(false);
 
 	if (remove(file.c_str()) != 0)
 	{
 		log(logERROR) << "Failed to delete file: " << file;
-		throw ResponseException("404");
-	}
-	else {
-		this->_status = 200;
-		this->_reason = getStatusMessage("200");
-		this->_type = "text/html";
-		this->_connection = request.getConnection();
-		this->_body = "";
-		this->_len = _body.length();
-	}
-}
-
-/**
- * @brief Creates an HTML page listing the contents of a directory.
- *
- * This function generates an HTML page that lists the contents of the specified directory
- * using a template.
- *
- * @param dirPath The path to the directory.
- */
-void	Response::createDirlisting(std::string dirPath)
-{
-	std::string htmlTemplate = this->_dirlistTemplate;
-
-	std::size_t pos = htmlTemplate.find("INSERT");
-	if (pos == std::string::npos)
-		{log(logERROR) << "Invalid directory listing template";}
-	std::string insertList = this->loopDir(dirPath);
-	htmlTemplate.replace(pos, 6, insertList);
-
-	while((pos = htmlTemplate.find("PATH")) != std::string::npos)
-		htmlTemplate.replace(pos, 4, this->_loc->path);
-
-	this->setBody(htmlTemplate);
-
-}
-
-/**
- * @brief Loops through a directory and its subdirectories to create an HTML list of the contents.
- *
- * This function recursively traverses the specified directory and its subdirectories,
- * generating an HTML list of the contents.
- *
- * @param dirPath The path to the directory.
- * @return A string containing the HTML list of the directory contents.
- */
-std::string	Response::loopDir(std::string dirPath)
-{
-	std::ostringstream html;
-	if (dirPath[0] == '/' || dirPath[0] == '.') // Check if path starts with / or .
-		dirPath = dirPath.substr(1);
-	dirPath = this->_servSet->root + "/" + dirPath;
-
-	struct dirent	*entry;
-	DIR		*dir = opendir(dirPath.c_str());
-	if (dir == NULL)
-	{
-		log(logERROR) << "Error opening directory: " << dirPath;
 		throw ResponseException("500");
 	}
-
-	// Loop through directory and create a list in html
-	html << "<ul>";
-	while ((entry = readdir(dir)) != NULL)
-	{
-		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
-		{
-			html << "<li> "
-			<< entry->d_name
-			<< "<button onclick=\"deleteFile('"
-			<< entry->d_name
-			<< "')\">Delete</button>"
-			<< "</li>";
-			if (entry->d_type == DT_DIR)
-			{
-				std::string	subPath = dirPath + "/" + entry->d_name;
-				html << this->loopDir(subPath);
-			}
-		}
-	}
-	html << "</ul>";
-
-	if (closedir(dir) != 0)
-	{
-		log(logERROR) << "Error closing directory: " << dirPath;
-		throw ResponseException("500");
-	}
-	return (html.str());
 }
 
 /**
  * @brief Generates the HTTP response string.
  *
- * This function constructs the HTTP response string by combining the status line, headers,
- * and body.
+ * Constructs the HTTP response based on the current status and other member variables.
  *
  * @return The complete HTTP response as a string.
  */
-std::string Response::makeResponse()
+std::string	Response::getResponse()
 {
 	std::ostringstream response;
+	std::pair<std::string, std::string> error;
 
-	response << HTTPVERSION << " " << this->_status << " " << this->_reason << "\r\n";
+	if (this->_status >= 400) // add error page body
+	{
+		try
+		{
+			error = _loc->findError(_status);
+			this->_reason = error.first;
+			this->_body = readFileToString(error.second);
+			_contentType = findType(error.second);
+		} catch (std::exception &e) {
+			log(logERROR) << "No error page found";
+		}
+		_connection = "close";
+	}
+
+	response << HTTPVERSION << " " << _status << " " << _reason << "\r\n";
 	response << "Date: " << getDateTime() << "\r\n";
-	response << "Content-Length: " << this->_len << "\r\n";
-	if (this->_type != "")
-		response << "Content-Type: " << this->_type << "\r\n";
-	response << "Connection: " << this->_connection << "\r\n";
-	if (!this->_sessionId.empty())
-		response << "Set-Cookie: session_id=" << this->_sessionId << "\r\n";
-	if (!this->_redir.empty())
-		response << "Location: " << this->_redir << "\r\n";
+	response << "Content-Length: " << _body.size() << "\r\n";
+	if (!_contentType.empty())
+		response << "Content-Type: " << _contentType << "\r\n";
+	response << "Connection: " << _connection << "\r\n";
+	if (!_sessionId.empty())
+		response << "Set-Cookie: session_id=" << _sessionId << "\r\n";
+	if (!_redir.empty())
+		response << "Location: " << _redir << "\r\n";
 	response << "\r\n";
+
 	std::string return_value = response.str();
-	if (this->_len)
-		return_value += this->_body + "\r\n\r\n";
+	if (_body.size())
+		return_value += _body + "\r\n\r\n";
+
 	return (return_value);
-}
-
-Response::Response(const Response &copy) :
-	_status(copy._status),
-	_reason(copy._reason),
-	_type(copy._type),
-	_len(copy._len),
-	_connection(copy._connection),
-	_body(copy._body)
-{}
-
-// Destructor
-Response::~Response()
-{
-	if (this->_loc)
-		delete _loc;
-}
-
-// Operators
-Response & Response::operator=(const Response &assign)
-{
-	this->_status = assign._status;
-	this->_reason = assign._reason;
-	this->_type = assign._type;
-	this->_connection = assign._connection;
-	this->_body = assign._body;
-	this->_len = assign._len;
-	this->_loc = assign._loc;
-	this->_servSet = assign._servSet;
-	return (*this);
-}
-
-void	Response::setStatus(int status)
-{
-	this->_status = status;
 }
 
 void	Response::setReason(std::string reason)
 {
 	this->_reason = reason;
-}
-
-void	Response::setType(std::string type)
-{
-	this->_type = type;
-}
-
-void	Response::setBody(std::string body)
-{
-	this->_body = body;
-	this->_len = body.size();
-}
-
-void	Response::setConnection(std::string connection)
-{
-	this->_connection = connection;
-}
-
-std::string	Response::getConnection()
-{
-	return (this->_connection);
-}
-
-std::string	Response::getSessionId()
-{
-	return (this->_sessionId);
 }

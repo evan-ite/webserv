@@ -16,6 +16,8 @@ button {
 
 form {
     display: flex; 
+    flex-direction: column;
+
     justify-content: space-around; 
     align-items: center;
     margin: 5%;
@@ -31,26 +33,26 @@ p {
     color: #f0f0f0;
     font-family: 'Courier New', Courier, monospace;
     font-weight: 200;
-    width: 25%;
-    height: 30%;
     border-style: hidden;
-    margin: 1%;
-    padding: 1%;
+    margin: 1% 4% 1% 4%;
+    padding: 1% 5% 1% 5%;
 }
 
 .cgi-input {
-    margin: 1%;
+    margin: 3%;
 }
 
 .formbox {
     display: flex;
+    flex-wrap: wrap;
     margin: 1% 10% 1% 10%;
     border-color: #ff8800;
-    background-color: #f8b06c8a;
+    background-color: #fa80df8a;
     border-width: 3px;
     border-style: solid;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 .memebox {

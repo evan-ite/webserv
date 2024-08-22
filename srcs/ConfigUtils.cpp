@@ -1,13 +1,10 @@
-#include "../includes/settings.hpp"
+#include "../includes/Config.hpp"
 
 /**
- * @brief Counts the number of opening and closing braces in a line.
+ * Counts the number of open and close braces in a given line and updates the brace count.
  *
- * This function updates the brace count based on the number of opening and closing
- * braces found in the given line.
- *
- * @param line The line to count braces in.
- * @param braceCount Pointer to the brace count to be updated.
+ * @param line The line to count the braces in.
+ * @param braceCount A pointer to the brace count variable to update.
  */
 void Config::countBraces(std::string line, int *braceCount)
 {
@@ -17,29 +14,26 @@ void Config::countBraces(std::string line, int *braceCount)
 }
 
 /**
- * @brief Determines if the current line is a location block.
+ * Determines the location mode based on the given line and updates the current location accordingly.
  *
- * This function checks if the current line indicates the start or end of a location block
- * and updates the parsing state accordingly.
- *
- * @param line The current line being parsed.
- * @param parsingLocation Pointer to the parsing state.
- * @param currentLocation Pointer to the current location being parsed.
- * @param value The value extracted from the line.
- * @return True if the line is a location block, false otherwise.
+ * @param line The line to analyze.
+ * @param parsingLocation A pointer to a boolean indicating whether the function is currently parsing a location block.
+ * @param currentLocation A pointer to the current location object.
+ * @param value The value associated with the location.
+ * @return True if the location mode was successfully determined and updated, false otherwise.
  */
 bool Config::locationMode(std::string line, bool *parsingLocation, Location *currentLocation, std::string value)
 {
 	if (line.find("}") != std::string::npos && *parsingLocation)
 	{
-		this->_tempServer.locations[currentLocation->path] = *currentLocation;
+		_tempServer.addLocation(*currentLocation);
 		*parsingLocation = false;
 		return (true);
 	}
 	if (line.find("location") != std::string::npos)
 	{
-		if (_tempServer.locations.find(value) != _tempServer.locations.end())
-			*currentLocation = _tempServer.locations[value];
+		if (_tempServer.locationExists(value))
+			*currentLocation = _tempServer.findLocation(value);
 		else
 			*currentLocation = Location(value);
 		*parsingLocation = true;
@@ -49,86 +43,61 @@ bool Config::locationMode(std::string line, bool *parsingLocation, Location *cur
 }
 
 /**
- * @brief Extracts port numbers from the server configuration string.
+ * @brief Extracts port and host values from a server string based on a keyword.
  *
- * This function searches for occurrences of the keyword "listen" in the provided
- * server configuration string and extracts the port numbers that follow it.
- * The port numbers are expected to be separated by spaces and terminated by a semicolon.
+ * This function searches for the specified keyword in the server string and extracts the values
+ * that follow the keyword until a semicolon is encountered. The extracted values are then stored
+ * in a vector and returned.
  *
- * @param server The server configuration string.
- * @return A vector of strings containing the extracted port numbers.
+ * @param server The server string to search in.
+ * @param keyword The keyword to search for in the server string.
+ * @return A vector containing the extracted port and host values.
  */
-std::vector<std::string> Config::getPorts(std::string server)
+std::vector<std::string> Config::getPortHost(const std::string& server, const std::string& keyword)
 {
-	std::vector<std::string> ports;
+	std::vector<std::string> values;
 	size_t startPos = 0;
 
 	while (true)
 	{
-		size_t pos = server.find("listen", startPos);
+		size_t pos = server.find(keyword, startPos);
 		if (pos == std::string::npos) break;
 		size_t endPos = server.find(";", pos);
 		if (endPos == std::string::npos) break;
 
-		std::string portStr = server.substr(pos + 7, endPos - pos - 7);
-		std::istringstream iss(portStr);
-		std::string port;
-		while (iss >> port)
-			ports.push_back(port);
+		std::string valueStr = server.substr(pos + keyword.length(), endPos - pos - keyword.length());
+		std::istringstream iss(valueStr);
+		std::string value;
+		while (iss >> value)
+			values.push_back(value);
 		startPos = endPos + 1;
 	}
-	return (ports);
+
+	return values;
 }
 
 /**
- * @brief Extracts host addresses from the server configuration string.
+ * @brief Parses a configuration setting and updates the provided ASetting object (Derived Classes).
  *
- * This function searches for occurrences of the keyword "host" in the provided
- * server configuration string and extracts the host addresses that follow it.
- * The host addresses are expected to be separated by spaces and terminated by a semicolon.
+ * This function takes a key-value pair from a configuration file and updates the
+ * corresponding attribute in the provided ASetting object. It handles various
+ * configuration keys such as "root", "index", "error_page", "autoindex", "allow",
+ * "client_max_body_size", "cgi", "cgi_extension", "cgi_bin", "dir_list", and "cgi_pass".
  *
- * @param server The server configuration string.
- * @return A vector of strings containing the extracted host addresses.
+ * @param setting The ASetting object to be updated.
+ * @param key The configuration key.
+ * @param value The configuration value.
+ * @param line The entire line from the configuration file, used for parsing complex values.
+ *
+ * @throws std::runtime_error If the key is "error_page" and the error code or error page is invalid.
+ * @throws std::runtime_error If the key is "client_max_body_size" and the size is invalid.
  */
-std::vector<std::string> Config::getHosts(std::string server)
-{
-	std::vector<std::string> hosts;
-	size_t startPos = 0;
-
-	while (true)
-	{
-		size_t pos = server.find("host", startPos);
-		if (pos == std::string::npos || !isblank(server[pos + 4])) break;
-		size_t endPos = server.find(";", pos);
-		if (endPos == std::string::npos) break;
-
-		std::string hostStr = server.substr(pos + 5, endPos - pos - 5);
-		std::istringstream iss(hostStr);
-		std::string host;
-		while (iss >> host)
-			hosts.push_back(host);
-		startPos = endPos + 1;
-	}
-	return (hosts);
-}
-
-/**
- * @brief Parses a location configuration line.
- *
- * This function parses a single line of the location configuration and updates the
- * current location with the parsed key-value pair.
- *
- * @param currentLocation Pointer to the current location being parsed.
- * @param key The key extracted from the line.
- * @param value The value extracted from the line.
- * @param line The original line being parsed.
- */
-void Config::parseLocation(Location *currentLocation, std::string key, std::string value, std::string line)
+void Config::parse(ASetting& setting, std::string key, std::string value, std::string line)
 {
 	if (key == "root")
-		currentLocation->root = value;
+		setting.setRoot(value);
 	else if (key == "index")
-		currentLocation->index = value;
+		setting.setIndex(value);
 	else if (key == "error_page")
 	{
 		std::istringstream iss(line);
@@ -141,22 +110,10 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 			throw std::runtime_error("Error: invalid error page");
 		removeCharacter(error_page, ';');
 		removeCharacter(error_page, '"');
-		currentLocation->loc_error_pages[error_code] = error_page;
+		setting.addErrorPage(error_code, error_page);
 	}
 	else if (key == "autoindex")
-		currentLocation->autoindex = (value == "on");
-	else if (key == "return")
-	{
-		std::istringstream iss(line);
-		std::string redir;
-		iss >> redir;
-		iss >> redir;
-		if (!(iss >> redir))
-			throw std::runtime_error("Error: invalid redirection value");
-		removeCharacter(redir, ';');
-		removeCharacter(redir, '"');
-		currentLocation->redir = redir;
-	}
+		setting.setAutoindex((value == "on"));
 	else if (key == "allow")
 	{
 		std::istringstream iss(line);
@@ -165,42 +122,8 @@ void Config::parseLocation(Location *currentLocation, std::string key, std::stri
 		while (iss >> allow)
 		{
 			removeCharacter(allow, ';');
-			currentLocation->allow.push_back(allow);
+			setting.addAllow(allow);
 		}
-	}
-	else if (key == "cgi")
-		currentLocation->cgi = (value == "on");
-	else if (key == "cgi_extension")
-		currentLocation->cgi_extension = value;
-	else if (key == "cgi_bin")
-		currentLocation->cgi_bin = value;
-	else if (key == "cgi_pass")
-		currentLocation->cgi_pass = value;
-}
-
-/**
- * @brief Parses a server configuration line.
- *
- * This function parses a single line of the server configuration and updates the
- * temporary server with the parsed key-value pair.
- *
- * @param key The key extracted from the line.
- * @param value The value extracted from the line.
- * @param line The original line being parsed.
- */
-void Config::parseServer(std::string key, std::string value, std::string line)
-{
-	if (key == "root")
-		this->_tempServer.root = value;
-	else if (key == "host")
-		this->_tempServer.host = value;
-	else if (key == "listen")
-	{
-		std::istringstream iss(value);
-		int port;
-		if (!(iss >> port))
-			throw std::runtime_error("Error: invalid port number");
-		this->_tempServer.port = port;
 	}
 	else if (key == "client_max_body_size")
 	{
@@ -208,90 +131,65 @@ void Config::parseServer(std::string key, std::string value, std::string line)
 		int size;
 		if (!(iss >> size))
 			throw std::runtime_error("Error: invalid client_max_body_size");
-		this->_tempServer.client_max_body_size = size;
-	}
-	else if (key == "client_body_in_file_only")
-		this->_tempServer.client_body_in_file_only = (value == "on");
-	else if (key == "client_body_buffer_size")
-	{
-		std::istringstream iss(value);
-		int size;
-		if (!(iss >> size))
-			throw std::runtime_error("Error: invalid client_body_buffer_size");
-		this->_tempServer.client_body_buffer_size = size;
-	}
-	else if (key == "client_body_timeout")
-	{
-		std::istringstream iss(value);
-		int timeout;
-		if (!(iss >> timeout))
-			throw std::runtime_error("Error: invalid client_body_timeout");
-		this->_tempServer.client_body_timeout = timeout;
+		setting.setClientMaxBodySize(size);
 	}
 	else if (key == "cgi")
-		this->_tempServer.cgi = (value == "on");
+		setting.setCgi((value == "on"));
 	else if (key == "cgi_extension")
-		this->_tempServer.cgi_extension = value;
+		setting.setCgiExtension(value);
 	else if (key == "cgi_bin")
-		this->_tempServer.cgi_bin = value;
-	else if (key == "cgi_pass")
-		this->_tempServer.cgi_pass = value;
-	else if (key == "error_page") {
-		std::istringstream iss(line);
-		std::string error_code;
-		std::string error_page;
-		iss >> error_code;
-		if (!(iss >> error_code))
-			throw std::runtime_error("Error: invalid error code");
-		if (!(iss >> error_page))
-			throw std::runtime_error("Error: invalid error page");
-		removeCharacter(error_page, ';');
-		removeCharacter(error_page, '"');
-		this->_tempServer.error_pages[error_code] = this->_tempServer.root + "/" + error_page;
-	}
+		setting.setCgiBin(value);
 	else if (key == "dir_list")
+		setting.setDirlistTemplate(value);
+	else if (key == "cgi_pass")
+		setting.setCgiPass(value);
+}
+
+/**
+ * @brief Parses the unique configurations of the derived classess of ASetting (Server/Location).
+ *
+ * This function takes a key-value pair from a configuration file and updates the
+ * corresponding attribute in the provided Location or Server object.
+ *
+ * @param location The Location object to be updated if isLoc is true.
+ * @param isLoc A boolean indicating whether the key-value pair pertains to a Location object.
+ * @param key The configuration key.
+ * @param value The configuration value.
+ * @param line The entire line from the configuration file, used for parsing complex values.
+ *
+ * @throws std::runtime_error If the key is "return" and the redirection value is invalid.
+ * @throws std::runtime_error If the key is "listen" and the port number is invalid.
+ */
+void Config::parseUnique(Location &location, bool isLoc, std::string key, std::string value, std::string line)
+{
+	if (isLoc)
 	{
-		std::string path = this->_tempServer.root + "/" + value;
-		this->_tempServer.dirlistTemplate = readFileToString(path);
+		if (key == "return")
+		{
+			std::istringstream iss(line);
+			std::string redir;
+			iss >> redir;
+			iss >> redir;
+			if (!(iss >> redir))
+				throw std::runtime_error("Error: invalid redirection value");
+			removeCharacter(redir, ';');
+			removeCharacter(redir, '"');
+			location.setRedir(redir);
+		}
 	}
-}
-
-/**
- * @brief Generates status messages for the server configuration.
- *
- * This function generates status messages and load them into the server configuration.
- *
- * @param server The server configuration to generate status messages for.
- */
-void Config::makeStatusMessages(ServerSettings &server)
-{
-	server.error_messages["400"] = "Bad Request";
-	server.error_messages["403"] = "Forbidden";
-	server.error_messages["404"] = "Not Found";
-	server.error_messages["405"] = "Method Not Allowed";
-	server.error_messages["413"] = "Request Entity Too Large";
-	server.error_messages["415"] = "Unsupported Media Type";
-	server.error_messages["500"] = "Internal Server Error";
-	server.error_messages["200"] = "OK";
-	server.error_messages["201"] = "Created";
-	server.error_messages["204"] = "No Content";
-}
-
-/**
- * @brief Removes a specific character from a string.
- *
- * This function removes all occurrences of the specified character from the given string.
- *
- * @param str The string to remove the character from.
- * @param ch The character to be removed.
- */
-void Config::removeCharacter(std::string& str, char charToRemove)
-{
-	for (std::string::size_type i = 0; i < str.size(); )
+	else
 	{
-		if (str[i] == charToRemove)
-			str.erase(i, 1);
-		else
-			++i;
+		if (key == "host")
+			_tempServer.setHost(value);
+		else if (key == "listen")
+		{
+			std::istringstream iss(value);
+			int port;
+			if (!(iss >> port) || port < 0)
+				throw std::runtime_error("Error: invalid port number or port in location block");
+			_tempServer.setPort(port);
+		}
+		else if (key == "server_name")
+			_tempServer.setServerName(value);
 	}
 }

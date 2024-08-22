@@ -3,17 +3,19 @@
 
 # include "settings.hpp"
 
+class Config;
+
 class Webserv
 {
 	public:
-		Webserv(Config &conf);
+		Webserv();
 		~Webserv();
 		Webserv & operator=(const Webserv &assign);
-		int					run();
+		int					run(Config conf);
 		class configError : public std::exception {
 			virtual const char* what() const throw();
 		};
-		class epollError : public std::exception {
+		class pollError : public std::exception {
 			virtual const char* what() const throw();
 		};
 		class internalError : public std::exception {
@@ -21,18 +23,20 @@ class Webserv
 		};
 
 	private:
-		void				addServer(Server s);
-		int					getEpollFD();
-		void				epollAddFD(int fd);
-		int					getNumberServers();
+		void							addServer(Server s);
+		void							pollAdd(int fd);
+		void							pollRemove(int fd);
+		std::vector<Server>::iterator	findServer(int fd);
 
 		Webserv(const Webserv &copy);
-		Webserv();
-		Config							_conf;
-		int								_epoll_fd;
-		std::vector<Server>				_servers;
-		void							setupEpoll();
-		void							handleEpollEvents();
+		struct pollfd		_fds[MAX_EVENTS];
+		Client*				_clientList[MAX_EVENTS];
+		std::vector<Server>	_servers;
+		int					_nfds;
+		void				handleEvents();
+		void				handleErrors(int i);
+		void				handleRecv(int i);
+		void				handleSend(int i);
 };
 
 #endif
