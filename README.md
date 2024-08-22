@@ -17,7 +17,7 @@
 - Serve static files (HTML, CSS, JavaScript, images).
 - Handle dynamic content using CGI scripts.
 - Support for HTTP methods: GET, POST, and DELETE.
-- Non-blocking I/O operations with `epoll`.
+- Non-blocking I/O operations with `poll`.
 - Customizable through configuration files.
 - Serve content on multiple ports.
 - Default error pages and customizable error handling.
